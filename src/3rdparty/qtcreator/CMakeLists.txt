@@ -3,13 +3,18 @@ set(QT_CREATOR_VERSION 0.3.6.1)
 set(QT_CREATOR_ENABLE_QML off)
 set(QT_CREATOR_NO_FILENAME_LIST on)
 
-function(configure_qtc_library _name)
-    add_library(${_name} SHARED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Widgets Svg Network Concurrent Qml REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets Svg Network Concurrent Qml REQUIRED)
 
-    set(CMAKE_AUTOMOC on)
+function(configure_qtc_library _name)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTOUIC ON)
+    set(CMAKE_AUTORCC ON)
+
+    choruskit_add_library(${_name} SHARED)
 
     if(WIN32)
-        ck_attach_win_rc_file(${PROJECT_NAME}
+        ck_attach_win_rc_file(${_name}
             NAME ${_name}
             VERSION ${PROJECT_VERSION}
             DESCRIPTION "Qt Creator 3.6"
@@ -22,6 +27,8 @@ function(configure_qtc_library _name)
     )
 
     target_compile_definitions(${_name} PRIVATE _UNICODE UNICODE)
+
+    choruskit_include_directories(${_name} . ..)
 endfunction()
 
 add_subdirectory(aggregation)

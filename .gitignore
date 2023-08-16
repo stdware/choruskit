@@ -81,7 +81,6 @@ build/
 cmake-build*
 *.user
 *.lnk
-Libs/*
 _workingDir*
 .vscode
 .idea

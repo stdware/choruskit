@@ -45,3 +45,5 @@ foreach(_item ${_qt_libs})
         Qt${QT_DEFAULT_MAJOR_VERSION}::${_item}
     )
 endforeach()
+
+choruskit_install_headers(. EXCLUDE_DIRS unused_src)

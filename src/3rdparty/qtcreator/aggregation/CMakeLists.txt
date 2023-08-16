@@ -11,3 +11,5 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE AGGREGATION_LIBRARY)
 target_link_libraries(${PROJECT_NAME} PUBLIC
     Qt${QT_DEFAULT_MAJOR_VERSION}::Core
 )
+
+choruskit_install_headers(. EXCLUDE_DIRS examples)

@@ -1,4 +1,6 @@
-set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
+if(NOT DEFINED CK_CMAKE_MODULES_DIR)
+    set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
+endif()
 
 set(CK_APPLICATION_NAME ChorusKit)
 set(CK_APPLICATION_VENDOR OpenVPI)
@@ -22,7 +24,7 @@ macro(ck_init_build_system _app)
 
     # Meta
     set(CK_INITIALIZED on)
-    
+
     set(CK_APPLICATION_NAME ${_app})
     set(CK_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     set(CK_INSTALL_EXPORT ${_app}Targets)
