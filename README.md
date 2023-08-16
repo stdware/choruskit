@@ -1,2 +1,3 @@
-# choruskit
-ChorusKit cmake modules and libraries
+# ChorusKit
+
+ChorusKit cmake modules and libraries.
