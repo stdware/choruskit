@@ -16,4 +16,4 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 set_source_files_properties(pluginmanager.cpp PROPERTIES SKIP_AUTOMOC ON)
 
-choruskit_install_headers(. EXCLUDE_DIRS test)
+choruskit_install_headers(. EXCLUDE_DIRS test newSettings)
