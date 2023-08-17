@@ -6,8 +6,7 @@ set(CMAKE_AUTORCC ON)
 
 find_package(unofficial-breakpad CONFIG REQUIRED)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Network REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Network REQUIRED)
+ck_add_qt_module(_qt_libs Core Network)
 
 include(../config.cmake)
 
@@ -25,8 +24,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    Qt${QT_DEFAULT_MAJOR_VERSION}::Core
-    Qt${QT_DEFAULT_MAJOR_VERSION}::Network
+    ${_qt_libs}
 )
 
 choruskit_include_directories(${PROJECT_NAME} .)

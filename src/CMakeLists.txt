@@ -1,3 +1,4 @@
+include(../cmake/modules/Basic.cmake)
 include(../cmake/modules/OSResource.cmake)
 
 function(choruskit_add_library _target _type)
@@ -68,6 +69,9 @@ macro(choruskit_install_headers _dir)
 endmacro()
 
 add_subdirectory(3rdparty)
+
+add_subdirectory(appcore)
+
 add_subdirectory(loader)
 
 if(CHORUSKIT_INSTALL)

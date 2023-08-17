@@ -1,13 +1,13 @@
-project(CkAppLoad
-    VERSION 0.0.0.1
+project(CkLoader
+    VERSION ${CHORUSKIT_VERSION}
     LANGUAGES CXX
 )
-
-return()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+
+ck_add_qt_module(_qt_libs Core Widgets Network)
 
 file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
@@ -16,10 +16,8 @@ choruskit_add_library(${PROJECT_NAME} STATIC ${_src})
 find_package(QasTool REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    QMWidgets ExtensionSystem qBreakpad qastool::core
-    Qt${QT_DEFAULT_MAJOR_VERSION}::Core
-    Qt${QT_DEFAULT_MAJOR_VERSION}::Widgets
-    Qt${QT_DEFAULT_MAJOR_VERSION}::Network
+    QMWidgets ExtensionSystem CkAppCore qBreakpad qastool::core
+    ${_qt_libs}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

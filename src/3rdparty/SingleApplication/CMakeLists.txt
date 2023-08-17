@@ -4,13 +4,19 @@ project(SingleApplication LANGUAGES CXX DESCRIPTION "Replacement for QtSingleApp
 
 set(CMAKE_AUTOMOC ON)
 
-add_library(${PROJECT_NAME} STATIC
+# add_library(${PROJECT_NAME} STATIC
+# singleapplication.h
+# singleapplication.cpp
+# singleapplication_p.h
+# singleapplication_p.cpp
+# )
+# add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+choruskit_add_library(${PROJECT_NAME} STATIC
     singleapplication.h
     singleapplication.cpp
     singleapplication_p.h
     singleapplication_p.cpp
-        )
-add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+)
 
 if(NOT QT_DEFAULT_MAJOR_VERSION)
     set(QT_DEFAULT_MAJOR_VERSION 5 CACHE STRING "Qt version to use (5 or 6), defaults to 5")
@@ -33,6 +39,7 @@ endif()
 find_package(Qt${QT_DEFAULT_MAJOR_VERSION} COMPONENTS ${QT_COMPONENTS} REQUIRED)
 
 option(SINGLEAPPLICATION_DOCUMENTATION "Generate Doxygen documentation" OFF)
+
 if(SINGLEAPPLICATION_DOCUMENTATION)
     find_package(Doxygen)
 endif()
@@ -44,7 +51,10 @@ if(WIN32)
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC QAPPLICATION_CLASS=${QAPPLICATION_CLASS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+choruskit_include_directories(${PROJECT_NAME} .)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     QT_NO_CAST_TO_ASCII
     QT_NO_CAST_FROM_ASCII

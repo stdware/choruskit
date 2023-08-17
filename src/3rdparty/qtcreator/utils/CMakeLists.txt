@@ -23,27 +23,23 @@ if(QT_CREATOR_NO_FILENAME_LIST)
     set(_defines QT_CREATOR_NO_FILENAME_LIST)
 endif()
 
-set(_qt_libs Core Widgets Network Concurrent)
+set(_qt_modules Core Widgets Network Concurrent)
 
 if(QT_CREATOR_ENABLE_QML)
     list(APPEND _src unused_src/templateengine.h unused_src/templateengine.cpp)
-    list(APPEND _qt_libs Qml)
+    list(APPEND _qt_modules Qml)
 endif()
+
+ck_add_qt_module(_qt_libs ${_qt_modules})
 
 configure_qtc_library(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PRIVATE ${_src})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE QTCREATOR_UTILS_LIB)
-
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${_defines})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${_platform_link_flags} ${_platform_libs})
-
-foreach(_item ${_qt_libs})
-    target_link_libraries(${PROJECT_NAME} PUBLIC
-        Qt${QT_DEFAULT_MAJOR_VERSION}::${_item}
-    )
-endforeach()
+target_link_libraries(${PROJECT_NAME} PUBLIC ${_qt_libs})
 
 choruskit_install_headers(. EXCLUDE_DIRS unused_src)

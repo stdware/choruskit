@@ -3,9 +3,6 @@ set(QT_CREATOR_VERSION 0.3.6.1)
 set(QT_CREATOR_ENABLE_QML off)
 set(QT_CREATOR_NO_FILENAME_LIST on)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Widgets Svg Network Concurrent Qml REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets Svg Network Concurrent Qml REQUIRED)
-
 function(configure_qtc_library _name)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTOUIC ON)

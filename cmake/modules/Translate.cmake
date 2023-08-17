@@ -60,7 +60,15 @@ function(ck_add_translations _target)
             get_target_property(_tmp_files ${_item} SOURCES)
             list(FILTER _tmp_files INCLUDE REGEX ".+\\.(cpp|cc)")
             list(FILTER _tmp_files EXCLUDE REGEX "(qasc|moc)_.+")
-            list(APPEND _src_files ${_tmp_files})
+
+            # Need to convert to absolute path
+            get_target_property(_target_dir ${_item} SOURCE_DIR)
+
+            foreach(_file ${_tmp_files})
+                get_filename_component(_abs_file ${_file} ABSOLUTE BASE_DIR ${_target_dir})
+                list(APPEND _src_files ${_abs_file})
+            endforeach()
+
             unset(_tmp_files)
 
             get_target_property(_tmp_dirs ${_item} INCLUDE_DIRECTORIES)

@@ -2,10 +2,180 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN">
 <context>
+    <name>Application</name>
+    <message>
+        <location filename="../../src/loader/main.cpp" line="164"/>
+        <source>Failed to load core: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/loader/main.cpp" line="309"/>
+        <source>You&apos;re trying to start %1 as the %2, which is extremely dangerous and therefore strongly not recommended.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/loader/main.cpp" line="421"/>
+        <source>Searching plugins...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/loader/main.cpp" line="463"/>
+        <source>Could not find Core plugin!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/loader/main.cpp" line="470"/>
+        <source>Core plugin is disabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/loader/main.cpp" line="495"/>
+        <source>Please close the running application!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/loader/main.cpp" line="515"/>
+        <source>Loading plugins...</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Core</name>
     <message>
         <location filename="../../src/3rdparty/qtcreator/utils/mimetypes/mimedatabase.cpp" line="56"/>
         <source>All Files (*)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Core::DocumentSystem</name>
+    <message>
+        <location filename="../../src/appcore/src/DocumentSystem.cpp" line="321"/>
+        <location filename="../../src/appcore/src/DocumentSystem.cpp" line="550"/>
+        <source>All Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentSystem.cpp" line="368"/>
+        <source>Open File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentSystem.cpp" line="382"/>
+        <source>Open Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentSystem.cpp" line="395"/>
+        <source>Open Directory</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentSystem.cpp" line="410"/>
+        <source>Save File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentSystem.cpp" line="571"/>
+        <source>Save As File</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Core::DocumentWatcher</name>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="149"/>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="167"/>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="426"/>
+        <source>File Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="151"/>
+        <source>Cannot save %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="152"/>
+        <source>Error while saving %1: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="168"/>
+        <source>%1 has been opened in the editor!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="428"/>
+        <source>Cannot reload %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="429"/>
+        <source>Error while reloading %1: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="714"/>
+        <source>Save As File</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Core::PromptHandler</name>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="715"/>
+        <source>All Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="757"/>
+        <source>File Changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="761"/>
+        <source>The unsaved file %1 has changed outside. Do you want to reload it and discard your changes?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="765"/>
+        <source>The file %1 has changed outside. Do you want to reload it?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="796"/>
+        <source>File has been removed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="800"/>
+        <source>The file %1 has been removed outside. Do you want to save it under a different name, or close the editor?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="806"/>
+        <source>The file %1 was removed. Do you want to save it under a different name, or close the editor?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="814"/>
+        <source>&amp;Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="816"/>
+        <source>C&amp;lose All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="818"/>
+        <source>Save &amp;as...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/appcore/src/DocumentWatcher.cpp" line="820"/>
+        <source>&amp;Save</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

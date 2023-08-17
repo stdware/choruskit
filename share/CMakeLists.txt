@@ -21,8 +21,16 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
         get_target_property(_files ${_item} SOURCES)
         list(FILTER _files INCLUDE REGEX ".+\\.(cpp|cc)")
         list(FILTER _files EXCLUDE REGEX "(qasc|moc)_.+")
-        list(APPEND _src ${_files})
+
+        get_target_property(_dir ${_item} SOURCE_DIR)
+
+        foreach(_file ${_files})
+            get_filename_component(_abs_file ${_file} ABSOLUTE BASE_DIR ${_dir})
+            list(APPEND _src ${_abs_file})
+        endforeach()
     endforeach()
+
+    message("${_src}")
 
     qt5_create_translation(_my_qm_files ${_my_ts_files} ${_src})
 
