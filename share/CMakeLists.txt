@@ -4,7 +4,7 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
 
     set(_my_ts_files)
     set(_my_qm_files)
-    set(_qm_dir ${CMAKE_BINARY_DIR}/share/${CHORUSKIT_INSTALL_NAME}/translations)
+    set(_qm_dir ${CMAKE_BUILD_SHARE_DIR}/${CHORUSKIT_INSTALL_NAME}/translations)
 
     foreach(_item ${CHORUSKIT_TRANSLATIONS})
         list(APPEND _my_ts_files ${CMAKE_CURRENT_SOURCE_DIR}/translations/choruskit_${_item}.ts)
@@ -29,8 +29,6 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
             list(APPEND _src ${_abs_file})
         endforeach()
     endforeach()
-
-    message("${_src}")
 
     qt5_create_translation(_my_qm_files ${_my_ts_files} ${_src})
 

@@ -7,6 +7,7 @@ project(ChorusKit VERSION 0.0.0.1 LANGUAGES CXX)
 # ----------------------------------
 option(CHORUSKIT_BUILD_TRANSLATIONS "Build translations" ON)
 option(CHORUSKIT_BUILD_TESTS "Build test cases" ON)
+option(CHORUSKIT_BUILD_TOOLS "Build tools" ON)
 option(CHORUSKIT_INSTALL "Install library" ON)
 
 # ----------------------------------
@@ -22,6 +23,10 @@ endif()
 
 if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+endif()
+
+if(NOT DEFINED CMAKE_BUILD_SHARE_DIR)
+    set(CMAKE_BUILD_SHARE_DIR ${CMAKE_BINARY_DIR}/share)
 endif()
 
 if(MSVC)
@@ -52,3 +57,7 @@ set(CHORUSKIT_TRANSLATIONS zh_CN zh_HK ja_JP)
 add_subdirectory(src)
 
 add_subdirectory(share)
+
+if(CHORUSKIT_BUILD_TOOLS)
+    add_subdirectory(tools)
+endif()

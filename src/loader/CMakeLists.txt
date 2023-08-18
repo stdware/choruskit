@@ -7,7 +7,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-ck_add_qt_module(_qt_libs Core Widgets Network)
+ck_add_qt_module(_qt_libs Core Widgets)
 
 file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
@@ -16,7 +16,7 @@ choruskit_add_library(${PROJECT_NAME} STATIC ${_src})
 find_package(QasTool REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    QMWidgets ExtensionSystem CkAppCore qBreakpad qastool::core
+    QMWidgets ExtensionSystem qastool::core
     ${_qt_libs}
 )
 
@@ -24,10 +24,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SingleApplication
 )
 
+choruskit_include_directories(${PROJECT_NAME} include)
+
+choruskit_install_headers(include)
+
 if(WIN32)
     ck_attach_win_rc_file(${PROJECT_NAME}
         VENDOR "Sine Striker"
     )
 endif()
 
-include(config/qasc.cmake)
+include(src/config/qasc.cmake)

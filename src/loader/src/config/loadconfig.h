@@ -29,10 +29,8 @@ struct SplashSettings {
 struct LoadConfig {
     QAS_JSON(LoadConfig)
 
-    QString pluginIID;
     QString splashImage;
     SplashSettings splashSettings;
-    QString coreName;
     QStringList resourceFiles;
     bool resizable;
     QList<int> splashSize;

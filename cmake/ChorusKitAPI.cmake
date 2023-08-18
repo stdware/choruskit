@@ -112,10 +112,17 @@ function(ck_finish_build_system)
 
     # Generate config header
     get_target_property(_def_list ChorusKit_Metadata CONFIG_DEFINITIONS)
-    ck_generate_config_header("${_def_list}" "${CK_HEADERS_OUTPUT_PATH}/choruskit_config.h")
+
+    set(_config_header ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
+
+    if(_def_list)
+        ck_generate_config_header("${_def_list}" ${_config_header})
+    else()
+        file(WRITE ${_config_header} "")
+    endif()
 
     # Generate build info header
-    ck_generate_build_info_header("${CK_HEADERS_OUTPUT_PATH}/choruskit_buildinfo.h")
+    ck_generate_build_info_header("${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h")
 endfunction()
 
 #[[
@@ -148,7 +155,7 @@ function(ck_add_definition)
         message(FATAL_ERROR "ck_add_definition: called with incorrect number of arguments")
     endif()
 
-    set_property(TARGET ChorusKit_Metadata APPEND CONFIG_DEFINITIONS "${_def}")
+    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CONFIG_DEFINITIONS "${_def}")
 endfunction()
 
 #[[
@@ -198,7 +205,7 @@ function(ck_configure_application)
             ${FUNC_UNPARSED_ARGUMENTS}
         )
         set_target_properties(${_target} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${CK_MAIN_OUTPUT_PATH}
+            RUNTIME_OUTPUT_DIRECTORY ${CK_BUILD_MAIN_DIR}
         )
     else()
         if(WIN32)
@@ -255,7 +262,7 @@ function(ck_configure_application)
     endif()
 
     # Add post build events to distribute shared files
-    add_custom_command(TARGET ${_item} POST_BUILD
+    add_custom_command(TARGET ${_target} POST_BUILD
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ChorusKit_CopySharedFiles
     )
 endfunction()

@@ -107,6 +107,6 @@ if(CHORUSKIT_INSTALL)
 
     # Install cmake modules
     install(DIRECTORY ${CK_CMAKE_MODULES_DIR}/
-        DESTINATION ${_install_dir}
+        DESTINATION ${_install_dir}/cmake
     )
 endif()

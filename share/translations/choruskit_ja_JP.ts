@@ -4,37 +4,32 @@
 <context>
     <name>Application</name>
     <message>
-        <location filename="../../src/loader/main.cpp" line="164"/>
+        <location filename="../../src/loader/src/main.cpp" line="162"/>
         <source>Failed to load core: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/main.cpp" line="309"/>
+        <location filename="../../src/loader/src/main.cpp" line="327"/>
         <source>You&apos;re trying to start %1 as the %2, which is extremely dangerous and therefore strongly not recommended.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/main.cpp" line="421"/>
+        <location filename="../../src/loader/src/main.cpp" line="368"/>
         <source>Searching plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/main.cpp" line="463"/>
+        <location filename="../../src/loader/src/main.cpp" line="410"/>
         <source>Could not find Core plugin!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/main.cpp" line="470"/>
+        <location filename="../../src/loader/src/main.cpp" line="415"/>
         <source>Core plugin is disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/main.cpp" line="495"/>
-        <source>Please close the running application!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../src/loader/main.cpp" line="515"/>
+        <location filename="../../src/loader/src/main.cpp" line="465"/>
         <source>Loading plugins...</source>
         <translation type="unfinished"></translation>
     </message>
