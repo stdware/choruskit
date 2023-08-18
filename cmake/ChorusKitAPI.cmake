@@ -144,9 +144,10 @@ function(ck_add_definition)
         list(POP_FRONT _list _val)
 
         # Boolean
-        if(${_val} STREQUAL "off")
+        string(TOLOWER ${_val} _val_lower)
+        if(${_val_lower} STREQUAL "off" OR ${_val_lower} STREQUAL "false")
             return()
-        elseif(${_val} STREQUAL "on")
+        elseif(${_val_lower} STREQUAL "on" OR ${_val_lower} STREQUAL "true")
             set(_def ${_key})
         else()
             set(_def "${_key}=${_val}")
