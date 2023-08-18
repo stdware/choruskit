@@ -46,3 +46,9 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
         )
     endif()
 endif()
+
+if(CHORUSKIT_INSTALL)
+    install(DIRECTORY doc/
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/${CHORUSKIT_INSTALL_NAME}
+    )
+endif()

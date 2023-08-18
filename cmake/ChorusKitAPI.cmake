@@ -56,7 +56,7 @@ macro(ck_init_build_system _app)
         set(CK_BUILD_LIBRARY_DIR ${_CK_BUILD_BASE_DIR}/Frameworks)
         set(CK_BUILD_PLUGINS_DIR ${_CK_BUILD_BASE_DIR}/Plugins)
         set(CK_BUILD_SHARE_DIR ${_CK_BUILD_BASE_DIR}/Resources)
-        set(CK_QT_CONF_DIR ${_CK_BUILD_BASE_DIR}/Resources)
+        set(CK_BUILD_QT_CONF_DIR ${_CK_BUILD_BASE_DIR}/Resources)
 
         set(_CK_INSTALL_BASE_DIR ${_app}.app/Contents)
         set(CK_INSTALL_RUNTIME_DIR ${_CK_INSTALL_BASE_DIR}/MacOS)
@@ -73,7 +73,7 @@ macro(ck_init_build_system _app)
         set(CK_BUILD_LIBRARY_DIR ${CK_BUILD_MAIN_DIR}/lib)
         set(CK_BUILD_PLUGINS_DIR ${CK_BUILD_MAIN_DIR}/lib/${_app}/plugins)
         set(CK_BUILD_SHARE_DIR ${CK_BUILD_MAIN_DIR}/share)
-        set(CK_QT_CONF_DIR ${CK_BUILD_MAIN_DIR}/bin)
+        set(CK_BUILD_QT_CONF_DIR ${CK_BUILD_MAIN_DIR}/bin)
 
         set(CK_INSTALL_RUNTIME_DIR bin)
         set(CK_INSTALL_LIBRARY_DIR lib)
@@ -367,6 +367,8 @@ function(ck_add_application_plugin _target)
             LIBRARY DESTINATION ${_install_output_dir}
         )
     endif()
+
+    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CHORUSKIT_PLUGINS "${_target}")
 endfunction()
 
 #[[
@@ -469,7 +471,7 @@ function(ck_add_library _target)
         if(FUNC_COPYRIGHT)
             set(_copyright ${FUNC_COPYRIGHT})
         else()
-            _ck_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
+            ck_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
             set(_copyright "Copyright ${CK_DEV_START_YEAR}-${_year} ${_vendor}")
         endif()
 

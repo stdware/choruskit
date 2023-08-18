@@ -19,17 +19,17 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="410"/>
+        <location filename="../../src/loader/src/main.cpp" line="403"/>
         <source>Could not find Core plugin!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="415"/>
+        <location filename="../../src/loader/src/main.cpp" line="408"/>
         <source>Core plugin is disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="465"/>
+        <location filename="../../src/loader/src/main.cpp" line="458"/>
         <source>Loading plugins...</source>
         <translation type="unfinished"></translation>
     </message>
