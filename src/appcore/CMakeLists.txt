@@ -26,6 +26,7 @@ choruskit_include_directories(${PROJECT_NAME} include)
 if(WIN32)
     ck_attach_win_rc_file(${PROJECT_NAME}
         VENDOR "Sine Striker"
+        DESCRIPTION "ChorusKit Framework Module"
     )
 endif()
 

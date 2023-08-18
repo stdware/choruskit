@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QLoggingCategory>
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QProcess>
 #include <QTextStream>
 
@@ -21,28 +22,34 @@
 
 #include "loaderconfig.h"
 
-#define USE_NATIVE_MESSAGEBOX
+#define CONFIG_USE_NATIVE_MESSAGEBOX
 
 Q_LOGGING_CATEGORY(loaderLog, "apploader")
 
 using namespace ExtensionSystem;
 
-static const SingleApplication::Options opts =
-    SingleApplication::ExcludeAppPath | SingleApplication::ExcludeAppVersion | SingleApplication::SecondaryNotification;
+static const SingleApplication::Options opts = SingleApplication::ExcludeAppPath |    //
+                                               SingleApplication::ExcludeAppVersion | //
+                                               SingleApplication::SecondaryNotification;
 
-
-enum { OptionIndent = 4, DescriptionIndent = 34 };
+enum {
+    OptionIndent = 4,
+    DescriptionIndent = 34,
+};
 
 static const char fixedOptionsC[] = " [options]... [files]...\n";
 
+// Default arguments
 static const char HELP_OPTION1[] = "-h";
 static const char HELP_OPTION2[] = "--help";
 static const char VERSION_OPTION1[] = "-v";
 static const char VERSION_OPTION2[] = "--version";
 static const char PLUGIN_PATH_OPTION[] = "--plugin-path";
 
+// Optional arguments
 static const char ALLOW_ROOT_OPTION[] = "--allow-root";
 
+// Global variables
 static QSplashScreen *g_splash = nullptr;
 
 static LoaderConfiguration *g_loadConfig = nullptr;
@@ -84,7 +91,7 @@ static inline void formatOption(QTextStream &str, const QStringList &opts, const
 }
 
 static inline void displayError(const QString &t) {
-#ifndef USE_NATIVE_MESSAGEBOX
+#ifndef CONFIG_USE_NATIVE_MESSAGEBOX
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Critical);
     msgbox.setWindowTitle(qApp->applicationName());
@@ -104,7 +111,7 @@ static inline void displayError(const QString &t) {
 }
 
 static inline void displayHelpText(const QString &t) {
-#ifndef USE_NATIVE_MESSAGEBOX
+#ifndef CONFIG_USE_NATIVE_MESSAGEBOX
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Information);
     msgbox.setWindowTitle(qApp->applicationName());
@@ -213,9 +220,9 @@ public:
     }
 };
 
-class ConfigFileLoader {
+class SplashConfigLoader {
 public:
-    ConfigFileLoader() {
+    SplashConfigLoader() {
     }
 
     void load(const QString &fileName, SplashScreen *splash) {
@@ -302,17 +309,20 @@ int main_entry(LoaderConfiguration *loadConfig) {
     Q_INIT_RESOURCE(ckloader_res);
 
     QString workingDir = QDir::currentPath();
+
+    // Global instances must be created
     QApplication &a = *qApp;
     QMAppExtension &host = *qAppExt;
 
     g_loadConfig = loadConfig;
 
-    if (loadConfig->userSettingPath.isEmpty()) {
-        loadConfig->userSettingPath = host.appDataDir();
+    // Settings path fallback
+    if (loadConfig->userSettingsPath.isEmpty()) {
+        loadConfig->userSettingsPath = host.appDataDir();
     }
 
-    if (loadConfig->systemSettingPath.isEmpty()) {
-        loadConfig->systemSettingPath = host.appShareDir();
+    if (loadConfig->systemSettingsPath.isEmpty()) {
+        loadConfig->systemSettingsPath = host.appShareDir();
     }
 
     QStringList arguments = a.arguments();
@@ -340,23 +350,20 @@ int main_entry(LoaderConfiguration *loadConfig) {
         }
     }
 
-    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, loadConfig->userSettingPath);
-    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, loadConfig->systemSettingPath);
-
     PluginManager pluginManager;
     pluginManager.setPluginIID(loadConfig->pluginIID);
     pluginManager.setSettings( //
-        new QSettings(QString("%1/%2.plugins.ini").arg(loadConfig->userSettingPath, qApp->applicationName()),
+        new QSettings(QString("%1/%2.plugins.ini").arg(loadConfig->userSettingsPath, qApp->applicationName()),
                       QSettings::IniFormat));
     pluginManager.setGlobalSettings( //
-        new QSettings(QString("%1/%2.plugins.ini").arg(loadConfig->systemSettingPath, qApp->applicationName()),
+        new QSettings(QString("%1/%2.plugins.ini").arg(loadConfig->systemSettingsPath, qApp->applicationName()),
                       QSettings::IniFormat));
 
     SplashScreen splash;
     g_splash = &splash;
     loadConfig->beforeLoadPlugin(&splash);
 
-    ConfigFileLoader configFileLoader;
+    SplashConfigLoader configFileLoader;
     configFileLoader.load(loadConfig->splashSettingPath, &splash);
 
     splash.show();
@@ -368,7 +375,6 @@ int main_entry(LoaderConfiguration *loadConfig) {
     splash.showMessage(QCoreApplication::translate("Application", "Searching plugins..."));
 
     QStringList pluginPaths = loadConfig->pluginPaths + argsParser.customPluginPaths;
-
     pluginManager.setPluginPaths(pluginPaths);
 
     // Parse arguments again
@@ -397,6 +403,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
         }
     }
 
+    // Check core plugin
     QString reason;
     auto loadCorePlugin = [&]() {
         if (!coreplugin) {
@@ -416,6 +423,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
     };
 
     if (!loadCorePlugin()) {
+        // Ignore errors if need to show help
         if (argsParser.showHelp) {
             printHelp();
             return 0;
@@ -424,10 +432,12 @@ int main_entry(LoaderConfiguration *loadConfig) {
         return 1;
     }
 
+    // Show version or full help information
     if (foundAppOptions.contains(QLatin1String(VERSION_OPTION1)) || foundAppOptions.contains(VERSION_OPTION2)) {
         printVersion(coreplugin);
         return 0;
     }
+
     if (foundAppOptions.contains(QLatin1String(HELP_OPTION1)) ||
         foundAppOptions.contains(QLatin1String(HELP_OPTION2))) {
         printHelp();
@@ -457,6 +467,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
     // Update loader text
     splash.showMessage(QCoreApplication::translate("Application", "Loading plugins..."));
 
+    // Initialize all plugins
     PluginManager::loadPlugins();
     if (coreplugin->hasError()) {
         displayError(msgCoreLoadFailure(coreplugin->errorString()));
@@ -465,7 +476,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
 
     loadConfig->afterLoadPlugin();
 
-    // Set up remote arguments.
+    // Set up remote arguments handler
     QObject::connect(&single, &SingleApplication::receivedMessage, [&](quint32 instanceId, QByteArray message) {
         QDataStream stream(&message, QIODevice::ReadOnly);
         QString msg;

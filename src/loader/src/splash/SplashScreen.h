@@ -24,6 +24,9 @@ public:
 public:
     void setTextAttribute(const QString &id, const Attribute &attr);
     void setText(const QString &id, const QString &text);
+
+    // The first display of text takes a relatively long time,
+    // So we firstly display the image background, then show texts
     void showTexts();
 
 signals:
