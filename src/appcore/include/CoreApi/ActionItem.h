@@ -39,6 +39,7 @@ namespace Core {
 
         QAction *action() const;
         QMenu *menu() const;
+        QWidgetAction *widgetAction() const;
         QList<QWidget *> widgets() const;
 
         QIcon icon() const;

@@ -6,6 +6,8 @@
 #include <QObject>
 #include <QToolBar>
 
+#include <optional>
+
 #include <QMDisplayString.h>
 
 #include "CkAppCoreGlobal.h"
@@ -14,39 +16,35 @@ namespace Core {
 
     class ActionItem;
 
-    class ActionInsertRuleV2 {
+    class ActionDomain;
+
+    using ActionDomainState = QMap<QString, QStringList>;
+
+    class ActionDomainPrivate;
+
+    class ActionInsertRule {
     public:
         enum InsertMode {
             Append,
             Unshift,
-            InsertBehind,
-            InsertFront,
         };
 
-        QString id;
-        InsertMode direction;
+        InsertMode mode;
+        QString refItem;
+        bool expandMenu;
 
-        inline ActionInsertRuleV2();
-        inline ActionInsertRuleV2(const QString &id);
-        inline ActionInsertRuleV2(const QString &id, InsertMode direction);
+        inline ActionInsertRule() : ActionInsertRule(Append) {
+        }
+        inline ActionInsertRule(InsertMode mode, bool expandMenu = false) : mode(mode), expandMenu(expandMenu) {
+        }
+        inline ActionInsertRule(InsertMode mode, const QString &refItem, bool expandMenu = false)
+            : mode(mode), refItem(refItem), expandMenu(expandMenu) {
+        }
     };
 
-    inline ActionInsertRuleV2::ActionInsertRuleV2() : ActionInsertRuleV2(QString()) {
-    }
-
-    inline ActionInsertRuleV2::ActionInsertRuleV2(const QString &id) : ActionInsertRuleV2(id, Append) {
-    }
-
-    inline ActionInsertRuleV2::ActionInsertRuleV2(const QString &id, ActionInsertRuleV2::InsertMode direction)
-        : id(id), direction(direction) {
-    }
-
-    class ActionDomain;
-
-    class ActionDomainItemPrivate;
-
-    class ActionDomainItem {
-        Q_GADGET
+    class CKAPPCORE_API ActionDomain : public QObject {
+        Q_OBJECT
+        Q_DECLARE_PRIVATE(ActionDomain)
     public:
         enum Type {
             Action,
@@ -57,37 +55,6 @@ namespace Core {
         };
         Q_ENUM(Type)
 
-        explicit ActionDomainItem(const QString &id, int type = Action);
-        ActionDomainItem(const QString &id, const QString &title, const QList<ActionInsertRuleV2> &rules,
-                         int type = Action);
-        ~ActionDomainItem();
-
-        QString id() const;
-        ActionDomain *domain() const;
-        int type() const;
-
-        QString title() const;
-        void setTitle(const QMDisplayString &title);
-
-        QList<ActionInsertRuleV2> rules() const;
-        void setRules(const QList<ActionInsertRuleV2> &rules);
-
-    private:
-        ActionDomainItemPrivate *d;
-
-        Q_DISABLE_COPY_MOVE(ActionDomainItem)
-
-        friend class ActionDomain;
-    };
-
-    using ActionDomainState = QMap<QString, QStringList>;
-
-    class ActionDomainPrivate;
-
-    class CKAPPCORE_API ActionDomain : public QObject {
-        Q_OBJECT
-        Q_DECLARE_PRIVATE(ActionDomain)
-    public:
         explicit ActionDomain(const QString &id, QObject *parent = nullptr);
         ActionDomain(const QString &id, const QMDisplayString &title, QObject *parent = nullptr);
         ~ActionDomain();
@@ -101,20 +68,26 @@ namespace Core {
         bool configurable() const;
         void setConfigurable(bool configurable);
 
-        bool addTopLevelItem(ActionDomainItem *item);
-        bool removeTopLevelItem(const QString &id);
-        bool removeTopLevelItem(ActionDomainItem *item);
-        QList<ActionDomainItem *> topLevelItems() const;
+        bool addTopLevelMenu(const QString &id);
+        bool removeTopLevelMenu(const QString &id);
+        bool containsTopLevelMenu(const QString &id) const;
+        QStringList topLevelMenus() const;
 
-        bool addAction(ActionDomainItem *item);
+        bool addAction(const QString &id, Type type);
         bool removeAction(const QString &id);
-        bool removeAction(ActionDomainItem *item);
-        QList<ActionDomainItem *> actions() const;
+        bool containsAction(const QString &id) const;
+        std::optional<Type> actionType(const QString &id) const;
+        QStringList actions() const;
+
+        void addInsertRule(const QString &targetId, const QString &id, const ActionInsertRule &rule);
+        void removeInsertRule(const QString &targetId, const QString &id);
+        bool hasActionInsertRule(const QString &targetId, const QString &id) const;
 
         ActionDomainState state() const;
         ActionDomainState cachedState() const;
 
-        void buildDomain(const QMap<QString, QWidget *> &topLevelMenus, const QList<ActionItem *> &items) const;
+        void buildDomain(const QMap<QString, QWidget *> &topLevelMenus, const QList<ActionItem *> &items,
+                         const ActionDomainState &state) const;
 
     signals:
         void stateChanged();

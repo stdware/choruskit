@@ -34,12 +34,12 @@ public:
     virtual bool preprocessArguments(QStringList &arguments, int *code = nullptr);
 
     // You may need to show text on splash
-    virtual void beforeLoadPlugin(QSplashScreen *screen);
+    virtual void beforeLoadPlugins(QSplashScreen *screen);
 
-    // You may need to do some final jobs after loading all plugins
-    virtual void afterLoadPlugin();
+    // You may need to do some jobs after loading all plugins
+    virtual void afterLoadPlugins();
 
-    // Create `QApplication` and `QMAppExtension` instances before calling this function
+    // Create `QApplication` and `QMAppExtension` instances before calling it (Important!!!)
     int run();
 };
 

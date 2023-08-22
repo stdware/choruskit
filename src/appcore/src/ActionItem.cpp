@@ -44,18 +44,12 @@ namespace Core {
         if (type != ActionItem::Action) {
             return;
         }
-        auto shortcuts = spec->cachedShortcuts();
-        if (shortcuts.isEmpty())
-            shortcuts = spec->shortcuts();
-        action->setShortcuts(shortcuts);
+        action->setShortcuts(spec->cachedShortcuts());
     }
 
     void ActionItemPrivate::_q_actionIconChanged() {
         Q_Q(ActionItem);
-        auto icon = spec->cachedIcon().icon();
-        if (icon.isNull())
-            icon = spec->icon();
-        q->setIcon(icon);
+        q->setIcon(spec->cachedIcon());
     }
 
     ActionItem::ActionItem(const QString &id, QAction *action, QObject *parent)
@@ -73,6 +67,7 @@ namespace Core {
         d->type = Action;
         d->action = action;
 
+        // Search ActionSystem for spec
         if (!d->getSpec()) {
             return;
         }
@@ -186,6 +181,11 @@ namespace Core {
         return d->menu;
     }
 
+    QWidgetAction *ActionItem::widgetAction() const {
+        Q_D(const ActionItem);
+        return d->widgetAction;
+    }
+
     QList<QWidget *> ActionItem::widgets() const {
         Q_D(const ActionItem);
         if (!d->widgetAction)
@@ -211,6 +211,7 @@ namespace Core {
         }
         return res;
     }
+    
     void ActionItem::setIcon(const QIcon &icon) {
         Q_D(ActionItem);
 

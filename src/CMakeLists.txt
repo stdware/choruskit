@@ -70,6 +70,10 @@ endmacro()
 
 add_subdirectory(3rdparty)
 
+if(NOT TARGET QMCore)
+    find_package(qtmediate REQUIRED)
+endif()
+
 add_subdirectory(appcore)
 
 add_subdirectory(loader)

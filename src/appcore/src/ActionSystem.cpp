@@ -148,159 +148,16 @@ namespace Core {
         return d->domains.keys();
     }
 
-    static void getIcon(QIcon &icon, const QString &iconArg) {
-        if (iconArg.isNull()) {
-            return;
-        }
-
-        // Extract icon
-        if (iconArg.startsWith("svg(") && iconArg.endsWith(')')) {
-            icon = QIcon(iconArg.mid(4, iconArg.size() - 5) + ", .svgx");
-        } else {
-            icon = QIcon(iconArg);
-        }
-    }
-
-    // void ActionSystemPrivate::loadContexts_dfs(const QString &prefix, const QString &parentId,
-    //                                            const QMXmlAdaptorElement *ele, ActionContext *context) {
-    //     Q_Q(ActionSystem);
-
-    //     const auto &ctx2 = *ele;
-
-    //     bool isMenu = ctx2.name == "menu";
-    //     bool isAction = ctx2.name == "action";
-    //     bool isSeparator = ctx2.name == "separator";
-    //     bool isGroup = isMenu || ctx2.name == "group";
-
-    //     QString id = ctx2.properties.value("id");
-    //     if (!isSeparator) {
-    //         if (id.isEmpty())
-    //             return;
-
-    //         if (id.startsWith('^')) {
-    //             id.remove(0, 1);
-    //         } else {
-    //             id.prepend(prefix);
-    //         }
-    //     }
-
-    //     QList<ActionInsertRule> rules;
-    //     QList<QKeySequence> shortcuts;
-    //     QString commandName;
-    //     QIcon icon;
-    //     if (!isGroup && !isSeparator) {
-    //         if (!isAction) {
-    //             return;
-    //         }
-
-    //         QString key = ctx2.properties.value("shortcut");
-    //         if (!key.isEmpty()) {
-    //             shortcuts.append(QKeySequence(key));
-    //         }
-
-    //         key = ctx2.properties.value("command");
-    //         if (!key.isEmpty() && commandName.isEmpty()) {
-    //             commandName = configVars.parse(key);
-    //         }
-    //     }
-
-    //     if (!isGroup || isMenu) {
-    //         getIcon(icon, ctx2.properties.value("icon"));
-    //     }
-
-    //     if (!parentId.isEmpty()) {
-    //         rules.append({parentId, ActionInsertRule::Append});
-    //     }
-
-    //     QList<QMXmlAdaptorElement *> children;
-    //     for (const auto &ctx_ref3 : qAsConst(ctx2.children)) {
-    //         const auto &ctx3 = *ctx_ref3;
-    //         if (ctx3.name == "rules") {
-    //             if (rules.isEmpty()) {
-    //                 for (const auto &ctx_ref4 : qAsConst(ctx3.children)) {
-    //                     const auto &ctx4 = *ctx_ref4;
-    //                     if (ctx4.name != "rule") {
-    //                         continue;
-    //                     }
-
-    //                     QString targetId = ctx4.properties.value("id");
-    //                     if (targetId.isEmpty()) {
-    //                         continue;
-    //                     }
-
-    //                     auto mode = ctx4.properties.value("mode");
-    //                     ActionInsertRule::InsertMode rule = ActionInsertRule::Append;
-    //                     if (!mode.isEmpty()) {
-    //                         if (mode == "prepend" || mode == "unshift") {
-    //                             rule = ActionInsertRule::Unshift;
-    //                         } else if (mode == "insertBehind") {
-    //                             rule = ActionInsertRule::InsertBehind;
-    //                         } else if (mode == "insertFront") {
-    //                             rule = ActionInsertRule::InsertFront;
-    //                         }
-    //                     }
-
-    //                     rules.append({targetId, rule});
-    //                 }
-    //             }
-    //         } else if (ctx3.name == "shortcuts") {
-    //             if (isAction) {
-    //                 for (const auto &ctx_ref4 : qAsConst(ctx3.children)) {
-    //                     const auto &ctx4 = *ctx_ref4;
-    //                     if (ctx4.name != "shortcut" || ctx4.value.isEmpty()) {
-    //                         continue;
-    //                     }
-    //                     shortcuts.append(ctx4.value);
-    //                 }
-    //             }
-    //         } else if (ctx3.name == "icon") {
-    //             if (isAction || isMenu) {
-    //                 getIcon(icon, ctx3.value);
-    //             }
-    //         } else if (ctx3.name == "content") {
-    //             if (isGroup) {
-    //                 for (const auto &ctx_ref4 : qAsConst(ctx3.children)) {
-    //                     children.append(ctx_ref4.data());
-    //                 }
-    //             }
-    //         } else if (isGroup) {
-    //             children.append(ctx_ref3.data());
-    //         }
-    //     }
-
-    //     if (!isSeparator) {
-    //         auto action = context->action(id);
-    //         if (!action) {
-    //             action = context->addAction(id, isGroup);
-    //         }
-    //         action.setRules(action.rules() + rules);
-
-    //         auto it = actions.find(id);
-    //         if (it == actions.end()) {
-    //             auto spec = new ActionSpec(id);
-    //             spec->setShortcuts(shortcuts);
-    //             spec->setCommandName(commandName);
-    //             if (!icon.isNull()) {
-    //                 spec->setIcon(icon);
-    //             }
-    //             q->addAction(spec);
-    //         }
-    //     } else {
-    //         auto action = context->addSeparator();
-    //         action.setRules(action.rules() + rules);
-    //     }
-
-    //     for (const auto &child : qAsConst(children)) {
-    //         loadContexts_dfs(prefix, id, child, context);
-    //     }
-    // }
-
     static const char settingCatalogC[] = "ActionSystem";
 
     static const char stateGroupC[] = "State";
 
-    QMap<QString, QStringList> _obj_to_state(const QJsonObject &obj) {
-        QMap<QString, QStringList> res;
+    static const char shortcutsGroupC[] = "Shortcuts";
+
+    static const char iconGroupC[] = "Icon";
+
+    static ActionDomainState __obj_to_state(const QJsonObject &obj) {
+        ActionDomainState res;
         for (auto it = obj.begin(); it != obj.end(); ++it) {
             if (!it->isArray()) {
                 continue;
@@ -310,7 +167,7 @@ namespace Core {
         return res;
     }
 
-    QJsonObject _state_to_obj(const QMap<QString, QStringList> &state) {
+    static QJsonObject __state_to_obj(const ActionDomainState &state) {
         QJsonObject obj;
         for (auto it = state.begin(); it != state.end(); ++it) {
             obj.insert(it.key(), QJsonArray::fromStringList(it.value()));
@@ -329,7 +186,7 @@ namespace Core {
             if (!it->isObject()) {
                 continue;
             }
-            auto state = _obj_to_state(it->toObject());
+            auto state = __obj_to_state(it->toObject());
             if (state.isEmpty()) {
                 continue;
             }
@@ -342,7 +199,7 @@ namespace Core {
 
         QJsonObject stateObj;
         for (auto it = stateCaches.begin(); it != stateCaches.end(); ++it) {
-            stateObj.insert(it.key(), _state_to_obj(it.value()));
+            stateObj.insert(it.key(), __state_to_obj(it.value()));
         }
 
         QJsonObject obj;
@@ -351,58 +208,206 @@ namespace Core {
         settings->insert(settingCatalogC, obj);
     }
 
-    QStringList ActionSystem::loadContexts(const QString &filename) {
-        Q_D(ActionSystem);
-
-        // QMXmlAdaptor file;
-        // if (!file.load(filename)) {
-        //     myWarning(__func__) << "load file failed";
-        //     return {};
-        // }
-
-        // const auto &root = file.root;
-        // if (root.name != "actionSystem") {
-        //     return {};
-        // }
-
-        // QMChronSet<QString> res;
-        // for (const auto &ctx_ref : qAsConst(root.children)) {
-        //     const auto &ctx = *ctx_ref;
-        //     if (ctx.name != "context") {
-        //         continue;
-        //     }
-
-        //     QString id = ctx.properties.value("id");
-        //     if (id.isEmpty()) {
-        //         continue;
-        //     }
-
-        //     ActionContext *context = nullptr;
-        //     if (ctx.properties.value("mode") == "find") {
-        //         context = this->context(id);
-        //     } else if (!this->context(id)) {
-        //         context = new ActionContext(id);
-        //         addContext(context);
-        //     }
-
-        //     if (!context) {
-        //         continue;
-        //     }
-        //     res.append(id);
-
-        //     QString prefix = ctx.properties.value("prefix");
-        //     for (const auto &ctx_ref2 : qAsConst(ctx.children)) {
-        //         d->loadContexts_dfs(prefix, {}, ctx_ref2.data(), context);
-        //     }
-        // }
-
-        // return res.values();
-
-        return {};
+    // Recognize semicolon as the delimiter, you should use two consecutive semicolon to unescape
+    static QList<QKeySequence> parseShortcuts(const QString &text) {
+        QString curText;
+        QList<QKeySequence> res;
+        for (auto it = text.begin(); it != text.end(); ++it) {
+            const auto &ch = *it;
+            if (ch == ';') {
+                if (it != text.end() && *(it + 1) == ';') {
+                    it++;
+                    curText += ";";
+                } else {
+                    res.append(QKeySequence(curText));
+                    curText.clear();
+                }
+            } else {
+                curText += ch;
+            }
+        }
+        if (!curText.isEmpty()) {
+            res.append(QKeySequence(curText));
+        }
+        return res;
     }
 
-    QStringList ActionSystem::loadDomains(const QString &fileName) {
-        return {};
+    static ActionDomain::Type parseActionDomainType(const QString &name) {
+        ActionDomain::Type type = ActionDomain::Action;
+        if (name == "group") {
+            type = ActionDomain::Group;
+        } else if (name == "separator") {
+            type = ActionDomain::Separator;
+        } else if (name == "stretch") {
+            type = ActionDomain::Stretch;
+        } else if (name == "menu") {
+            type = ActionDomain::Menu;
+        }
+        return type;
+    }
+
+    static int m_separatorCount = 0;
+    static int m_stretchCount = 0;
+
+    static void parseRecursiveMenuTree(ActionDomain *domain, const QMXmlAdaptorElement *ele, const QString &parentId) {
+        for (const auto &sub_item : qAsConst(ele->children)) {
+            QString id = sub_item->properties.value("id");
+            if (id.isEmpty()) {
+                if (sub_item->name == "separator") {
+                    id = "separator_" + QString::number(++m_separatorCount);
+                } else if (sub_item->name == "stretch") {
+                    id = "stretch_" + QString::number(++m_stretchCount);
+                } else {
+                    continue;
+                }
+            }
+
+            domain->addInsertRule(
+                id, parentId,
+                ActionInsertRule{ActionInsertRule::Append, sub_item->properties.value("expand") == "true"});
+
+            if (!domain->containsAction(id)) {
+                domain->addAction(id, parseActionDomainType(sub_item->name));
+            }
+
+            if (!sub_item->children.isEmpty()) {
+                parseRecursiveMenuTree(domain, sub_item.data(), id);
+            }
+        }
+    }
+
+    bool ActionSystem::loadDomains(const QString &fileName) {
+        Q_D(ActionSystem);
+
+        QMXmlAdaptor file;
+        if (!file.load(fileName)) {
+            myWarning(__func__) << "load file failed";
+            return false;
+        }
+
+        const auto &root = file.root;
+        if (root.name != "actionSystem") {
+            return false;
+        }
+
+        for (const auto &item : qAsConst(root.children)) {
+            // Parse action items
+            if (item->name == "actions" || item->name == "menus") {
+                for (const auto &action_item : qAsConst(item->children)) {
+                    if (action_item->name != "item") {
+                        continue;
+                    }
+
+                    const auto &properties = action_item->properties;
+
+                    // id
+                    const auto &id = properties.value("id");
+
+                    // validate id
+                    if (id.isEmpty() || d->actions.contains(id))
+                        continue;
+
+                    auto spec = new ActionSpec(id);
+
+                    // command name
+                    auto it = properties.find("command");
+                    if (it != properties.end()) {
+                        spec->setCommandName(it.value());
+                    }
+
+                    // shortcuts
+                    it = properties.find("shortcut");
+                    if (it != properties.end()) {
+                        spec->setShortcuts({QKeySequence(it.value())});
+                    } else {
+                        it = properties.find("shortcuts");
+                        if (it != properties.end()) {
+                            spec->setShortcuts(parseShortcuts(it.value()));
+                        }
+                    }
+
+                    // icon
+                    it = properties.find("icon");
+                    if (it != properties.end()) {
+                        const auto &iconArg = it.value();
+                        if (iconArg.startsWith("svg(") && iconArg.endsWith(')')) {
+                            spec->setIcon(QIcon(iconArg.mid(4, iconArg.size() - 5) + ", .svgx"));
+                        } else {
+                            spec->setIcon(QIcon(iconArg));
+                        }
+                    }
+
+                    addAction(spec);
+                }
+                continue;
+            }
+
+            // Parse action domains
+            if (item->name == "domains") {
+                for (const auto &domain_item : qAsConst(item->children)) {
+                    if (domain_item->name != "domain") {
+                        continue;
+                    }
+
+                    // id
+                    const auto &domainId = domain_item->properties.value("id");
+
+                    // validate id
+                    if (domainId.isEmpty())
+                        continue;
+
+                    auto domain = d->domains.value(domainId);
+                    if (!domain) {
+                        domain = new ActionDomain(domainId);
+                        addDomain(domain);
+                    }
+
+                    for (const auto &topLevel_item : qAsConst(domain_item->children)) {
+                        const auto &properties = topLevel_item->properties;
+
+                        // top level menu
+                        QString id = properties.value("id");
+                        if (id.isEmpty()) {
+                            continue;
+                        }
+
+                        if (topLevel_item->name == "insert") {
+                            const auto &target = properties.value("target").split('/');
+                            const auto &modeStr = properties.value("mode");
+                            const auto &expand = properties.value("expand") == "true";
+
+                            if (target.isEmpty() || target.front().isEmpty())
+                                continue;
+
+                            ActionInsertRule::InsertMode mode = ActionInsertRule::Append;
+                            if (!modeStr.isEmpty()) {
+                                if (modeStr == "prepend" || modeStr == "unshift") {
+                                    mode = ActionInsertRule::Unshift;
+                                }
+                            }
+
+                            domain->addInsertRule(id, target.first(), {mode, target.at(1), expand});
+                            continue;
+                        }
+
+                        // insertion
+                        if (id.startsWith('%')) {
+                            domain->addTopLevelMenu(id.mid(1));
+                        } else {
+                            domain->addAction(id, parseActionDomainType(id));
+                        }
+
+                        for (const auto &sub_item : qAsConst(topLevel_item->children)) {
+                            parseRecursiveMenuTree(domain, sub_item.data(), id);
+                        }
+                    }
+                }
+
+                continue;
+            }
+        }
+
+        return true;
     }
 
     QMap<QString, QStringList> ActionSystem::stateCache(const QString &domainId) {

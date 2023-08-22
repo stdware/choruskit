@@ -2,9 +2,9 @@
 #define ACTIONSYSTEM_P_H
 
 #include "ActionSystem.h"
-#include "QMChronMap.h"
-#include "QMSimpleVarExp.h"
 
+#include <QMChronMap.h>
+#include <QMSimpleVarExp.h>
 #include <QMXmlAdaptor.h>
 
 namespace Core {

@@ -303,7 +303,6 @@ namespace Core {
                 w->setGeometry(winRect);
         }
 
-
         double ratio = (w->screen()->logicalDotsPerInch() / QMOs::unitDpi());
         auto addTrimmer = [&](bool move) {
             if (!isDialog && !isMax) {

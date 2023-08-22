@@ -1,23 +1,11 @@
-#ifndef ACTIONDOMAINPRIVATE_H
-#define ACTIONDOMAINPRIVATE_H
+#ifndef ACTIONDOMAIN_P_H
+#define ACTIONDOMAIN_P_H
 
 #include "ActionDomain.h"
 
 #include <QMChronMap.h>
 
 namespace Core {
-
-    class ActionDomainItemPrivate {
-    public:
-        explicit ActionDomainItemPrivate(int type);
-
-        QString id;
-        QMDisplayString title;
-        QList<ActionInsertRuleV2> rules;
-        int type;
-
-        ActionDomain *domain;
-    };
 
     class ActionDomainPrivate {
         Q_DECLARE_PUBLIC(ActionDomain)
@@ -33,8 +21,9 @@ namespace Core {
         QMDisplayString title;
 
         bool configurable;
-        QMChronMap<QString, ActionDomainItem *> topItems;
-        QMChronMap<QString, ActionDomainItem *> actions;
+        QSet<QString> topLevelMenus;
+        QHash<QString, ActionDomain::Type> actions;
+        QHash<QString, QMChronMap<QString, ActionInsertRule>> rules; // target id -> [id -> rule]
 
         mutable bool stateDirty;
         mutable bool cachedStateDirty;
@@ -42,10 +31,14 @@ namespace Core {
         mutable ActionDomainState state;
         mutable ActionDomainState cachedState;
 
+        QAction *sharedWidgetAction;
+
         void setStateDirty();
         void setCachedStateDirty();
+
+        ActionDomainState calcState(const ActionDomainState &existingState, const decltype(rules) &rules) const;
     };
 
 }
 
-#endif // ACTIONDOMAINPRIVATE_H
+#endif // ACTIONDOMAIN_P_H

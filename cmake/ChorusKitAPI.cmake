@@ -22,9 +22,12 @@ macro(ck_init_build_system _app)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    # Meta
+    if (CK_INITIALIZED)
+        message(FATAL_ERROR "ck_init_build_system: build system has initialized")
+    endif()
     set(CK_INITIALIZED on)
 
+    # Meta
     set(CK_APPLICATION_NAME ${_app})
     set(CK_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     set(CK_INSTALL_EXPORT ${_app}Targets)
@@ -108,6 +111,10 @@ macro(ck_init_build_system _app)
 endmacro()
 
 function(ck_finish_build_system)
+    if (NOT CK_INITIALIZED)
+        message(FATAL_ERROR "ck_finish_build_system: build system not initialized")
+    endif()
+
     include(${CK_CMAKE_MODULES_DIR}/modules/BuildInfo.cmake)
 
     # Generate config header

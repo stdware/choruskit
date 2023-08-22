@@ -4,32 +4,32 @@
 <context>
     <name>Application</name>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="162"/>
+        <location filename="../../src/loader/src/main.cpp" line="169"/>
         <source>Failed to load core: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="327"/>
+        <location filename="../../src/loader/src/main.cpp" line="337"/>
         <source>You&apos;re trying to start %1 as the %2, which is extremely dangerous and therefore strongly not recommended.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="368"/>
+        <location filename="../../src/loader/src/main.cpp" line="375"/>
         <source>Searching plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="403"/>
+        <location filename="../../src/loader/src/main.cpp" line="410"/>
         <source>Could not find Core plugin!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="408"/>
+        <location filename="../../src/loader/src/main.cpp" line="415"/>
         <source>Core plugin is disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="458"/>
+        <location filename="../../src/loader/src/main.cpp" line="468"/>
         <source>Loading plugins...</source>
         <translation type="unfinished"></translation>
     </message>

@@ -76,10 +76,7 @@ namespace Core {
 
     QList<QKeySequence> ActionSpec::cachedShortcuts() const {
         auto system = qobject_cast<ActionSystem *>(parent());
-        if (!system) {
-            return {};
-        }
-        return system->shortcutsCache(id());
+        return system ? system->shortcutsCache(id()) : shortcuts();
     }
 
     QIcon ActionSpec::icon() const {
@@ -90,14 +87,13 @@ namespace Core {
     void ActionSpec::setIcon(const QIcon &icon) {
         Q_D(ActionSpec);
         d->icon = icon;
+        emit iconChanged();
     }
 
-    ActionIconSpec ActionSpec::cachedIcon() const {
+    QIcon ActionSpec::cachedIcon() const {
         auto system = qobject_cast<ActionSystem *>(parent());
-        if (!system) {
-            return {};
-        }
-        return system->iconCache(id());
+        auto icon = system ? system->iconCache(id()).icon() : QIcon();
+        return icon.isNull() ? this->icon() : icon;
     }
 
     ActionSpec::ActionSpec(ActionSpecPrivate &d, const QString &id, QObject *parent) : QObject(parent), d_ptr(&d) {

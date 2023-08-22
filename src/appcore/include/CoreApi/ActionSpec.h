@@ -65,7 +65,7 @@ namespace Core {
 
         QIcon icon() const;
         void setIcon(const QIcon &icon);
-        ActionIconSpec cachedIcon() const;
+        QIcon cachedIcon() const;
 
     signals:
         void shortcutsChanged();

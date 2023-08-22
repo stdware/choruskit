@@ -4,11 +4,10 @@ bool LoaderConfiguration::preprocessArguments(QStringList &arguments, int *code)
     return false;
 }
 
-void LoaderConfiguration::beforeLoadPlugin(QSplashScreen *screen) {
-    // Do nothing
+void LoaderConfiguration::beforeLoadPlugins(QSplashScreen *screen) {
 }
 
-void LoaderConfiguration::afterLoadPlugin() {
+void LoaderConfiguration::afterLoadPlugins() {
 }
 
 extern int main_entry(LoaderConfiguration *loadConfig);

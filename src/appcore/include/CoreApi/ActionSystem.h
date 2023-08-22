@@ -3,7 +3,6 @@
 
 #include <QMenuBar>
 
-#include "ActionContext.h"
 #include "ActionDomain.h"
 #include "ActionSpec.h"
 
@@ -32,9 +31,7 @@ namespace Core {
         QList<ActionDomain *> domains() const;
         QStringList domainIds() const;
 
-        QStringList loadContexts(const QString &filename);
-
-        QStringList loadDomains(const QString &fileName);
+        bool loadDomains(const QString &fileName); // Load actions and domains from XML file
 
     public:
         ActionDomainState stateCache(const QString &domainId);

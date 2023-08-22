@@ -361,7 +361,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
 
     SplashScreen splash;
     g_splash = &splash;
-    loadConfig->beforeLoadPlugin(&splash);
+    loadConfig->beforeLoadPlugins(&splash);
 
     SplashConfigLoader configFileLoader;
     configFileLoader.load(loadConfig->splashSettingPath, &splash);
@@ -474,7 +474,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
         return 1;
     }
 
-    loadConfig->afterLoadPlugin();
+    loadConfig->afterLoadPlugins();
 
     // Set up remote arguments handler
     QObject::connect(&single, &SingleApplication::receivedMessage, [&](quint32 instanceId, QByteArray message) {

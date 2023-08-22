@@ -21,10 +21,8 @@ namespace Core {
     public:
         using AddOnFactory = std::function<IWindowAddOn *()>;
 
-        bool addAddOn(const QString &id, const QMetaObject *metaObject,
-                      const AddOnFactory &factory = {});
-        inline void addAddOn(const QStringList &ids, const QMetaObject *metaObject,
-                             const AddOnFactory &factory = {});
+        bool addAddOn(const QString &id, const QMetaObject *metaObject, const AddOnFactory &factory = {});
+        inline void addAddOn(const QStringList &ids, const QMetaObject *metaObject, const AddOnFactory &factory = {});
         bool removeAddOn(const QString &id, const QMetaObject *metaObject);
 
         IWindow *findWindow(QWidget *window) const;
@@ -37,8 +35,7 @@ namespace Core {
         void loadWindowGeometry(const QString &id, QWidget *w, const QSize &fallback = {}) const;
         void saveWindowGeometry(const QString &id, QWidget *w);
 
-        void loadSplitterSizes(const QString &id, QSplitter *s,
-                               const QList<int> &fallback = {}) const;
+        void loadSplitterSizes(const QString &id, QSplitter *s, const QList<int> &fallback = {}) const;
         void saveSplitterSizes(const QString &id, QSplitter *s);
 
     signals:
