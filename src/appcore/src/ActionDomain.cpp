@@ -7,6 +7,21 @@ namespace Core {
 
 #define myWarning(func) (qWarning().nospace() << "Core::ActionDomain::" << (func) << "():").space()
 
+    class StretchWidgetAction : public QWidgetAction {
+    public:
+        explicit StretchWidgetAction(QObject *parent = nullptr) : QWidgetAction(parent) {
+        }
+
+    protected:
+        QWidget *createWidget(QWidget *parent) override {
+            auto w = new QWidget(parent);
+            w->setDisabled(true);
+            w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            return w;
+        }
+    };
+
+
     ActionDomainPrivate::ActionDomainPrivate() {
         configurable = true;
         stateDirty = true;
@@ -18,22 +33,8 @@ namespace Core {
     }
 
     void ActionDomainPrivate::init() {
-        class EmptyWidgetAction : public QWidgetAction {
-        public:
-            explicit EmptyWidgetAction(QObject *parent = nullptr) : QWidgetAction(parent) {
-            }
-
-        protected:
-            QWidget *createWidget(QWidget *parent) override {
-                auto w = new QWidget(parent);
-                w->setDisabled(true);
-                w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-                return w;
-            }
-        };
-
         Q_Q(ActionDomain);
-        sharedWidgetAction = new EmptyWidgetAction(q);
+        sharedWidgetAction = new StretchWidgetAction(q);
     }
 
     void ActionDomainPrivate::setStateDirty() {
@@ -304,18 +305,21 @@ namespace Core {
             if (it2 != idIndexes.end()) {
                 // Replace
                 it2.value() = rule;
-                return;
+                goto out;
             }
 
             // Insert
             idIndexes.append(id, rule);
-            return;
+            goto out;
         }
 
         // Add index
         d->rules.insert(targetId, {
                                       {id, rule}
         });
+
+    out:
+        d->setStateDirty();
     }
 
     void ActionDomain::removeInsertRule(const QString &targetId, const QString &id) {
@@ -333,6 +337,7 @@ namespace Core {
         if (idIndexes.isEmpty()) {
             d->rules.erase(it);
         }
+        d->setStateDirty();
     }
 
     bool ActionDomain::hasActionInsertRule(const QString &targetId, const QString &id) const {

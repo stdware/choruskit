@@ -2,6 +2,10 @@ if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
 endif()
 
+if(NOT DEFINED CK_BUILD_MAIN_DIR)
+    set(CK_BUILD_MAIN_DIR ${CMAKE_BINARY_DIR}/out-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_BUILD_TYPE})
+endif()
+
 set(CK_APPLICATION_NAME ChorusKit)
 set(CK_APPLICATION_VENDOR OpenVPI)
 set(CK_DEV_START_YEAR 2019)
@@ -22,9 +26,23 @@ macro(ck_init_build_system _app)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if (CK_INITIALIZED)
+    # Find QMake (Required)
+    # We shouldn't call find_package in this environment, so we need to find program manually
+    if(NOT DEFINED QT_QMAKE_EXECUTABLE)
+        set(QT_QMAKE_EXECUTABLE)
+        include(${CK_CMAKE_MODULES_DIR}/modules/FindQMake.cmake)
+    endif()
+
+    if(QT_QMAKE_EXECUTABLE)
+        message(STATUS "Qmake found: ${QT_QMAKE_EXECUTABLE}")
+    else()
+        message(FATAL_ERROR "Qmake not found")
+    endif()
+
+    if(CK_INITIALIZED)
         message(FATAL_ERROR "ck_init_build_system: build system has initialized")
     endif()
+
     set(CK_INITIALIZED on)
 
     # Meta
@@ -48,7 +66,6 @@ macro(ck_init_build_system _app)
     set(CK_ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/etc)
 
     set(CK_BUILD_INCLUDE_DIR ${CK_ARCHIVE_OUTPUT_PATH}/include)
-    set(CK_BUILD_MAIN_DIR ${CMAKE_BINARY_DIR}/out-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_BUILD_TYPE})
 
     # Build
     if(APPLE)
@@ -111,7 +128,7 @@ macro(ck_init_build_system _app)
 endmacro()
 
 function(ck_finish_build_system)
-    if (NOT CK_INITIALIZED)
+    if(NOT CK_INITIALIZED)
         message(FATAL_ERROR "ck_finish_build_system: build system not initialized")
     endif()
 
@@ -130,6 +147,8 @@ function(ck_finish_build_system)
 
     # Generate build info header
     ck_generate_build_info_header("${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h")
+
+    _ck_post_deploy()
 endfunction()
 
 #[[
@@ -152,6 +171,7 @@ function(ck_add_definition)
 
         # Boolean
         string(TOLOWER ${_val} _val_lower)
+
         if(${_val_lower} STREQUAL "off" OR ${_val_lower} STREQUAL "false")
             return()
         elseif(${_val_lower} STREQUAL "on" OR ${_val_lower} STREQUAL "true")
@@ -164,6 +184,29 @@ function(ck_add_definition)
     endif()
 
     set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CONFIG_DEFINITIONS "${_def}")
+endfunction()
+
+#[[
+Add library searching paths to build system, only Windows need this function.
+
+    ck_add_library_searching_path(<paths...>)
+]] #
+function(ck_add_library_searching_path)
+    get_target_property(_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
+
+    if(NOT _paths)
+        set(_paths)
+    endif()
+
+    foreach(_item ${ARGN})
+        if(${_item} IN_LIST _paths)
+            continue()
+        endif()
+
+        list(APPEND _paths ${_item})
+    endforeach()
+
+    set_target_properties(ChorusKit_Metadata PROPERTIES LIBRARY_SEARCHING_PATHS "${_paths}")
 endfunction()
 
 #[[
@@ -312,7 +355,7 @@ function(ck_add_application_plugin _target)
     add_dependencies(${CK_APPLICATION_NAME} ${_target})
 
     # Set parsed name as output name if not set
-    _ck_try_set_output_name(${_target} ${_name})
+    _ck_try_set_output_name(${_target} ${_target})
 
     ck_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
 
@@ -336,7 +379,7 @@ function(ck_add_application_plugin _target)
     endif()
 
     # Configure plugin desc file
-    set(_tmp_desc_file ${CMAKE_CURRENT_BINARY_DIR}/${_name}Metadata/plugin.json)
+    set(_tmp_desc_file ${CMAKE_CURRENT_BINARY_DIR}/${_target}Metadata/plugin.json)
     _ck_configure_plugin_desc(${_tmp_desc_file} ${FUNC_UNPARSED_ARGUMENTS})
     ck_add_attached_files(${_target}
         SRC ${_tmp_desc_file} DEST .
@@ -376,7 +419,7 @@ function(ck_add_application_plugin _target)
         )
     endif()
 
-    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CHORUSKIT_PLUGINS "${_target}")
+    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CHORUSKIT_PLUGINS ${_target})
 endfunction()
 
 #[[
@@ -626,6 +669,99 @@ function(_ck_check_shared_library _target _out)
     endif()
 
     set(${_out} ${_res} PARENT_SCOPE)
+endfunction()
+
+function(_ck_try_set_output_name _target _name)
+    get_target_property(_org ${_target} OUTPUT_NAME)
+
+    if(NOT _org)
+        set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_name})
+    endif()
+endfunction()
+
+function(_ck_post_deploy)
+    if(NOT Python_EXECUTABLE)
+        # Python
+        find_package(Python QUIET)
+
+        if(Python_FOUND)
+            message(STATUS "Python found: ${Python_EXECUTABLE}")
+        else()
+            message(WARNING "Python not found, the installation maybe incomplete")
+            return()
+        endif()
+    endif()
+
+    add_custom_target(ChorusKit_AppLocalDeps DEPENDS ChorusKit_ReleaseTranslations)
+
+    get_target_property(_plugin_list ChorusKit_Metadata CHORUSKIT_PLUGINS)
+    set(_binary_paths)
+
+    if(_plugin_list)
+        foreach(_item ${_plugin_list})
+            list(APPEND _binary_paths $<TARGET_FILE:${_item}>)
+        endforeach()
+
+        list(APPEND _binary_paths $<TARGET_FILE:${CK_APPLICATION_NAME}>)
+    else()
+        set(_binary_paths $<TARGET_FILE:${CK_APPLICATION_NAME}>)
+    endif()
+
+    # Get petool
+    get_target_property(_imported ckwindeps IMPORTED)
+
+    if(_imported)
+        get_target_property(_petool ckwindeps LOCATION)
+    else()
+        set(_petool "$<TARGET_FILE:ckwindeps>")
+    endif()
+
+    # Get library searching paths
+    get_target_property(_searching_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
+
+    # Compute escaped path string
+    set(_searching_paths_escaped "")
+    set(_binary_paths_escaped "")
+
+    foreach(_item ${_searching_paths})
+        set(_searching_paths_escaped "${_searching_paths_escaped} \"${_item}\"")
+    endforeach()
+
+    foreach(_item ${_binary_paths})
+        set(_binary_paths_escaped "${_binary_paths_escaped} \"${_item}\"")
+    endforeach()
+
+    # Run command
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(_debug --debug)
+    else()
+        set(_debug)
+    endif()
+
+    if(WIN32)
+        add_custom_command(TARGET ChorusKit_AppLocalDeps POST_BUILD
+            COMMAND ${Python_EXECUTABLE} "${CK_CMAKE_MODULES_DIR}/python/windeploy.py"
+            --prefix ${CK_BUILD_MAIN_DIR}
+            --qmake ${QT_QMAKE_EXECUTABLE}
+            --petool ${_petool}
+            --dirs ${_searching_paths}
+            --files ${_binary_paths}
+            ${_debug}
+        )
+
+        install(CODE "
+            execute_process(
+                COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target ChorusKit_ReleaseTranslations
+                COMMAND \"${Python_EXECUTABLE}\" \"${CK_CMAKE_MODULES_DIR}/python/windeploy.py\"
+                --prefix \"${CMAKE_INSTALL_PREFIX}\"
+                --qmake \"${QT_QMAKE_EXECUTABLE}\"
+                --petool \"${_petool}\"
+                --dirs ${_searching_paths_escaped}
+                --files ${_binary_paths_escaped}
+                ${_debug}
+            )
+        ")
+    endif()
 endfunction()
 
 include(${CK_CMAKE_MODULES_DIR}/modules/FileCopy.cmake)

@@ -78,6 +78,10 @@ add_subdirectory(appcore)
 
 add_subdirectory(loader)
 
+add_subdirectory(svsutils)
+
+add_subdirectory(svswidgets)
+
 if(CHORUSKIT_INSTALL)
     # Add install target
     set(_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${CHORUSKIT_INSTALL_NAME})
@@ -112,5 +116,6 @@ if(CHORUSKIT_INSTALL)
     # Install cmake modules
     install(DIRECTORY ${CK_CMAKE_MODULES_DIR}/
         DESTINATION ${_install_dir}/cmake
+        PATTERN "__pycache__" EXCLUDE
     )
 endif()

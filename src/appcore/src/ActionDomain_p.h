@@ -31,6 +31,7 @@ namespace Core {
         mutable ActionDomainState state;
         mutable ActionDomainState cachedState;
 
+        // Use shared widget action to create stretch
         QAction *sharedWidgetAction;
 
         void setStateDirty();

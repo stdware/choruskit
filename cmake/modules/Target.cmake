@@ -192,6 +192,54 @@ function(ck_target_components _target)
         endforeach()
     endif()
 
+    if(TARGET ChorusKit_Metadata)
+        if(CMAKE_BUILD_TYPE)
+            string(TOUPPER ${CMAKE_BUILD_TYPE} _config_upper)
+        else()
+            set(_config_upper DEBUG)
+        endif()
+
+        foreach(_item ${FUNC_LINKS} ${FUNC_LINKS_PRIVATE})
+            if(NOT TARGET ${_item})
+                message(WARNING "ck_target_components: target \"${_item}\" linked by \"${_target}\" not found.")
+                continue()
+            endif()
+
+            if(NOT WIN32)
+                continue()
+            endif()
+
+            get_target_property(_imported ${_item} IMPORTED)
+
+            if(NOT _imported)
+                continue()
+            endif()
+
+            get_target_property(_path ${_item} LOCATION_${config_upper})
+
+            if(NOT _path OR ${_path} IN_LIST _result)
+                continue()
+            endif()
+
+            get_filename_component(_path ${_path} DIRECTORY)
+            get_filename_component(_subdir ${_path} NAME)
+
+            if(WIN32)
+                set(_expected_subdir bin)
+            else()
+                set(_expected_subdir lib)
+            endif()
+
+            if(NOT ${_subdir} STREQUAL ${_expected_subdir})
+                continue()
+            endif()
+
+            get_filename_component(_path ${_path} DIRECTORY)
+
+            ck_add_library_searching_path(${_path})
+        endforeach()
+    endif()
+
     # ----------------- Template End -----------------
 endfunction()
 
@@ -265,3 +313,70 @@ function(ck_dir_skip_automoc)
         )
     endforeach()
 endfunction()
+
+#[[
+Get a target's shared dependency locations.
+
+    ck_get_target_dependencies(<list> <targets ...>)
+]] #
+function(ck_get_target_dependencies _list)
+    set(_result)
+
+    if(CMAKE_BUILD_TYPE)
+        string(TOUPPER ${CMAKE_BUILD_TYPE} _config_upper)
+    else()
+        set(_config_upper DEBUG)
+    endif()
+
+    foreach(_item ${ARGN})
+        get_target_property(_linked_libs ${_item} LINK_LIBRARIES)
+
+        foreach(_item ${_linked_libs})
+            get_target_property(_imported ${_item} IMPORTED)
+
+            if(NOT _imported)
+                continue()
+            endif()
+
+            message("${_item}")
+            get_target_property(_path ${_item} LOCATION_${config_upper})
+
+            if(NOT _path OR ${_path} IN_LIST _result)
+                continue()
+            endif()
+
+            list(APPEND _result ${_path})
+        endforeach()
+    endforeach()
+
+    set(${_list} ${_result} PARENT_SCOPE)
+endfunction()
+
+# ----------------------------------
+# Private functions
+# ----------------------------------
+macro(_ck_list_prepend_prefix _list _prefix)
+    foreach(_item ${ARGN})
+        list(APPEND ${_list} ${_prefix}${_item})
+    endforeach()
+endmacro()
+
+macro(_ck_list_remove_all _list1 _list2)
+    foreach(_item ${${_list2}})
+        list(REMOVE_ITEM ${_list1} ${_item})
+    endforeach()
+endmacro()
+
+macro(_ck_list_add_flatly _list)
+    set(_temp_list)
+    file(GLOB _temp_list ${ARGN})
+    list(APPEND ${_list} ${_temp_list})
+    unset(_temp_list)
+endmacro()
+
+macro(_ck_list_add_recursively _list)
+    set(_temp_list)
+    file(GLOB_RECURSE _temp_list ${ARGN})
+    list(APPEND ${_list} ${_temp_list})
+    unset(_temp_list)
+endmacro()
