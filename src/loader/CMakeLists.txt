@@ -19,7 +19,7 @@ choruskit_add_library(${PROJECT_NAME} STATIC ${_src})
 find_package(QasTool REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    QMWidgets ExtensionSystem qastool::core
+    qtmediate::Widgets ExtensionSystem qastool::core
     ${_qt_libs}
 )
 

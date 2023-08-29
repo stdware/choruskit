@@ -19,7 +19,7 @@ choruskit_add_library(${PROJECT_NAME} SHARED ${_src})
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE CKAPPCORE_LIBRARY)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC QMWidgetTools ExtensionSystem ${_qt_libs})
+target_link_libraries(${PROJECT_NAME} PUBLIC qtmediate::WidgetTools ExtensionSystem ${_qt_libs})
 target_link_libraries(${PROJECT_NAME} PRIVATE SingleApplication)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${_qt_includes} include/CoreApi src)

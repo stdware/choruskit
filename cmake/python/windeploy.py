@@ -206,7 +206,6 @@ def main():
     def find_and_copy(src_rel_path: str, dest_rel_path: str, extensions: list[str] = []) -> bool:
         for dir in args.dirs:
             temp_path = dir + "/" + src_rel_path
-            print("123 " + temp_path)
             if os.path.isdir(temp_path):
                 print_verbose(
                     f"Copy directory {os.path.normpath(os.path.abspath(temp_path))}")

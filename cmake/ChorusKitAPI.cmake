@@ -6,6 +6,10 @@ if(NOT DEFINED CK_BUILD_MAIN_DIR)
     set(CK_BUILD_MAIN_DIR ${CMAKE_BINARY_DIR}/out-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_BUILD_TYPE})
 endif()
 
+if(NOT DEFINED CK_RUN_SCRIPTS_VERBOSE)
+    set(CK_RUN_SCRIPTS_VERBOSE off)
+endif()
+
 set(CK_APPLICATION_NAME ChorusKit)
 set(CK_APPLICATION_VENDOR OpenVPI)
 set(CK_DEV_START_YEAR 2019)
@@ -762,6 +766,12 @@ function(_ck_post_deploy)
         set(_debug)
     endif()
 
+    if(CK_RUN_SCRIPTS_VERBOSE)
+        set(_verbose --verbose)
+    else()
+        set(_verbose)
+    endif()
+
     if(WIN32)
         # Get library searching paths
         get_target_property(_searching_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
@@ -780,7 +790,7 @@ function(_ck_post_deploy)
             --petool ${_petool}
             --dirs ${_searching_paths}
             --files ${_binary_paths}
-            ${_debug}
+            ${_debug} ${_verbose}
             COMMENT "Running post deploy script..."
         )
 
@@ -794,7 +804,7 @@ function(_ck_post_deploy)
                 --petool \"${_petool}\"
                 --dirs ${_searching_paths_escaped}
                 --files ${_binary_paths_escaped}
-                ${_debug}
+                ${_debug} ${_verbose}
             )
         ")
     elseif(APPLE)
