@@ -8,7 +8,7 @@
 # References:
 #   1. qmake path: find `windeployqt.exe` path
 #   2. windeps path: resolve other dependencies of PE files
-#   3. library searching paths: find and copy dependencies, should be of UNIX root directory structure
+#   3. library searching paths: find and copy dependencies, should be a UNIX `bin` directory
 #   4. PE files: executable and plugins
 
 from __future__ import annotations
@@ -77,54 +77,60 @@ def deploy_3rdparty_libraries(petool: str, libdir: str, files: list[str], search
         print("petool not found!!!")
         return -1
 
-    # Run petool
-    cmds: list[str] = [
-        petool,
-    ]
-    cmds += files
+    # Use a set to store library names which have been collected
+    name_set: set[str] = set()
+    for item in files:
+        name_set.add(os.path.basename(item).lower())
 
-    # Run command
-    result = subprocess.run(cmds, stdout=subprocess.PIPE, text=True)
-    code = result.returncode
-
-    if code != 0:
-        print("Deploy 3rdparty libraries failed")
-        return code
-
-    # Search dependencies
+    # Recursively resolve dependencies
+    stack: list[str] = files
     dependencies: list[str] = []
-    for item in result.stdout.split("\n"):
-        item_lower = item.lower()
-        # Skip Qt libraries
-        if item.startswith("Qt"):
-            continue
-        # Skip MSVC libraries
-        if item_lower.startswith("vcruntime") or item_lower.startswith("msvc"):
-            continue
-        # Skip win-crt libraries
-        if item_lower.startswith("api-ms-win-crt"):
-            continue
-        # Skip Windows system libraries
-        if os.path.exists("C:\\Windows\\system32\\" + item) or os.path.exists("C:\\Windows\\SysWow64\\" + item):
-            continue
+    while len(stack) > 0:
+        # Run command
+        result = subprocess.run(
+            [petool] + stack, stdout=subprocess.PIPE, text=True)
+        code = result.returncode
+        if code != 0:
+            print("Deploy 3rdparty libraries failed")
+            return code
 
-        # Search path
-        path = ""
-        for dir in searching_dirs:
-            temp_path = dir + "/" + item
-            if os.path.exists(temp_path):
-                path = temp_path
-                break
+        stack.clear()
+        for item in result.stdout.split("\n"):
+            item_lower = item.lower()
 
-        if path == "":
-            print(f"Dependency '{item}' not found in searching paths")
-            return -1
+            # Skip Qt libraries
+            if item.startswith("Qt"):
+                continue
+            # Skip MSVC libraries
+            if item_lower.startswith("vcruntime") or item_lower.startswith("msvc"):
+                continue
+            # Skip win-crt libraries
+            if item_lower.startswith("api-ms-win-crt"):
+                continue
+            # Skip Windows system libraries
+            if os.path.exists("C:\\Windows\\system32\\" + item) or os.path.exists("C:\\Windows\\SysWow64\\" + item):
+                continue
+            # Skip if collected
+            if item_lower in name_set:
+                continue
+            name_set.add(item_lower)
 
-        dependencies.append(path)
+            # Search
+            path = ""
+            for dir in searching_dirs:
+                temp_path = dir + "/" + item
+                if os.path.exists(temp_path):
+                    path = temp_path
+                    break
+            if len(path) == 0:
+                continue
+            dependencies.append(path)
+
+            # Push to stack
+            stack.append(path)
 
     # Copy dependencies
     for path in dependencies:
-        base_name = os.path.basename(path)
         print_verbose(f"Copy {os.path.normpath(os.path.abspath(path))}")
         shutil.copy2(path, libdir)
 
@@ -180,11 +186,6 @@ def main():
     else:
         Global.prefix = args.prefix
 
-    # Compute bin paths
-    searching_paths: list[str] = []
-    for dir in args.dirs:
-        searching_paths.append(dir + "/bin")
-
     # Run windeployqt
     code = deploy_qt_binaries(os.path.dirname(args.qmake),
                               Global.prefix + "/bin",
@@ -197,27 +198,28 @@ def main():
     code = deploy_3rdparty_libraries(args.petool,
                                      Global.prefix + "/bin",
                                      args.files,
-                                     searching_paths)
+                                     args.dirs)
     if code != 0:
         sys.exit(code)
 
     # Deploy `qtmediate` and `ChorusKit` plugins and resources
-    def find_and_copy(rel_path: str, extensions: list[str] = []) -> bool:
+    def find_and_copy(src_rel_path: str, dest_rel_path: str, extensions: list[str] = []) -> bool:
         for dir in args.dirs:
-            temp_path = dir + "/" + rel_path
+            temp_path = dir + "/" + src_rel_path
+            print("123 " + temp_path)
             if os.path.isdir(temp_path):
                 print_verbose(
                     f"Copy directory {os.path.normpath(os.path.abspath(temp_path))}")
                 copy_files_with_extensions(
-                    temp_path, Global.prefix + "/" + rel_path, extensions)
+                    temp_path, Global.prefix + "/" + dest_rel_path, extensions)
                 return True
         return False
 
-    find_and_copy("lib/qtmediate/plugins", ["dll"])
-    if not find_and_copy("share/qtmediate"):
-        find_and_copy("../share/qtmediate")  # VCPKG
-    if not find_and_copy("share/ChorusKit"):
-        find_and_copy("../share/ChorusKit")  # VCPKG
+    find_and_copy("../lib/qtmediate/plugins", "lib/qtmediate/plugins", ["dll"])
+    if not find_and_copy("../share/qtmediate", "share/qtmediate"):
+        find_and_copy("../../share/qtmediate", "share/qtmediate")  # VCPKG
+    if not find_and_copy("../share/ChorusKit", "share/ChorusKit"):
+        find_and_copy("../../share/ChorusKit", "share/ChorusKit")  # VCPKG
 
 
 if __name__ == "__main__":

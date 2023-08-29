@@ -205,38 +205,7 @@ function(ck_target_components _target)
                 continue()
             endif()
 
-            if(NOT WIN32)
-                continue()
-            endif()
-
-            get_target_property(_imported ${_item} IMPORTED)
-
-            if(NOT _imported)
-                continue()
-            endif()
-
-            get_target_property(_path ${_item} LOCATION_${config_upper})
-
-            if(NOT _path OR ${_path} IN_LIST _result)
-                continue()
-            endif()
-
-            get_filename_component(_path ${_path} DIRECTORY)
-            get_filename_component(_subdir ${_path} NAME)
-
-            if(WIN32)
-                set(_expected_subdir bin)
-            else()
-                set(_expected_subdir lib)
-            endif()
-
-            if(NOT ${_subdir} STREQUAL ${_expected_subdir})
-                continue()
-            endif()
-
-            get_filename_component(_path ${_path} DIRECTORY)
-
-            ck_add_library_searching_path(${_path})
+            ck_add_library_searching_paths(${_item})
         endforeach()
     endif()
 

@@ -189,9 +189,13 @@ endfunction()
 #[[
 Add library searching paths to build system, only Windows need this function.
 
-    ck_add_library_searching_path(<paths...>)
+    ck_add_library_searching_paths(<path or target ...>)
 ]] #
-function(ck_add_library_searching_path)
+function(ck_add_library_searching_paths)
+    if(NOT WIN32)
+        return()
+    endif()
+
     get_target_property(_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
 
     if(NOT _paths)
@@ -199,6 +203,24 @@ function(ck_add_library_searching_path)
     endif()
 
     foreach(_item ${ARGN})
+        if(TARGET ${_item})
+            # Resolve location
+            get_target_property(_imported ${_item} IMPORTED)
+
+            if(NOT _imported)
+                continue()
+            endif()
+
+            get_target_property(_path ${_item} LOCATION_${config_upper})
+
+            if(NOT _path OR ${_path} IN_LIST _result)
+                continue()
+            endif()
+
+            get_filename_component(_path ${_path} DIRECTORY)
+            set(_item ${_path})
+        endif()
+
         if(${_item} IN_LIST _paths)
             continue()
         endif()
@@ -569,6 +591,8 @@ function(ck_add_library _target)
             )
         endif()
     endif()
+
+    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CHORUSKIT_LIBRARIES ${_target})
 endfunction()
 
 # ----------------------------------
@@ -694,17 +718,25 @@ function(_ck_post_deploy)
 
     add_custom_target(ChorusKit_AppLocalDeps DEPENDS ChorusKit_ReleaseTranslations)
 
+    # Add application
+    set(_binary_paths $<TARGET_FILE:${CK_APPLICATION_NAME}>)
+
+    # Add plugins
     get_target_property(_plugin_list ChorusKit_Metadata CHORUSKIT_PLUGINS)
-    set(_binary_paths)
 
     if(_plugin_list)
         foreach(_item ${_plugin_list})
             list(APPEND _binary_paths $<TARGET_FILE:${_item}>)
         endforeach()
+    endif()
 
-        list(APPEND _binary_paths $<TARGET_FILE:${CK_APPLICATION_NAME}>)
-    else()
-        set(_binary_paths $<TARGET_FILE:${CK_APPLICATION_NAME}>)
+    # Add libraries
+    get_target_property(_library_list ChorusKit_Metadata CHORUSKIT_LIBRARIES)
+
+    if(_library_list)
+        foreach(_item ${_library_list})
+            list(APPEND _binary_paths $<TARGET_FILE:${_item}>)
+        endforeach()
     endif()
 
     # Get petool
@@ -716,16 +748,8 @@ function(_ck_post_deploy)
         set(_petool "$<TARGET_FILE:ckwindeps>")
     endif()
 
-    # Get library searching paths
-    get_target_property(_searching_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
-
     # Compute escaped path string
-    set(_searching_paths_escaped "")
     set(_binary_paths_escaped "")
-
-    foreach(_item ${_searching_paths})
-        set(_searching_paths_escaped "${_searching_paths_escaped} \"${_item}\"")
-    endforeach()
 
     foreach(_item ${_binary_paths})
         set(_binary_paths_escaped "${_binary_paths_escaped} \"${_item}\"")
@@ -739,6 +763,16 @@ function(_ck_post_deploy)
     endif()
 
     if(WIN32)
+        # Get library searching paths
+        get_target_property(_searching_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
+
+        # Compute escaped path string 2
+        set(_searching_paths_escaped "")
+
+        foreach(_item ${_searching_paths})
+            set(_searching_paths_escaped "${_searching_paths_escaped} \"${_item}\"")
+        endforeach()
+
         add_custom_command(TARGET ChorusKit_AppLocalDeps POST_BUILD
             COMMAND ${Python_EXECUTABLE} "${CK_CMAKE_MODULES_DIR}/python/windeploy.py"
             --prefix ${CK_BUILD_MAIN_DIR}
@@ -747,9 +781,11 @@ function(_ck_post_deploy)
             --dirs ${_searching_paths}
             --files ${_binary_paths}
             ${_debug}
+            COMMENT "Running post deploy script..."
         )
 
         install(CODE "
+            message(STATUS \"Running post deploy script...\")
             execute_process(
                 COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target ChorusKit_ReleaseTranslations
                 COMMAND \"${Python_EXECUTABLE}\" \"${CK_CMAKE_MODULES_DIR}/python/windeploy.py\"
@@ -761,6 +797,10 @@ function(_ck_post_deploy)
                 ${_debug}
             )
         ")
+    elseif(APPLE)
+    # TODO...
+    else()
+        # TODO...
     endif()
 endfunction()
 
