@@ -10,8 +10,9 @@ add_executable(${PROJECT_NAME} ${_src})
 target_compile_definitions(${PROJECT_NAME} PRIVATE _UNICODE UNICODE)
 
 if(WIN32)
+    string(TIMESTAMP _year "%Y")
     ck_attach_win_rc_file(${PROJECT_NAME}
-        VENDOR "Sine Striker"
+        COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${_year} SineStriker"
         DESCRIPTION "ChorusKit Windows Deploy Tool"
     )
 endif()

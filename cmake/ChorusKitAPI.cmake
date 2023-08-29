@@ -129,6 +129,12 @@ macro(ck_init_build_system _app)
 
     # Copy global shared files
     add_custom_target(ChorusKit_CopySharedFiles)
+
+    # Used ChorusKit Metadata Keys: 
+    #   CONFIG_DEFINITIONS
+    #   LIBRARY_SEARCHING_PATHS
+    #   APPLICATION_PLUGINS
+    #   APPLICATION_LIBRARIES
 endmacro()
 
 function(ck_finish_build_system)
@@ -445,7 +451,7 @@ function(ck_add_application_plugin _target)
         )
     endif()
 
-    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CHORUSKIT_PLUGINS ${_target})
+    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY APPLICATION_PLUGINS ${_target})
 endfunction()
 
 #[[
@@ -596,7 +602,7 @@ function(ck_add_library _target)
         endif()
     endif()
 
-    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CHORUSKIT_LIBRARIES ${_target})
+    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY APPLICATION_LIBRARIES ${_target})
 endfunction()
 
 # ----------------------------------
@@ -712,8 +718,8 @@ function(_ck_post_deploy)
         # Python
         find_package(Python QUIET)
 
-        if(Python_FOUND)
-            message(STATUS "Python found: ${Python_EXECUTABLE}")
+        if(Python_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL 3.8)
+            message(STATUS "Python found: ${Python_EXECUTABLE} (version ${Python_VERSION})")
         else()
             message(WARNING "Python not found, the installation maybe incomplete")
             return()
@@ -726,7 +732,7 @@ function(_ck_post_deploy)
     set(_binary_paths $<TARGET_FILE:${CK_APPLICATION_NAME}>)
 
     # Add plugins
-    get_target_property(_plugin_list ChorusKit_Metadata CHORUSKIT_PLUGINS)
+    get_target_property(_plugin_list ChorusKit_Metadata APPLICATION_PLUGINS)
 
     if(_plugin_list)
         foreach(_item ${_plugin_list})
@@ -735,7 +741,7 @@ function(_ck_post_deploy)
     endif()
 
     # Add libraries
-    get_target_property(_library_list ChorusKit_Metadata CHORUSKIT_LIBRARIES)
+    get_target_property(_library_list ChorusKit_Metadata APPLICATION_LIBRARIES)
 
     if(_library_list)
         foreach(_item ${_library_list})
@@ -792,6 +798,7 @@ function(_ck_post_deploy)
             --files ${_binary_paths}
             ${_debug} ${_verbose}
             COMMENT "Running post deploy script..."
+            WORKING_DIRECTORY ${CK_BUILD_MAIN_DIR}
         )
 
         install(CODE "
@@ -805,6 +812,7 @@ function(_ck_post_deploy)
                 --dirs ${_searching_paths_escaped}
                 --files ${_binary_paths_escaped}
                 ${_debug} ${_verbose}
+                WORKING_DIRECTORY \"${CK_BUILD_MAIN_DIR}\"
             )
         ")
     elseif(APPLE)

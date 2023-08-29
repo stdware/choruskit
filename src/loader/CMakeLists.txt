@@ -31,10 +31,4 @@ choruskit_include_directories(${PROJECT_NAME} include)
 
 choruskit_install_headers(include)
 
-if(WIN32)
-    ck_attach_win_rc_file(${PROJECT_NAME}
-        VENDOR "Sine Striker"
-    )
-endif()
-
 include(src/config/qasc.cmake)

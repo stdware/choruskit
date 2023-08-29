@@ -27,9 +27,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${_qt_includes} include/CoreA
 choruskit_include_directories(${PROJECT_NAME} include)
 
 if(WIN32)
+    string(TIMESTAMP _year "%Y")
     ck_attach_win_rc_file(${PROJECT_NAME}
-        VENDOR "Sine Striker"
-        DESCRIPTION "ChorusKit Framework Module"
+        COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${_year} SineStriker"
+        DESCRIPTION "Copyright SineStriker"
     )
 endif()
 
