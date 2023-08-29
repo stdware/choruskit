@@ -7,7 +7,6 @@
 #include <QTextStream>
 
 #include <QMAppExtension.h>
-#include <QMConsole.h>
 #include <QMCss.h>
 #include <QMDecoratorV2.h>
 #include <QMSystem.h>
@@ -105,7 +104,7 @@ static inline void displayError(const QString &t) {
     if (g_splash) {
         g_splash->close();
     }
-    qmCon->MsgBox(nullptr, QMConsole::Critical, qApp->applicationName(), t);
+    qAppExt->MsgBox(nullptr, QMAppExtension::Critical, qApp->applicationName(), t);
 #endif
     QMOs::exitApp(-1);
 }
@@ -125,7 +124,7 @@ static inline void displayHelpText(const QString &t) {
     if (g_splash) {
         g_splash->close();
     }
-    qmCon->MsgBox(nullptr, QMConsole::Information, qApp->applicationName(), t);
+    qAppExt->MsgBox(nullptr, QMAppExtension::Information, qApp->applicationName(), t);
 #endif
 
     QMOs::exitApp(0);
@@ -338,7 +337,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
                                                       "You're trying to start %1 as the %2, which is "
                                                       "extremely dangerous and therefore strongly not recommended.")
                               .arg(qApp->applicationName(), QMOs::rootUserName());
-            qmCon->MsgBox(nullptr, QMCoreConsole::Warning, qApp->applicationName(), msg);
+            qAppExt->MsgBox(nullptr, QMAppExtension::Warning, qApp->applicationName(), msg);
             return false;
         }
 

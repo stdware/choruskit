@@ -25,9 +25,9 @@ struct LocaleGuard {
     int mode;
 };
 
-// ========================================
-// Modified from windeployqt(Copyright Qt company)
-// ========================================
+// ================================================================================
+// Modified from windeployqt 5.15.2(Copyright Qt company)
+// ================================================================================
 static std::wstring winErrorMessage(unsigned long error) {
     std::wstring rc;
     wchar_t *lpMsgBuf;

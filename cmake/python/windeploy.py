@@ -214,11 +214,19 @@ def main():
                 return True
         return False
 
+    # Searching path is the `bin` directory, but install prefix is `root` directory,
+    # we need to search the parent directory of each searching path for `lib` and `share`
+    # directory.
     find_and_copy("../lib/qtmediate/plugins", "lib/qtmediate/plugins", ["dll"])
-    if not find_and_copy("../share/qtmediate", "share/qtmediate"):
-        find_and_copy("../../share/qtmediate", "share/qtmediate")  # VCPKG
-    if not find_and_copy("../share/ChorusKit", "share/ChorusKit"):
-        find_and_copy("../../share/ChorusKit", "share/ChorusKit")  # VCPKG
+
+    # VCPKG has a `debug` directory containing debug version of the packages,
+    # we need to search the upper directory if the `share` directory is not found.
+    if not find_and_copy("../share/qtmediate/translations", "share/qtmediate/translations"):
+        find_and_copy("../../share/qtmediate/translations",
+                      "share/qtmediate/translations")
+    if not find_and_copy("../share/ChorusKit/translations", "share/ChorusKit/translations"):
+        find_and_copy("../../share/ChorusKit/translations",
+                      "share/ChorusKit/translations")
 
 
 if __name__ == "__main__":

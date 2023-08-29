@@ -5,7 +5,6 @@ ChorusKit is a plugin framework derived from Qt Creator for OpenVPI SVS applicat
 ## Dependencies
 
 + Qt 5.15.2
-
 + [qtmediate](https://github.com/SineStriker/qtmediate)
 + [SingleApplication](https://github.com/itay-grudev/SingleApplication)
 + [qBreakpad](https://github.com/buzzySmile/qBreakpad)
