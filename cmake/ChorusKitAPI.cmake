@@ -10,6 +10,14 @@ if(NOT DEFINED CK_RUN_SCRIPTS_VERBOSE)
     set(CK_RUN_SCRIPTS_VERBOSE off)
 endif()
 
+if(NOT DEFINED CK_ENABLE_DEVEL)
+    set(CK_ENABLE_DEVEL off)
+endif()
+
+if(NOT DEFINED CK_ENABLE_CONSOLE)
+    set(CK_ENABLE_CONSOLE on)
+endif()
+
 set(CK_APPLICATION_NAME ChorusKit)
 set(CK_APPLICATION_VENDOR OpenVPI)
 set(CK_DEV_START_YEAR 2019)
@@ -20,12 +28,10 @@ Initialize ChorusKitApi global settings.
 
     ck_init_buildsystem(<name>
         [ROOT <dir>]
-        [VENDOR <vendor>]
-        [DEVEL] [CONSOLE]
     )
 ]] #
 macro(ck_init_build_system _app)
-    set(options DEVEL CONSOLE)
+    set(options)
     set(oneValueArgs ROOT VENDOR)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -63,9 +69,6 @@ macro(ck_init_build_system _app)
     if(FUNC_VENDOR)
         set(CK_APPLICATION_VENDOR ${FUNC_VENDOR})
     endif()
-
-    set(CK_ENABLE_DEVEL ${FUNC_DEVEL})
-    set(CK_ENABLE_CONSOLE ${FUNC_CONSOLE})
 
     set(CK_ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/etc)
 
@@ -130,11 +133,11 @@ macro(ck_init_build_system _app)
     # Copy global shared files
     add_custom_target(ChorusKit_CopySharedFiles)
 
-    # Used ChorusKit Metadata Keys: 
-    #   CONFIG_DEFINITIONS
-    #   LIBRARY_SEARCHING_PATHS
-    #   APPLICATION_PLUGINS
-    #   APPLICATION_LIBRARIES
+    # Used ChorusKit Metadata Keys:
+    # CONFIG_DEFINITIONS
+    # LIBRARY_SEARCHING_PATHS
+    # APPLICATION_PLUGINS
+    # APPLICATION_LIBRARIES
 endmacro()
 
 function(ck_finish_build_system)
@@ -212,6 +215,12 @@ function(ck_add_library_searching_paths)
         set(_paths)
     endif()
 
+    if(CMAKE_BUILD_TYPE)
+        string(TOUPPER ${CMAKE_BUILD_TYPE} _config_upper)
+    else()
+        set(_config_upper DEBUG)
+    endif()
+
     foreach(_item ${ARGN})
         if(TARGET ${_item})
             # Resolve location
@@ -221,7 +230,7 @@ function(ck_add_library_searching_paths)
                 continue()
             endif()
 
-            get_target_property(_path ${_item} LOCATION_${config_upper})
+            get_target_property(_path ${_item} LOCATION_${_config_upper})
 
             if(NOT _path OR ${_path} IN_LIST _result)
                 continue()

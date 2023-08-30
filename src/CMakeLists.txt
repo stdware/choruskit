@@ -16,7 +16,7 @@ function(choruskit_add_library _target _type)
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
         )
     endif()
-
+    
     set_property(GLOBAL APPEND PROPERTY CHORUSKIT_TRANSLATE_TARGETS ${_target})
 endfunction()
 
@@ -78,7 +78,7 @@ add_subdirectory(appcore)
 
 add_subdirectory(loader)
 
-add_subdirectory(svsutils)
+add_subdirectory(svsbase)
 
 add_subdirectory(svswidgets)
 

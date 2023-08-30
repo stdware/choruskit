@@ -219,8 +219,8 @@ def main():
     # directory.
     find_and_copy("../lib/qtmediate/plugins", "lib/qtmediate/plugins", ["dll"])
 
-    # VCPKG has a `debug` directory containing debug version of the packages,
-    # we need to search the upper directory if the `share` directory is not found.
+    # VCPKG has a `debug` directory containing debug version of the packages, we need 
+    # to search the upper directory if the `share` directory is not found.
     if not find_and_copy("../share/qtmediate/translations", "share/qtmediate/translations"):
         find_and_copy("../../share/qtmediate/translations",
                       "share/qtmediate/translations")

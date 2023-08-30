@@ -193,12 +193,6 @@ function(ck_target_components _target)
     endif()
 
     if(TARGET ChorusKit_Metadata)
-        if(CMAKE_BUILD_TYPE)
-            string(TOUPPER ${CMAKE_BUILD_TYPE} _config_upper)
-        else()
-            set(_config_upper DEBUG)
-        endif()
-
         foreach(_item ${FUNC_LINKS} ${FUNC_LINKS_PRIVATE})
             if(NOT TARGET ${_item})
                 message(WARNING "ck_target_components: target \"${_item}\" linked by \"${_target}\" not found.")

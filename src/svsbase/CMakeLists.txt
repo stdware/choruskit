@@ -1,4 +1,4 @@
-project(CkAppCore
+project(CkSVSBase
     VERSION ${CHORUSKIT_VERSION}
     LANGUAGES CXX
 )
@@ -10,26 +10,25 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-ck_add_qt_module(_qt_libs Core Widgets Network)
-ck_add_qt_private_inc(_qt_includes Core Gui Widgets)
+ck_add_qt_module(_qt_libs Core)
+ck_add_qt_private_inc(_qt_includes Core)
 
 file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
 choruskit_add_library(${PROJECT_NAME} SHARED ${_src})
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE CKAPPCORE_LIBRARY)
+target_compile_definitions(${PROJECT_NAME} PRIVATE CKSVSBASE_LIBRARY)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC qtmediate::WidgetTools ExtensionSystem ${_qt_libs})
-target_link_libraries(${PROJECT_NAME} PRIVATE SingleApplication)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${_qt_libs})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${_qt_includes} include/CoreApi src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${_qt_includes} include/SVSBase src)
 
 choruskit_include_directories(${PROJECT_NAME} include)
 
 if(WIN32)
     string(TIMESTAMP _year "%Y")
     ck_attach_win_rc_file(${PROJECT_NAME}
-        COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${_year} SineStriker"
+        COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${_year} OpenVPI"
         DESCRIPTION "ChorusKit Library"
     )
 endif()

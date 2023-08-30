@@ -15,5 +15,4 @@
 #    endif
 #endif
 
-
 #endif // CKAPPCOREGLOBAL_H
