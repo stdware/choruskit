@@ -7,7 +7,7 @@
 
 # References:
 #   1. qmake path: find `windeployqt.exe` path
-#   2. windeps path: resolve other dependencies of PE files
+#   2. petool path: resolve other dependencies of PE files
 #   3. library searching paths: find and copy dependencies, should be a UNIX `bin` directory
 #   4. PE files: executable and plugins
 
@@ -72,10 +72,11 @@ def deploy_qt_binaries(qmake_dir: str, libdir: str, plugindir: str, files: list[
     return code
 
 
-def deploy_shared_libraries(petool: str, libdir: str, files: list[str], searching_dirs: list[str] = []) -> int:
+def deploy_shared_libraries(petool: str, libdir: str, files: list[str],
+                            searching_dirs: list[str] = []) -> tuple[int, list[str]]:
     if not os.path.isfile(petool):
         print("petool not found!!!")
-        return -1
+        return -1, []
 
     # Use a set to store library names which have been collected
     name_set: set[str] = set()
@@ -92,7 +93,7 @@ def deploy_shared_libraries(petool: str, libdir: str, files: list[str], searchin
         code = result.returncode
         if code != 0:
             print("Deploy 3rdparty libraries failed")
-            return code
+            return code, []
 
         stack.clear()
         for item in result.stdout.split("\n"):
@@ -107,8 +108,8 @@ def deploy_shared_libraries(petool: str, libdir: str, files: list[str], searchin
             # Skip Windows system libraries
             if os.path.exists("C:\\Windows\\system32\\" + item) or os.path.exists("C:\\Windows\\SysWow64\\" + item):
                 continue
-            # Skip existing Qt libraries
-            if item.startswith("Qt") and os.path.exists(libdir + "/" + item):
+            # Skip Qt libraries
+            if item.startswith("Qt"):
                 continue
             # Skip if collected
             if item_lower in name_set:
@@ -126,10 +127,6 @@ def deploy_shared_libraries(petool: str, libdir: str, files: list[str], searchin
                 continue
             dependencies.append(path)
 
-            # Skip Qt libraries
-            if item.startswith("Qt"):
-                continue
-
             # Push to stack
             stack.append(path)
 
@@ -138,7 +135,7 @@ def deploy_shared_libraries(petool: str, libdir: str, files: list[str], searchin
         print_verbose(f"Copy {os.path.normpath(os.path.abspath(path))}")
         shutil.copy2(path, libdir)
 
-    return 0
+    return 0, dependencies
 
 
 def copy_files_with_extensions(src_directory: str, dst_directory: str, extensions: list[str]):
@@ -192,19 +189,19 @@ def main():
 
     qmake_dir = os.path.dirname(args.qmake)
 
+    # Collect and deploy other libraries
+    code, libs = deploy_shared_libraries(args.petool,
+                                         Global.prefix + "/bin",
+                                         args.files,
+                                         args.dirs)
+    if code != 0:
+        sys.exit(code)
+
     # Run windeployqt
     code = deploy_qt_binaries(qmake_dir,
                               Global.prefix + "/bin",
                               Global.prefix + "/lib/Qt/plugins",
-                              args.files)
-    if code != 0:
-        sys.exit(code)
-
-    # Deploy other libraries
-    code = deploy_shared_libraries(args.petool,
-                                   Global.prefix + "/bin",
-                                   args.files,
-                                   args.dirs + [qmake_dir])
+                              args.files + libs)
     if code != 0:
         sys.exit(code)
 
