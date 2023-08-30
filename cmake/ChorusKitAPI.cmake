@@ -392,6 +392,10 @@ function(ck_add_application_plugin _target)
     # Add library target and attach definitions
     _ck_add_library_internal(${_target} SHARED ${FUNC_UNPARSED_ARGUMENTS})
 
+    if(CK_INITIALIZED)
+        add_library(${CK_APPLICATION_NAME}::${_target} ALIAS ${_target})
+    endif()
+
     # Add target level dependency
     add_dependencies(${CK_APPLICATION_NAME} ${_target})
 
@@ -555,6 +559,10 @@ function(ck_add_library _target)
 
     # Get target type
     _ck_check_shared_library(${_target} _shared)
+
+    if(CK_INITIALIZED)
+        add_library(${CK_APPLICATION_NAME}::${_target} ALIAS ${_target})
+    endif()
 
     # Add windows rc file
     if(WIN32)
@@ -759,12 +767,10 @@ function(_ck_post_deploy)
     endif()
 
     # Get petool
-    get_target_property(_imported ckwindeps IMPORTED)
-
-    if(_imported)
-        get_target_property(_petool ckwindeps LOCATION)
-    else()
+    if(TARGET ckwindeps)
         set(_petool "$<TARGET_FILE:ckwindeps>")
+    else()
+        get_target_property(_petool ChorusKit::windeps LOCATION)
     endif()
 
     # Compute escaped path string

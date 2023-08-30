@@ -4,6 +4,10 @@ include(../cmake/modules/OSResource.cmake)
 function(choruskit_add_library _target _type)
     add_library(${_target} ${_type} ${ARGN})
 
+    string(REGEX REPLACE "^Ck" "" _suffix "${_target}")
+    add_library(ChorusKit::${_suffix} ALIAS ${PROJECT_NAME})
+    set_target_properties(${PROJECT_NAME} PROPERTIES EXPORT_NAME ${_suffix})
+
     if(CHORUSKIT_INSTALL)
         install(TARGETS ${_target}
             EXPORT ${CHORUSKIT_INSTALL_NAME}Targets
@@ -16,7 +20,7 @@ function(choruskit_add_library _target _type)
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
         )
     endif()
-    
+
     set_property(GLOBAL APPEND PROPERTY CHORUSKIT_TRANSLATE_TARGETS ${_target})
 endfunction()
 
@@ -110,6 +114,8 @@ if(CHORUSKIT_INSTALL)
 
     # Install cmake targets files
     install(EXPORT ${CHORUSKIT_INSTALL_NAME}Targets
+        FILE "${CHORUSKIT_INSTALL_NAME}Targets.cmake"
+        NAMESPACE ChorusKit::
         DESTINATION ${_install_dir}
     )
 

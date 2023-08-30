@@ -19,12 +19,12 @@ choruskit_add_library(${PROJECT_NAME} STATIC ${_src})
 find_package(QasTool REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    qtmediate::Widgets ExtensionSystem qastool::core
+    qtmediate::Widgets ChorusKit::ExtensionSystem qastool::core
     ${_qt_libs}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    SingleApplication
+    ChorusKit::SingleApplication
 )
 
 choruskit_include_directories(${PROJECT_NAME} include)

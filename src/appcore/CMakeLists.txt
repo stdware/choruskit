@@ -17,9 +17,12 @@ file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
 choruskit_add_library(${PROJECT_NAME} SHARED ${_src})
 
+add_library(ChorusKit::AppCore ALIAS ${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES EXPORT_NAME AppCore)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE CKAPPCORE_LIBRARY)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC qtmediate::WidgetTools ExtensionSystem ${_qt_libs})
+target_link_libraries(${PROJECT_NAME} PUBLIC qtmediate::WidgetTools ChorusKit::ExtensionSystem ${_qt_libs})
 target_link_libraries(${PROJECT_NAME} PRIVATE SingleApplication)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${_qt_includes} include/CoreApi src)

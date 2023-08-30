@@ -7,6 +7,9 @@ file(GLOB _src *.h *.cpp)
 
 add_executable(${PROJECT_NAME} ${_src})
 
+add_executable(ChorusKit::windeps ALIAS ${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES EXPORT_NAME windeps)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE _UNICODE UNICODE)
 
 if(WIN32)
