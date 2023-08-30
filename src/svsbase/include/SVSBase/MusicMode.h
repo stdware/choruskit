@@ -5,7 +5,7 @@
 
 #include "CkSVSBaseGlobal.h"
 
-namespace SVSBase {
+namespace SVS {
 
     class CKSVSBASE_API MusicMode {
         Q_GADGET

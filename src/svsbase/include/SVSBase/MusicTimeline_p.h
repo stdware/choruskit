@@ -15,7 +15,7 @@
 
 #include "MusicTimeline.h"
 
-namespace SVSBase {
+namespace SVS {
 
     class CKSVSBASE_API MusicTimelinePrivate {
         Q_DECLARE_PUBLIC(MusicTimeline)

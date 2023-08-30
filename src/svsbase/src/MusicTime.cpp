@@ -7,7 +7,7 @@
 #include <QRegularExpression>
 #include <QTextStream>
 
-namespace SVSBase {
+namespace SVS {
 
     QDebug operator<<(QDebug debug, const MusicTime &time) {
         QDebugStateSaver saver(debug);
@@ -60,7 +60,7 @@ namespace SVSBase {
         return *this;
     }
 
-    PersistentMusicTime::PersistentMusicTime(SVSBase::PersistentMusicTime &&other) noexcept {
+    PersistentMusicTime::PersistentMusicTime(SVS::PersistentMusicTime &&other) noexcept {
         swap(other);
     }
 
@@ -154,7 +154,7 @@ namespace SVSBase {
         return debug;
     }
 
-    PersistentMusicTime::PersistentMusicTime(SVSBase::PersistentMusicTimeData *d) : d_ptr(d) {
+    PersistentMusicTime::PersistentMusicTime(SVS::PersistentMusicTimeData *d) : d_ptr(d) {
     }
 
 }

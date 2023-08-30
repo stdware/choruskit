@@ -7,7 +7,7 @@
 
 #include "MusicTime.h"
 
-namespace SVSBase {
+namespace SVS {
 
     class MusicTimeline;
 
@@ -122,7 +122,7 @@ namespace SVSBase {
         friend class PersistentMusicTime;
     };
 
-    inline void MusicTimeline::addTimeSignature(int bar, const SVSBase::MusicTimeSignature &timeSignature) {
+    inline void MusicTimeline::addTimeSignature(int bar, const SVS::MusicTimeSignature &timeSignature) {
         addTimeSignatures({
             {bar, timeSignature}
         });
@@ -150,8 +150,8 @@ namespace SVSBase {
         return create(time.measure(), time.beat(), time.tick());
     }
 
-} // namespace SVSBase
+} // namespace SVS
 
-Q_DECLARE_METATYPE(SVSBase::MusicTimeSignature)
+Q_DECLARE_METATYPE(SVS::MusicTimeSignature)
 
 #endif // MUSICTIMELINE_H

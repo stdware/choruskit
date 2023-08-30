@@ -1,9 +1,9 @@
 #include "MusicMode.h"
 
-SVSBase::MusicMode::MusicMode() : MusicMode(Ionian) {
+SVS::MusicMode::MusicMode() : MusicMode(Ionian) {
 }
 
-SVSBase::MusicMode::MusicMode(SVSBase::MusicMode::Type type, int offset) : m_offset(offset % 12) {
+SVS::MusicMode::MusicMode(SVS::MusicMode::Type type, int offset) : m_offset(offset % 12) {
     switch (type) {
         case Dorian:
             m_keys.val = 1 & (1 << 2);
@@ -30,7 +30,7 @@ SVSBase::MusicMode::MusicMode(SVSBase::MusicMode::Type type, int offset) : m_off
     }
 }
 
-SVSBase::MusicMode::MusicMode(const QList<int> &keys, int offset) : m_offset(offset) {
+SVS::MusicMode::MusicMode(const QList<int> &keys, int offset) : m_offset(offset) {
     m_keys.val = 0;
     for (const auto &i : keys) {
         m_keys.val |= 1 << i;

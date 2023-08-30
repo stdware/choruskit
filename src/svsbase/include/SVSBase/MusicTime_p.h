@@ -14,7 +14,7 @@
 
 #include "MusicTime.h"
 
-namespace SVSBase {
+namespace SVS {
 
     class MusicTimelinePrivate;
 

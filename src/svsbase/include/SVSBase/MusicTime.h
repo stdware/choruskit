@@ -5,7 +5,7 @@
 
 #include "CkSVSBaseGlobal.h"
 
-namespace SVSBase {
+namespace SVS {
 
     class MusicTimeline;
 
@@ -152,6 +152,6 @@ namespace SVSBase {
         return totalTick() >= other.totalTick();
     }
 
-} // namespace SVSBase
+} // namespace SVS
 
 #endif // MUSICTIME_H

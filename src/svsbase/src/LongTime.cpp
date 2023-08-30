@@ -4,7 +4,7 @@
 #include <QRegularExpression>
 #include <QTextStream>
 
-namespace SVSBase {
+namespace SVS {
 
     static inline int min2ms(int t) {
         return t * 60000;
@@ -76,7 +76,7 @@ namespace SVSBase {
         return res;
     }
 
-    QDebug operator<<(QDebug debug, const SVSBase::LongTime &lt) {
+    QDebug operator<<(QDebug debug, const SVS::LongTime &lt) {
         QDebugStateSaver saver(debug);
         debug.noquote().nospace() << "LongTime(" << lt.toString() << ")";
         return debug;
@@ -84,6 +84,6 @@ namespace SVSBase {
 
 }
 
-uint qHash(const SVSBase::LongTime &time, uint seed) {
+uint qHash(const SVS::LongTime &time, uint seed) {
     return qHash(time.totalMsec(), seed);
 }

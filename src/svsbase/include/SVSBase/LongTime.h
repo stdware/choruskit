@@ -5,7 +5,7 @@
 
 #include "CkSVSBaseGlobal.h"
 
-namespace SVSBase {
+namespace SVS {
 
     class CKSVSBASE_API LongTime {
     public:
@@ -82,6 +82,6 @@ namespace SVSBase {
 
 }
 
-uint qHash(const SVSBase::LongTime &time, uint seed);
+uint qHash(const SVS::LongTime &time, uint seed);
 
 #endif // LONGTIME_H

@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <QRegularExpression>
 
-namespace SVSBase {
+namespace SVS {
 
     QDataStream &operator<<(QDataStream &out, const MusicTimeSignature &ts) {
         out << ts.numerator() << ts.denominator();
@@ -465,4 +465,4 @@ namespace SVSBase {
     }
     //===========================================================================
 
-} // namespace SVSBase
+} // namespace SVS
