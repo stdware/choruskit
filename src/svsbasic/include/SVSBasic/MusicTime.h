@@ -3,7 +3,7 @@
 
 #include <QSharedPointer>
 
-#include "CkSVSBaseGlobal.h"
+#include "CkSVSBasicGlobal.h"
 
 namespace SVS {
 
@@ -32,7 +32,7 @@ namespace SVS {
     private:
         int m, b, t;
 
-        friend CKSVSBASE_API QDebug operator<<(QDebug debug, const MusicTime &time);
+        friend CKSVSBASIC_API QDebug operator<<(QDebug debug, const MusicTime &time);
     };
 
     Q_DECL_CONSTEXPR MusicTime::MusicTime() noexcept : m(0), b(0), t(0) {
@@ -69,7 +69,7 @@ namespace SVS {
         return m >= 0 && b >= 0 && t >= 0;
     }
 
-    class CKSVSBASE_API PersistentMusicTime {
+    class CKSVSBASIC_API PersistentMusicTime {
     public:
         PersistentMusicTime();
         ~PersistentMusicTime();
@@ -114,7 +114,7 @@ namespace SVS {
 
         QString toString() const;
 
-        friend CKSVSBASE_API QDebug operator<<(QDebug debug, const PersistentMusicTime &mt);
+        friend CKSVSBASIC_API QDebug operator<<(QDebug debug, const PersistentMusicTime &mt);
 
     private:
         explicit PersistentMusicTime(PersistentMusicTimeData *d);

@@ -1,4 +1,4 @@
-project(CkSVSBase
+project(CkSVSBasic
     VERSION ${CHORUSKIT_VERSION}
     LANGUAGES CXX
 )
@@ -17,11 +17,11 @@ file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
 choruskit_add_library(${PROJECT_NAME} SHARED ${_src})
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE CKSVSBASE_LIBRARY)
+target_compile_definitions(${PROJECT_NAME} PRIVATE CKSVSBASIC_LIBRARY)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${_qt_libs})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${_qt_includes} include/SVSBase src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${_qt_includes} include/SVSBasic src)
 
 choruskit_include_directories(${PROJECT_NAME} include)
 

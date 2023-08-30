@@ -3,11 +3,11 @@
 
 #include <QStringList>
 
-#include "CkSVSBaseGlobal.h"
+#include "CkSVSBasicGlobal.h"
 
 namespace SVS {
 
-    class CKSVSBASE_API LongTime {
+    class CKSVSBASIC_API LongTime {
     public:
         Q_DECL_CONSTEXPR inline LongTime();
         Q_DECL_CONSTEXPR inline LongTime(int msec);
@@ -28,7 +28,7 @@ namespace SVS {
         Q_DECL_CONSTEXPR bool operator>(const LongTime &other) const;
         Q_DECL_CONSTEXPR bool operator>=(const LongTime &other) const;
 
-        friend CKSVSBASE_API QDebug operator<<(QDebug debug, const LongTime &lt);
+        friend CKSVSBASIC_API QDebug operator<<(QDebug debug, const LongTime &lt);
 
     private:
         int t;

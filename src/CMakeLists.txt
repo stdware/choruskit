@@ -78,7 +78,7 @@ add_subdirectory(appcore)
 
 add_subdirectory(loader)
 
-add_subdirectory(svsbase)
+add_subdirectory(svsbasic)
 
 add_subdirectory(svswidgets)
 

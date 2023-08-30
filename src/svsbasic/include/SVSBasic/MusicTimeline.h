@@ -11,7 +11,7 @@ namespace SVS {
 
     class MusicTimeline;
 
-    class CKSVSBASE_API MusicTimeSignature {
+    class CKSVSBASIC_API MusicTimeSignature {
     public:
         MusicTimeSignature();
         MusicTimeSignature(int numerator, int denominator);
@@ -31,7 +31,7 @@ namespace SVS {
         Q_DECL_CONSTEXPR inline bool operator==(const MusicTimeSignature &t) const;
         Q_DECL_CONSTEXPR inline bool operator!=(const MusicTimeSignature &t) const;
 
-        friend CKSVSBASE_API QDebug operator<<(QDebug debug, const MusicTimeSignature &t);
+        friend CKSVSBASIC_API QDebug operator<<(QDebug debug, const MusicTimeSignature &t);
 
     private:
         int num;
@@ -62,12 +62,12 @@ namespace SVS {
         return num != t.num || den != t.den;
     }
 
-    CKSVSBASE_API QDataStream &operator<<(QDataStream &out, const MusicTimeSignature &ts);
-    CKSVSBASE_API QDataStream &operator>>(QDataStream &in, MusicTimeSignature &ts);
+    CKSVSBASIC_API QDataStream &operator<<(QDataStream &out, const MusicTimeSignature &ts);
+    CKSVSBASIC_API QDataStream &operator>>(QDataStream &in, MusicTimeSignature &ts);
 
     class MusicTimelinePrivate;
 
-    class CKSVSBASE_API MusicTimeline : public QObject {
+    class CKSVSBASIC_API MusicTimeline : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(MusicTimeline)
     public:

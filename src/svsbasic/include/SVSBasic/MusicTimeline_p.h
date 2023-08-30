@@ -17,7 +17,7 @@
 
 namespace SVS {
 
-    class CKSVSBASE_API MusicTimelinePrivate {
+    class CKSVSBASIC_API MusicTimelinePrivate {
         Q_DECLARE_PUBLIC(MusicTimeline)
     public:
         MusicTimelinePrivate();

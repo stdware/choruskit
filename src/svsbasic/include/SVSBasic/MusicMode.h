@@ -3,11 +3,11 @@
 
 #include <QObject>
 
-#include "CkSVSBaseGlobal.h"
+#include "CkSVSBasicGlobal.h"
 
 namespace SVS {
 
-    class CKSVSBASE_API MusicMode {
+    class CKSVSBASIC_API MusicMode {
         Q_GADGET
     public:
         enum Type {
