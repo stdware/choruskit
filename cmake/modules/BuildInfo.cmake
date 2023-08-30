@@ -48,23 +48,34 @@ function(ck_generate_build_info_header _file)
     find_package(Git QUIET)
 
     if(Git_FOUND)
+        message(STATUS "Git found: ${GIT_EXECUTABLE} (version ${GIT_VERSION_STRING})")
         execute_process(
             COMMAND ${GIT_EXECUTABLE} log -1 --pretty=format:%H
-            OUTPUT_VARIABLE _git_hash
+            OUTPUT_VARIABLE _git_hash_temp
             OUTPUT_STRIP_TRAILING_WHITESPACE
             ERROR_QUIET
             WORKING_DIRECTORY ${CK_REPO_ROOT_DIR}
-            COMMAND_ERROR_IS_FATAL ANY
+            RESULT_VARIABLE _code
         )
+
+        if(${_code} EQUAL 0)
+            set(_git_hash ${_git_hash_temp})
+        endif()
 
         execute_process(
             COMMAND ${GIT_EXECUTABLE} symbolic-ref --short -q HEAD
-            OUTPUT_VARIABLE _git_branch
+            OUTPUT_VARIABLE _git_branch_temp
             OUTPUT_STRIP_TRAILING_WHITESPACE
             ERROR_QUIET
             WORKING_DIRECTORY ${CK_REPO_ROOT_DIR}
-            COMMAND_ERROR_IS_FATAL ANY
+            RESULT_VARIABLE _code
         )
+
+        if(${_code} EQUAL 0)
+            set(_git_branch ${_git_branch_temp})
+        endif()
+    else()
+        message(WARNING "Git not found")
     endif()
 
     set(_compiler_name unknown)
