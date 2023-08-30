@@ -5,7 +5,6 @@
 #include <sstream>
 #include <vector>
 
-
 #include <shlwapi.h>
 
 #include <delayimp.h>
@@ -14,6 +13,9 @@
 
 #include <fcntl.h>
 #include <io.h>
+
+// Usage: ckwindeps <PE files>
+// Output: multiple lines of dependency shared libraries
 
 struct LocaleGuard {
     LocaleGuard() {
@@ -292,10 +294,14 @@ static bool readPeExecutable(const std::wstring &peExecutableFileName, std::wstr
 }
 
 int main(int argc, char *argv[]) {
+    (void) argv; // unused
+
     auto argvW = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
     if (!argvW) {
         return -1;
     }
+
+    // Parse arguments
     std::wstring wAppPath = argvW[0];
     std::vector<std::wstring> fileNames;
     bool showHelp = false;

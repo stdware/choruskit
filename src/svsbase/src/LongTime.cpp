@@ -1,5 +1,6 @@
 #include "LongTime.h"
 
+#include <QDebug>
 #include <QRegularExpression>
 #include <QTextStream>
 
@@ -73,6 +74,12 @@ namespace SVSBase {
             }
         }
         return res;
+    }
+
+    QDebug operator<<(QDebug debug, const SVSBase::LongTime &lt) {
+        QDebugStateSaver saver(debug);
+        debug.noquote().nospace() << "LongTime(" << lt.toString() << ")";
+        return debug;
     }
 
 }

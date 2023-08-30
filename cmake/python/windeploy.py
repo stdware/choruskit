@@ -72,7 +72,7 @@ def deploy_qt_binaries(qmake_dir: str, libdir: str, plugindir: str, files: list[
     return code
 
 
-def deploy_3rdparty_libraries(petool: str, libdir: str, files: list[str], searching_dirs: list[str] = []) -> int:
+def deploy_shared_libraries(petool: str, libdir: str, files: list[str], searching_dirs: list[str] = []) -> int:
     if not os.path.isfile(petool):
         print("petool not found!!!")
         return -1
@@ -98,9 +98,6 @@ def deploy_3rdparty_libraries(petool: str, libdir: str, files: list[str], search
         for item in result.stdout.split("\n"):
             item_lower = item.lower()
 
-            # Skip Qt libraries
-            if item.startswith("Qt"):
-                continue
             # Skip MSVC libraries
             if item_lower.startswith("vcruntime") or item_lower.startswith("msvc"):
                 continue
@@ -109,6 +106,9 @@ def deploy_3rdparty_libraries(petool: str, libdir: str, files: list[str], search
                 continue
             # Skip Windows system libraries
             if os.path.exists("C:\\Windows\\system32\\" + item) or os.path.exists("C:\\Windows\\SysWow64\\" + item):
+                continue
+            # Skip existing Qt libraries
+            if item.startswith("Qt") and os.path.exists(libdir + "/" + item):
                 continue
             # Skip if collected
             if item_lower in name_set:
@@ -125,6 +125,10 @@ def deploy_3rdparty_libraries(petool: str, libdir: str, files: list[str], search
             if len(path) == 0:
                 continue
             dependencies.append(path)
+
+            # Skip Qt libraries
+            if item.startswith("Qt"):
+                continue
 
             # Push to stack
             stack.append(path)
@@ -186,8 +190,10 @@ def main():
     else:
         Global.prefix = args.prefix
 
+    qmake_dir = os.path.dirname(args.qmake)
+
     # Run windeployqt
-    code = deploy_qt_binaries(os.path.dirname(args.qmake),
+    code = deploy_qt_binaries(qmake_dir,
                               Global.prefix + "/bin",
                               Global.prefix + "/lib/Qt/plugins",
                               args.files)
@@ -195,10 +201,10 @@ def main():
         sys.exit(code)
 
     # Deploy other libraries
-    code = deploy_3rdparty_libraries(args.petool,
-                                     Global.prefix + "/bin",
-                                     args.files,
-                                     args.dirs)
+    code = deploy_shared_libraries(args.petool,
+                                   Global.prefix + "/bin",
+                                   args.files,
+                                   args.dirs + [qmake_dir])
     if code != 0:
         sys.exit(code)
 
@@ -219,7 +225,7 @@ def main():
     # directory.
     find_and_copy("../lib/qtmediate/plugins", "lib/qtmediate/plugins", ["dll"])
 
-    # VCPKG has a `debug` directory containing debug version of the packages, we need 
+    # VCPKG has a `debug` directory containing debug version of the packages, we need
     # to search the upper directory if the `share` directory is not found.
     if not find_and_copy("../share/qtmediate/translations", "share/qtmediate/translations"):
         find_and_copy("../../share/qtmediate/translations",

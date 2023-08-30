@@ -7,7 +7,7 @@ function(_find_qmake _out)
         return()
     endif()
 
-    set(_dir ${Qt${QT_VERSION_MAJOR}_DIR})
+    set(_dir ${QT_DIR})
 
     while(TRUE)
         if(${_dir} MATCHES "(\\\\|\\/)$")

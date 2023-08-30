@@ -28,8 +28,6 @@ namespace SVSBase {
             initializer() {
                 qRegisterMetaType<MusicTimeSignature>();
                 qRegisterMetaTypeStreamOperators<MusicTimeSignature>();
-
-                qDebug() << "Registered";
             }
             ~initializer() {
             }

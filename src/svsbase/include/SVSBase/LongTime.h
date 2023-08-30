@@ -28,6 +28,8 @@ namespace SVSBase {
         Q_DECL_CONSTEXPR bool operator>(const LongTime &other) const;
         Q_DECL_CONSTEXPR bool operator>=(const LongTime &other) const;
 
+        friend CKSVSBASE_API QDebug operator<<(QDebug debug, const LongTime &lt);
+
     private:
         int t;
     };
