@@ -7,7 +7,6 @@
 #include <QSplitter>
 
 #include <QMWidgetsMacros.h>
-#include <QPixelSize.h>
 
 #include "CkSVSWidgetsGlobal.h"
 

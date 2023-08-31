@@ -5,7 +5,6 @@
 #include <QVBoxLayout>
 
 #include <QMWidgetsMacros.h>
-#include <QPixelSize.h>
 
 #include "BaseContainer.h"
 

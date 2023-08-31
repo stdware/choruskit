@@ -196,12 +196,13 @@ function(_ck_add_copy_command _target _base_dir _src _dest)
         endif()
 
         if(NOT FUNC_SKIP_INSTALL)
+            string(REPLACE "\\" "/" _install_prefix ${CMAKE_INSTALL_PREFIX})
             install(CODE "
                 file(RELATIVE_PATH _rel_path \"${CK_BUILD_MAIN_DIR}\" \"${_path}\")
                 execute_process(
                     COMMAND \"${CMAKE_COMMAND}\"
                     -D \"src=${_full_path}\"
-                    -D \"dest=${CMAKE_INSTALL_PREFIX}/\${_rel_path}\"
+                    -D \"dest=${_install_prefix}/\${_rel_path}\"
                     -P \"${CK_CMAKE_MODULES_DIR}/commands/CopyIfDifferent.cmake\"
                     COMMAND_ERROR_IS_FATAL ANY
                 )

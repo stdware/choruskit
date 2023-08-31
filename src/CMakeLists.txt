@@ -61,10 +61,11 @@ macro(choruskit_install_headers _dir)
         )
 
         # Remove empty directories
+        string(REPLACE "\\" "/" _install_prefix ${CMAKE_INSTALL_PREFIX})
         install(CODE "
             execute_process(
                 COMMAND \"${CMAKE_COMMAND}\"
-                -D \"dir=${CMAKE_INSTALL_PREFIX}/${_dest}\"
+                -D \"dir=${_install_prefix}/${_dest}\"
                 -P \"${CK_CMAKE_MODULES_DIR}/commands/RemoveEmptyDirs.cmake\"
                 COMMAND_ERROR_IS_FATAL ANY
             )
