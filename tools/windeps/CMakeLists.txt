@@ -21,8 +21,14 @@ if(WIN32)
 endif()
 
 if(CHORUSKIT_INSTALL)
+    if(CHORUSKIT_VCPKG_TOOLS_HINT)
+        set(_install_dir tools/${CHORUSKIT_INSTALL_NAME})
+    else()
+        set(_install_dir ${CMAKE_INSTALL_BINDIR})
+    endif()
+
     install(TARGETS ${PROJECT_NAME}
         EXPORT ${CHORUSKIT_INSTALL_NAME}Targets
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" OPTIONAL
+        RUNTIME DESTINATION ${_install_dir} OPTIONAL
     )
 endif()
