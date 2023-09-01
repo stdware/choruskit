@@ -45,7 +45,7 @@ endif()
 # ----------------------------------
 # Project Variables
 # ----------------------------------
-set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake CACHE PATH "ChorusKit cmake modules directory")
 
 set(CHORUSKIT_VERSION ${PROJECT_VERSION})
 set(CHORUSKIT_INSTALL_NAME ${PROJECT_NAME})

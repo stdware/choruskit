@@ -622,6 +622,49 @@ function(ck_add_library _target)
     set_property(TARGET ChorusKit_Metadata APPEND PROPERTY APPLICATION_LIBRARIES ${_target})
 endfunction()
 
+#[[
+Add plain executable target, won't be installed.
+
+    ck_add_executable(<target> [sources]
+        [AUTOGEN] [CONSOLE] [WINDOWS]
+    )
+
+    AUTOGEN: set CMAKE_AUTOMOC, CMAKE_AUTOUIC, CMAKE_AUTORCC
+    CONSOLE: build console application on Windows
+    WINDOWS: build windows application on Windows
+]] #
+function(ck_add_executable _target)
+    set(options AUTOGEN CONSOLE WINDOWS)
+    set(oneValueArgs)
+    set(multiValueArgs)
+    cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(FUNC_AUTOGEN)
+        _ck_set_cmake_autoxxx(on)
+    endif()
+
+    add_executable(${_target} ${FUNC_UNPARSED_ARGUMENTS})
+
+    if(WIN32 AND NOT FUNC_CONSOLE)
+        if(FUNC_WINDOWS)
+            set_target_properties(${_target} PROPERTIES WIN32_EXECUTABLE TRUE)
+        else()
+            # Set windows application type
+            if(NOT CK_ENABLE_CONSOLE)
+                set_target_properties(${_target} PROPERTIES
+                    WIN32_EXECUTABLE TRUE
+                )
+            endif()
+        endif()
+    endif()
+
+    set_target_properties(${_target} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CK_BUILD_RUNTIME_DIR}
+    )
+
+    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY PLAIN_EXECUTABLES ${_target})
+endfunction()
+
 # ----------------------------------
 # ChorusKit Private API
 # ----------------------------------
@@ -766,6 +809,16 @@ function(_ck_post_deploy)
         endforeach()
     endif()
 
+    # Add executables
+    get_target_property(_executable_list ChorusKit_Metadata PLAIN_EXECUTABLES)
+    set(_executable_paths)
+
+    if(_executable_list)
+        foreach(_item ${_executable_list})
+            list(APPEND _executable_paths $<TARGET_FILE:${_item}>)
+        endforeach()
+    endif()
+
     # Get petool
     if(TARGET ckwindeps)
         set(_petool "$<TARGET_FILE:ckwindeps>")
@@ -810,7 +863,7 @@ function(_ck_post_deploy)
             --qmake ${QT_QMAKE_EXECUTABLE}
             --petool ${_petool}
             --dirs ${_searching_paths}
-            --files ${_binary_paths}
+            --files ${_binary_paths} ${_executable_paths}
             ${_debug} ${_verbose}
             COMMENT "Running post deploy script..."
             WORKING_DIRECTORY ${CK_BUILD_MAIN_DIR}
