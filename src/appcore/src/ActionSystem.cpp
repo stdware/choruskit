@@ -25,7 +25,7 @@ namespace Core {
 
     void ActionSystemPrivate::init() {
         readSettings();
-        configVars.addHash(QMSimpleVarExp::SystemValues());
+        configVars.addHash(QMSimpleVarExp::systemValues());
     }
 
     static ActionSystem *m_instance = nullptr;

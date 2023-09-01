@@ -154,4 +154,6 @@ namespace SVS {
 
 } // namespace SVS
 
+Q_DECLARE_METATYPE(SVS::MusicTime)
+
 #endif // MUSICTIME_H

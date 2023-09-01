@@ -16,10 +16,9 @@ namespace SVS {
     public:
         Qt::Orientation orient() const;
 
-    private:
+    protected:
         Qt::Orientation m_orient;
-
-    private:
+        
         void resizeEvent(QResizeEvent *event) override;
     };
 

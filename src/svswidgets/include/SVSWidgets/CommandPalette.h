@@ -50,7 +50,6 @@ namespace SVS {
 
         void currentRowChanged(int role);
         void currentItemChanged(QListWidgetItem *item);
-
         void filterKeywordChanged(const QString &text);
 
         void styleDataChanged();

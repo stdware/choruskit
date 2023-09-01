@@ -1,6 +1,7 @@
 #ifndef LONGTIME_H
 #define LONGTIME_H
 
+#include <QMetaType>
 #include <QStringList>
 
 #include "CkSVSBasicGlobal.h"
@@ -82,6 +83,8 @@ namespace SVS {
 
 }
 
-uint qHash(const SVS::LongTime &time, uint seed);
+CKSVSBASIC_API uint qHash(const SVS::LongTime &time, uint seed);
+
+Q_DECLARE_METATYPE(SVS::LongTime)
 
 #endif // LONGTIME_H

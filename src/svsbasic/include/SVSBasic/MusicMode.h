@@ -65,6 +65,6 @@ namespace SVS {
 
 }
 
-
+Q_DECLARE_METATYPE(SVS::MusicMode)
 
 #endif // MUSICMODE_H

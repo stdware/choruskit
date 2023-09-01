@@ -345,13 +345,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // std::cout << "[Dependencies]" << std::endl;
     for (auto it = libraries.begin(); it != libraries.end(); ++it) {
         std::cout << it->first << std::endl;
     }
-
-    // std::cout << "[Debug]" << std::endl;
-    // std::cout << (isDebugIn ? "TRUE" : "FALSE") << std::endl;
 
     return 0;
 }
