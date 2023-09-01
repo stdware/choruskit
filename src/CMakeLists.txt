@@ -75,7 +75,7 @@ endmacro()
 
 add_subdirectory(3rdparty)
 
-if(NOT TARGET QMCore)
+if(NOT TARGET qtmediate::Core)
     find_package(qtmediate REQUIRED)
 endif()
 
