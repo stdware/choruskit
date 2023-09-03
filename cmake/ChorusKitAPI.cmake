@@ -215,10 +215,10 @@ function(ck_add_library_searching_paths)
         set(_paths)
     endif()
 
-    if(CMAKE_BUILD_TYPE)
-        string(TOUPPER ${CMAKE_BUILD_TYPE} _config_upper)
-    else()
+    if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL Debug)
         set(_config_upper DEBUG)
+    else()
+        string(TOUPPER ${CMAKE_BUILD_TYPE} _config_upper)
     endif()
 
     foreach(_item ${ARGN})
@@ -834,7 +834,7 @@ function(_ck_post_deploy)
     endforeach()
 
     # Run command
-    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL Debug)
         set(_debug --debug)
     else()
         set(_debug)
