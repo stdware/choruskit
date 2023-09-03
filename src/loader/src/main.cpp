@@ -106,7 +106,7 @@ static inline void displayError(const QString &t) {
     }
     qAppExt->showMessage(nullptr, QMAppExtension::Critical, qApp->applicationName(), t);
 #endif
-    QMOs::exitApp(-1);
+    std::exit(-1);
 }
 
 static inline void displayHelpText(const QString &t) {
@@ -127,7 +127,7 @@ static inline void displayHelpText(const QString &t) {
     qAppExt->showMessage(nullptr, QMAppExtension::Information, qApp->applicationName(), t);
 #endif
 
-    QMOs::exitApp(0);
+    std::exit(0);
 }
 
 static inline void printVersion(const PluginSpec *coreplugin) {
