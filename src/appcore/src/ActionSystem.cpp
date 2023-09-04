@@ -162,7 +162,7 @@ namespace Core {
             if (!it->isArray()) {
                 continue;
             }
-            res.insert(it.key(), QMBatch::arrayToStringList(it->toArray()));
+            res.insert(it.key(), QMBatch::jsonArrayToStrList(it->toArray()));
         }
         return res;
     }

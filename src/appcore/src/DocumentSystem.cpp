@@ -62,9 +62,9 @@ namespace Core {
 
         auto recentObj = obj.value(recentGroupC).toObject();
         QStringList recentFiles =
-            QMBatch::arrayToStringList(recentObj.value(QLatin1String(filesKeyC)).toArray());
+            QMBatch::jsonArrayToStrList(recentObj.value(QLatin1String(filesKeyC)).toArray());
         QStringList recentDirs =
-            QMBatch::arrayToStringList(recentObj.value(QLatin1String(dirKeyC)).toArray());
+            QMBatch::jsonArrayToStrList(recentObj.value(QLatin1String(dirKeyC)).toArray());
 
         // clean non-existing files
         m_recentFiles.clear();

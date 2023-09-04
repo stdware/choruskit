@@ -51,7 +51,7 @@ namespace Core {
     }
 
     SplitterSizes SplitterSizes::fromObject(const QJsonObject &obj) {
-        return QMBatch::toIntList(QMBatch::arrayToStringList(obj.value("sizes").toArray()));
+        return QMBatch::strListToIntList(QMBatch::jsonArrayToStrList(obj.value("sizes").toArray()));
     }
 
     QJsonObject SplitterSizes::toObject() const {

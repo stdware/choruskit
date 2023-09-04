@@ -140,6 +140,11 @@ macro(ck_init_build_system _app)
     # APPLICATION_LIBRARIES
 endmacro()
 
+#[[
+Do final work.
+
+    ck_finish_build_system()
+]] #
 function(ck_finish_build_system)
     if(NOT CK_INITIALIZED)
         message(FATAL_ERROR "ck_finish_build_system: build system not initialized")
@@ -148,18 +153,19 @@ function(ck_finish_build_system)
     include(${CK_CMAKE_MODULES_DIR}/modules/BuildInfo.cmake)
 
     # Generate config header
+    set(_config_header "${CK_BUILD_INCLUDE_DIR}/choruskit_config.h")
+
     get_target_property(_def_list ChorusKit_Metadata CONFIG_DEFINITIONS)
 
-    set(_config_header ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
-
     if(_def_list)
-        ck_generate_config_header("${_def_list}" ${_config_header})
+        ck_generate_config_header("${_def_list}" "${_config_header}")
     else()
         file(WRITE ${_config_header} "")
     endif()
 
     # Generate build info header
-    ck_generate_build_info_header("${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h")
+    set(_buildinfo_header "${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h")
+    ck_generate_build_info_header("${_buildinfo_header}")
 
     _ck_post_deploy()
 endfunction()
