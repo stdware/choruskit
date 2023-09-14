@@ -31,7 +31,7 @@ choruskit_include_directories(${PROJECT_NAME} include)
 
 if(WIN32)
     string(TIMESTAMP _year "%Y")
-    ck_attach_win_rc_file(${PROJECT_NAME}
+    qtmediate_add_win_rc(${PROJECT_NAME}
         COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${_year} SineStriker"
         DESCRIPTION "ChorusKit Library"
     )

@@ -14,7 +14,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE _UNICODE UNICODE)
 
 if(WIN32)
     string(TIMESTAMP _year "%Y")
-    ck_attach_win_rc_file(${PROJECT_NAME}
+    qtmediate_add_win_rc(${PROJECT_NAME}
         COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${_year} SineStriker"
         DESCRIPTION "ChorusKit Windows Deploy Tool"
     )

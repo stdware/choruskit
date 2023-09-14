@@ -6,10 +6,10 @@
 #include <QProcess>
 #include <QTextStream>
 
-#include <QMAppExtension.h>
-#include <QMCss.h>
-#include <QMDecoratorV2.h>
-#include <QMSystem.h>
+#include <QMCore/QMSystem.h>
+#include <QMGui/QMCss.h>
+#include <QMWidgets/QMAppExtension.h>
+#include <QMWidgets/QMDecoratorV2.h>
 
 #include <extensionsystem/pluginmanager.h>
 #include <extensionsystem/pluginspec.h>
@@ -281,7 +281,7 @@ public:
             attr.pos = item.pos.size() == 2 ? QPoint(item.pos[0], item.pos[1]) : attr.pos;
             attr.anchor = item.anchor.size() == 2 ? qMakePair(item.anchor[0], item.anchor[1]) : attr.anchor;
             attr.fontSize = item.fontSize > 0 ? item.fontSize : attr.fontSize;
-            attr.fontColor = QMCss::CssStringToColor(item.fontColor);
+            attr.fontColor = QMCss::parseColor(item.fontColor);
             attr.maxWidth = item.maxWidth > 0 ? item.maxWidth : attr.maxWidth;
             attr.text = item.text;
 

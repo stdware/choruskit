@@ -1,3 +1,9 @@
+if(NOT DEFINED QTMEDIATE_CMAKE_MODULES_DIR)
+    message(FATAL_ERROR "QTMEDIATE_CMAKE_MODULES_DIR not defined!")
+endif()
+
+include("${QTMEDIATE_CMAKE_MODULES_DIR}/QtMediateAPI.cmake")
+
 if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
 endif()
@@ -287,17 +293,15 @@ function(ck_configure_application)
     string(TIMESTAMP _year "%Y")
     set(_copyright "Copyright ${CK_DEV_START_YEAR}-${_year} ${CK_APPLICATION_VENDOR}")
 
-    include(${CK_CMAKE_MODULES_DIR}/modules/OSResource.cmake)
-
     if(APPLE)
         if(FUNC_ICNS)
-            set(_icns ICNS ${FUNC_ICNS})
+            set(_icns ICON ${FUNC_ICNS})
         else()
             set(_icns)
         endif()
 
         # Add mac bundle
-        ck_attach_mac_bundle(${_target}
+        qtmediate_add_mac_bundle(${_target}
             COPYRIGHT "${_copyright}"
             ${_icns}
             ${FUNC_UNPARSED_ARGUMENTS}
@@ -315,21 +319,27 @@ function(ck_configure_application)
             endif()
 
             if(FUNC_ICO)
-                set(_ico ICO ${FUNC_ICO})
+                set(_ico ICON ${FUNC_ICO})
             else()
                 set(_ico)
             endif()
 
             # Add windows rc file
-            ck_attach_win_rc_file(${_target}
-                MANIFEST
+            qtmediate_add_win_rc(${_target}
+                COPYRIGHT "${_copyright}"
+                ${_ico}
+                ${FUNC_UNPARSED_ARGUMENTS}
+            )
+
+            # Add manifest
+            qtmediate_add_win_manifest(${_target}
                 COPYRIGHT "${_copyright}"
                 ${_ico}
                 ${FUNC_UNPARSED_ARGUMENTS}
             )
 
             # Add shortcut
-            ck_create_win_shortcut(${_target} ${CK_BUILD_MAIN_DIR}
+            qtmediate_create_win_shortcut(${_target} ${CK_BUILD_MAIN_DIR}
                 OUTPUT_NAME "${_target}"
             )
         endif()
@@ -416,7 +426,7 @@ function(ck_add_application_plugin _target)
         set(_copyright "Copyright ${CK_DEV_START_YEAR}-${_year} ${_vendor}")
 
         # Add windows rc file
-        ck_attach_win_rc_file(${_target}
+        qtmediate_add_win_rc(${_target}
             COPYRIGHT "${_copyright}"
             ${FUNC_UNPARSED_ARGUMENTS}
         )
@@ -584,7 +594,7 @@ function(ck_add_library _target)
         get_target_property(_type ${_target} TYPE)
 
         if(_shared)
-            ck_attach_win_rc_file(${_target}
+            qtmediate_add_win_rc(${_target}
                 COPYRIGHT "${_copyright}"
                 ${FUNC_UNPARSED_ARGUMENTS}
             )

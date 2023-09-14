@@ -3,9 +3,6 @@
 
 #include "ActionDomain_p.h"
 
-#include "QMChronSet.h"
-#include "QMXmlAdaptor.h"
-
 #include "QMBatch.h"
 
 #include "ILoader.h"

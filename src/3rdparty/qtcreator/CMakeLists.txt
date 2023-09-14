@@ -11,7 +11,7 @@ function(configure_qtc_library _name)
     choruskit_add_library(${_name} SHARED)
 
     if(WIN32)
-        ck_attach_win_rc_file(${_name}
+        qtmediate_add_win_rc(${_name}
             NAME ${_name}
             VERSION ${PROJECT_VERSION}
             DESCRIPTION "Qt Creator 3.6"

@@ -1,5 +1,4 @@
 include(../cmake/modules/Basic.cmake)
-include(../cmake/modules/OSResource.cmake)
 
 function(choruskit_add_library _target _type)
     add_library(${_target} ${_type} ${ARGN})

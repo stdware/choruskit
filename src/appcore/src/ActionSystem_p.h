@@ -5,7 +5,8 @@
 
 #include <QMChronMap.h>
 #include <QMSimpleVarExp.h>
-#include <QMXmlAdaptor.h>
+
+#include <QMXmlAdaptor_p.h>
 
 namespace Core {
 
