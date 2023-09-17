@@ -12,19 +12,6 @@ function(ck_check_defined _var)
 endfunction()
 
 #[[
-Set value if valid, otherwise use default.
-
-    ck_check_defined(var)
-]] #
-macro(ck_set_value _key _maybe_value _default)
-    if(${_maybe_value})
-        set(${_key} ${${_maybe_value}})
-    else()
-        set(${_key} ${_default})
-    endif()
-endmacro()
-
-#[[
 The macro works same as "option".
 
     ck_option(<name> <values...>)
@@ -36,46 +23,9 @@ macro(ck_option _name)
 endmacro()
 
 #[[
-Parse version and create seq vars with specified prefix.
-
-    ck_parse_version(<prefix> <version>)
-]] #
-function(ck_parse_version _prefix _version)
-    string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ ${_version})
-
-    foreach(_i RANGE 1 4)
-        if(${CMAKE_MATCH_COUNT} GREATER_EQUAL ${_i})
-            set(_tmp ${CMAKE_MATCH_${_i}})
-        else()
-            set(_tmp 0)
-        endif()
-
-        set(${_prefix}_${_i} ${_tmp} PARENT_SCOPE)
-    endforeach()
-endfunction()
-
-#[[
-Get shorter version.
-
-    ck_get_short_version(<VAR> <version> <count>)
-]] #
-function(ck_get_short_version _var _version _count)
-    ck_parse_version(FUNC ${_version})
-
-    set(_list)
-
-    foreach(_i RANGE 1 ${_count})
-        list(APPEND _list ${FUNC_${_i}})
-    endforeach()
-
-    string(JOIN "." _short_version ${_list})
-    set(${_var} ${_short_version} PARENT_SCOPE)
-endfunction()
-
-#[[
 Tell if there are any generator expressions in the string.
 
-    ck_get_short_version(<string> <output>)
+    ck_has_genex(<string> <output>)
 ]] #
 function(ck_has_genex _str _out)
     string(GENEX_STRIP "${_str}" _no_genex)
@@ -161,41 +111,6 @@ function(ck_get_subdirs _var)
 
     set(${_var} ${_res} PARENT_SCOPE)
 endfunction()
-
-#[[
-Find Qt modules by calling `find_package`.
-
-    ck_find_qt_module(<modules...>)
-]] #
-macro(ck_find_qt_module)
-    foreach(_module ${ARGV})
-        find_package(QT NAMES Qt6 Qt5 COMPONENTS ${_module} REQUIRED)
-        find_package(Qt${QT_VERSION_MAJOR} COMPONENTS ${_module} REQUIRED)
-    endforeach()
-endmacro()
-
-#[[
-Add Qt modules to the specified list.
-
-    ck_add_qt_module(<list> <modules...>)
-]] #
-macro(ck_add_qt_module _list)
-    foreach(_module ${ARGN})
-        ck_find_qt_module(${_module})
-        list(APPEND ${_list} Qt${QT_VERSION_MAJOR}::${_module})
-    endforeach()
-endmacro()
-
-#[[
-Add Qt private include directories to the specified list.
-
-    ck_add_qt_private_inc(<list> <modules...>)
-]] #
-macro(ck_add_qt_private_inc _list)
-    foreach(_module ${ARGN})
-        list(APPEND ${_list} ${Qt${QT_VERSION_MAJOR}${_module}_PRIVATE_INCLUDE_DIRS})
-    endforeach()
-endmacro()
 
 #[[
 Add all or partial sub-directories to buildsystem

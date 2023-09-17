@@ -1,7 +1,5 @@
 include_guard(DIRECTORY)
 
-include(${CMAKE_CURRENT_LIST_DIR}/Basic.cmake)
-
 # Required Variables: CK_REPO_ROOT_DIR
 
 #[[

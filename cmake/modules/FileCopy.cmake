@@ -1,7 +1,5 @@
 include_guard(DIRECTORY)
 
-include(${CMAKE_CURRENT_LIST_DIR}/Basic.cmake)
-
 # Required Variables: CK_CMAKE_MODULES_DIR, CK_BUILD_MAIN_DIR, CK_BUILD_SHARE_DIR
 
 #[[

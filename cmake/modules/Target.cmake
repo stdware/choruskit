@@ -1,6 +1,34 @@
 include_guard(DIRECTORY)
 
-include(${CMAKE_CURRENT_LIST_DIR}/Basic.cmake)
+#[[
+Add Qt modules to the specified list.
+
+    ck_add_qt_module(<list> <modules...>)
+]] #
+macro(ck_add_qt_module _list)
+    foreach(_module ${ARGN})
+        if(NOT QT_VERSION_MAJOR OR NOT TARGET Qt${QT_VERSION_MAJOR}::${_module})
+            qtmediate_find_qt_libraries(${_module})
+        endif()
+
+        list(APPEND ${_list} Qt${QT_VERSION_MAJOR}::${_module})
+    endforeach()
+endmacro()
+
+#[[
+Add Qt private include directories to the specified list.
+
+    ck_add_qt_private_inc(<list> <modules...>)
+]] #
+macro(ck_add_qt_private_inc _list)
+    foreach(_module ${ARGN})
+        if(NOT QT_VERSION_MAJOR OR NOT TARGET Qt${QT_VERSION_MAJOR}::${_module})
+            qtmediate_find_qt_libraries(${_module})
+        endif()
+
+        list(APPEND ${_list} ${Qt${QT_VERSION_MAJOR}${_module}_PRIVATE_INCLUDE_DIRS})
+    endforeach()
+endmacro()
 
 # Required Variables: CK_APPLICATION_NAME, CK_CMAKE_SOURCE_DIR, CK_INSTALL_INCLUDE_DIR
 
@@ -102,7 +130,7 @@ CMake target commands wrapper to add sources, links, includes.
 
         [QT_LINKS             modules...]
         [QT_LINKS_PRIVATE     modules...]
-        [QT_INCLUDES_PRIVATE  modules...]
+        [QT_INCLUDE_PRIVATE  modules...]
 
         [AUTO_INCLUDE_CURRENT]
         [AUTO_INCLUDE_SUBDIRS]
@@ -120,7 +148,7 @@ function(ck_target_components _target)
         LINKS LINKS_PRIVATE
         DEFINES DEFINES_PRIVATE
         CCFLAGS CCFLAGS_PUBLIC
-        QT_LINKS QT_LINKS_PRIVATE QT_INCLUDES_PRIVATE
+        QT_LINKS QT_LINKS_PRIVATE QT_INCLUDE_PRIVATE
         AUTO_INCLUDE_DIRS INCLUDE_PRIVATE
     )
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -147,7 +175,7 @@ function(ck_target_components _target)
     target_link_libraries(${_target} PRIVATE ${_qt_libs_p})
 
     set(_qt_incs)
-    ck_add_qt_private_inc(_qt_incs ${FUNC_QT_INCLUDES_PRIVATE})
+    ck_add_qt_private_inc(_qt_incs ${FUNC_QT_INCLUDE_PRIVATE})
     target_include_directories(${_target} PRIVATE ${_qt_incs})
 
     if(FUNC_INCLUDE_CURRENT_PRIVATE)
@@ -261,20 +289,6 @@ function(ck_collect_targets _var)
     endif()
 
     set(${_var} ${_targets} PARENT_SCOPE)
-endfunction()
-
-#[[
-Set SKIP_AUTOMOC for all source files in specified directory.
-
-    ck_dir_skip_automoc(<dir...>)
-]] #
-function(ck_dir_skip_automoc)
-    foreach(_item ${ARGN})
-        file(GLOB _src ${_item}/*.h ${_item}/*.cpp ${_item}/*.cc)
-        set_source_files_properties(
-            ${_src} PROPERTIES SKIP_AUTOMOC ON
-        )
-    endforeach()
 endfunction()
 
 #[[

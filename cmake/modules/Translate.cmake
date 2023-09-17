@@ -1,7 +1,5 @@
 include_guard(DIRECTORY)
 
-include(${CMAKE_CURRENT_LIST_DIR}/Basic.cmake)
-
 #[[
 Add qt translation target.
 
@@ -85,7 +83,7 @@ function(ck_add_translations _target)
     endif()
 
     # Find linguist tools
-    ck_find_qt_module(LinguistTools)
+    qtmediate_find_qt_libraries(LinguistTools)
 
     add_custom_target(${_target})
 

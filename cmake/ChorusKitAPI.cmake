@@ -1,3 +1,5 @@
+include_guard(DIRECTORY)
+
 if(NOT DEFINED QTMEDIATE_CMAKE_MODULES_DIR)
     message(FATAL_ERROR "QTMEDIATE_CMAKE_MODULES_DIR not defined!")
 endif()
@@ -418,7 +420,7 @@ function(ck_add_application_plugin _target)
     # Set parsed name as output name if not set
     _ck_try_set_output_name(${_target} ${_target})
 
-    ck_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
+    qtmediate_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
 
     if(WIN32)
         string(TIMESTAMP _year "%Y")
@@ -446,7 +448,7 @@ function(ck_add_application_plugin _target)
         SRC ${_tmp_desc_file} DEST .
     )
 
-    ck_set_value(_category FUNC_CATEGORY ${_target})
+    qtmediate_set_value(_category FUNC_CATEGORY ${_target})
 
     set(_build_output_dir ${CK_BUILD_PLUGINS_DIR}/${_category})
     set(_install_output_dir ${CK_INSTALL_PLUGINS_DIR}/${_category})
@@ -505,16 +507,16 @@ function(ck_configure_plugin_metadata _target _plugin_json)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # Set plugin metadata
-    ck_set_value(_name FUNC_NAME ${PROJECT_NAME}) # to be removed
-    ck_set_value(_version FUNC_VERSION ${PROJECT_VERSION})
-    ck_set_value(_compat_version FUNC_COMPAT_VERSION "0.0.0.0")
-    ck_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
+    qtmediate_set_value(_name FUNC_NAME ${PROJECT_NAME}) # to be removed
+    qtmediate_set_value(_version FUNC_VERSION ${PROJECT_VERSION})
+    qtmediate_set_value(_compat_version FUNC_COMPAT_VERSION "0.0.0.0")
+    qtmediate_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
 
     # Fix version
-    ck_parse_version(_ver ${_version})
+    qtmediate_parse_version(_ver ${_version})
     set(PLUGIN_METADATA_VERSION ${_ver_1}.${_ver_2}.${_ver_3}_${_ver_4})
 
-    ck_parse_version(_compat ${_compat_version})
+    qtmediate_parse_version(_compat ${_compat_version})
     set(PLUGIN_METADATA_COMPAT_VERSION ${_compat_1}.${_compat_2}.${_compat_3}_${_compat_4})
     set(PLUGIN_METADATA_VENDOR ${_vendor})
 
@@ -587,7 +589,7 @@ function(ck_add_library _target)
         if(FUNC_COPYRIGHT)
             set(_copyright ${FUNC_COPYRIGHT})
         else()
-            ck_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
+            qtmediate_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
             set(_copyright "Copyright ${CK_DEV_START_YEAR}-${_year} ${_vendor}")
         endif()
 
@@ -681,6 +683,24 @@ function(ck_add_executable _target)
     set_property(TARGET ChorusKit_Metadata APPEND PROPERTY PLAIN_EXECUTABLES ${_target})
 endfunction()
 
+#[[
+Get shorter version.
+
+    ck_get_short_version(<VAR> <version> <count>)
+]] #
+function(ck_get_short_version _var _version _count)
+    qtmediate_parse_version(FUNC ${_version})
+
+    set(_list)
+
+    foreach(_i RANGE 1 ${_count})
+        list(APPEND _list ${FUNC_${_i}})
+    endforeach()
+
+    string(JOIN "." _short_version ${_list})
+    set(${_var} ${_short_version} PARENT_SCOPE)
+endfunction()
+
 # ----------------------------------
 # ChorusKit Private API
 # ----------------------------------
@@ -748,7 +768,7 @@ function(_ck_configure_plugin_desc _file)
     set(multiValueArgs SUBDIRS)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    ck_set_value(_name FUNC_NAME ${PROJECT_NAME})
+    qtmediate_set_value(_name FUNC_NAME ${PROJECT_NAME})
 
     set(_content "{\n    \"name\": \"${_name}\"")
 
@@ -906,6 +926,7 @@ function(_ck_post_deploy)
     endif()
 endfunction()
 
+include(${CK_CMAKE_MODULES_DIR}/modules/Basic.cmake)
 include(${CK_CMAKE_MODULES_DIR}/modules/FileCopy.cmake)
 include(${CK_CMAKE_MODULES_DIR}/modules/Target.cmake)
 include(${CK_CMAKE_MODULES_DIR}/modules/Translate.cmake)
