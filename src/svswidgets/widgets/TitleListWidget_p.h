@@ -1,5 +1,5 @@
-#ifndef CHORUSKIT_TITLELISTWIDGET_P_H
-#define CHORUSKIT_TITLELISTWIDGET_P_H
+#ifndef TITLELISTWIDGET_P_H
+#define TITLELISTWIDGET_P_H
 
 #include "TitleListItemDelegate.h"
 #include "TitleListWidget.h"
@@ -26,4 +26,4 @@ namespace SVS {
 
 }
 
-#endif // CHORUSKIT_TITLELISTWIDGET_P_H
+#endif // TITLELISTWIDGET_P_H

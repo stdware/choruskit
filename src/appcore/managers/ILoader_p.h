@@ -1,5 +1,5 @@
-#ifndef CHORUSKIT_ILOADER_P_H
-#define CHORUSKIT_ILOADER_P_H
+#ifndef ILOADER_P_H
+#define ILOADER_P_H
 
 #include "ILoader.h"
 
@@ -31,4 +31,4 @@ namespace Core {
 
 }
 
-#endif // CHORUSKIT_ILOADER_P_H
+#endif // ILOADER_P_H

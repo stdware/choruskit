@@ -7,9 +7,8 @@ project(ChorusKit VERSION 0.0.0.1 LANGUAGES CXX)
 # ----------------------------------
 option(CHORUSKIT_BUILD_TRANSLATIONS "Build translations" ON)
 option(CHORUSKIT_BUILD_TESTS "Build test cases" ON)
-option(CHORUSKIT_BUILD_TOOLS "Build tools" ON)
+option(CHORUSKIT_BUILD_DOCUMENTATIONS "Build documentations" OFF)
 option(CHORUSKIT_INSTALL "Install library" ON)
-option(CHORUSKIT_VCPKG_TOOLS_HINT "Install executables to tools directory" OFF)
 
 # ----------------------------------
 # CMake Settings
@@ -45,8 +44,6 @@ endif()
 # ----------------------------------
 # Project Variables
 # ----------------------------------
-set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake CACHE PATH "ChorusKit cmake modules directory" FORCE)
-
 set(CHORUSKIT_VERSION ${PROJECT_VERSION})
 set(CHORUSKIT_INSTALL_NAME ${PROJECT_NAME})
 set(CHORUSKIT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -58,7 +55,3 @@ set(CHORUSKIT_TRANSLATIONS zh_CN zh_HK ja_JP)
 add_subdirectory(src)
 
 add_subdirectory(share)
-
-if(CHORUSKIT_BUILD_TOOLS)
-    add_subdirectory(tools)
-endif()

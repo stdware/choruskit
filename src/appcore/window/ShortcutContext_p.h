@@ -1,5 +1,5 @@
-#ifndef CHORUSKIT_SHORTCUTCONTEXT_P_H
-#define CHORUSKIT_SHORTCUTCONTEXT_P_H
+#ifndef SHORTCUTCONTEXT_P_H
+#define SHORTCUTCONTEXT_P_H
 
 #include <QObject>
 
@@ -51,4 +51,4 @@ namespace Core {
 
 
 
-#endif // CHORUSKIT_SHORTCUTCONTEXT_P_H
+#endif // SHORTCUTCONTEXT_P_H
