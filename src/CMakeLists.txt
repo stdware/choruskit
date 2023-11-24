@@ -104,11 +104,13 @@ endfunction()
 function(choruskit_configure_include _name)
     target_include_directories(${PROJECT_NAME} PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
     )
 
     if(CHORUSKIT_INSTALL)
         target_include_directories(${PROJECT_NAME} PUBLIC
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
+            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_name}>"
         )
         file(GLOB _headers *.h)
         install(FILES ${_headers} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_name}")
