@@ -52,6 +52,8 @@ set(CHORUSKIT_TRANSLATIONS zh_CN zh_HK ja_JP)
 # ----------------------------------
 # Main Project
 # ----------------------------------
+find_package(qmcmake REQUIRED)
+
 add_subdirectory(src)
 
-add_subdirectory(share)
+# add_subdirectory(share)

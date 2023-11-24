@@ -13,7 +13,7 @@
 #include <QMap>
 #include <QSet>
 
-#include "MusicTimeline.h"
+#include <SVSBasic/MusicTimeline.h>
 
 namespace SVS {
 

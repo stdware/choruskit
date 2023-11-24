@@ -15,14 +15,20 @@ set(CHORUSKIT_BUILD_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../etc/include)
 # CMake API
 # ----------------------------------
 function(choruskit_add_library _target _type)
-    set(options NO_SYNC_INCLUDE)
-    set(oneValueArgs INCLUDE_PREFIX PREFIX)
-    set(multiValueArgs)
+    set(options AUTOGEN NO_SYNC_INCLUDE NO_WIN_RC)
+    set(oneValueArgs SYNC_INCLUDE_PREFIX PREFIX)
+    set(multiValueArgs SYNC_INCLUDE_OPTIONS)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(FUNC_AUTOGEN)
+        set(CMAKE_AUTOMOC ON)
+        set(CMAKE_AUTOUIC ON)
+        set(CMAKE_AUTORCC ON)
+    endif()
 
     add_library(${_target} ${_type})
 
-    if(WIN32 AND ${_type} STREQUAL "SHARED")
+    if(WIN32 AND NOT FUNC_NO_WIN_RC AND(${_type} STREQUAL "SHARED"))
         qtmediate_add_win_rc(${_target}
             DESCRIPTION ${CHORUSKIT_PROJECT_DESCRIPTION}
             COPYRIGHT ${CHORUSKIT_PROJECT_COPYRIGHT}
@@ -45,20 +51,25 @@ function(choruskit_add_library _target _type)
     target_include_directories(${_target} PRIVATE ${CHORUSKIT_BUILD_INCLUDE_DIR})
 
     # Library name
-    string(LENGTH "${_target}" _stringLength)
-    math(EXPR _startIndex "2")
-    math(EXPR _length "${_stringLength} - ${_startIndex}")
-    string(SUBSTRING "${_target}" ${_startIndex} ${_length} _name)
-    add_library(ChorusKit::${_name} ALIAS ${_target})
-    set_target_properties(${_target} PROPERTIES EXPORT_NAME ${_name})
+    if(${_target} MATCHES "^Ck.*")
+        string(LENGTH "${_target}" _stringLength)
+        math(EXPR _startIndex "2")
+        math(EXPR _length "${_stringLength} - ${_startIndex}")
+        string(SUBSTRING "${_target}" ${_startIndex} ${_length} _name)
+        set_target_properties(${_target} PROPERTIES EXPORT_NAME ${_name})
+    else()
+        set(_name ${_target})
+    endif()
 
-    if(FUNC_INCLUDE_PREFIX)
-        set(_inc_name ${FUNC_INCLUDE_PREFIX})
+    add_library(ChorusKit::${_name} ALIAS ${_target})
+
+    if(FUNC_SYNC_INCLUDE_PREFIX)
+        set(_inc_name ${FUNC_SYNC_INCLUDE_PREFIX})
     else()
         set(_inc_name ${_target})
     endif()
 
-    set(_gen_include_options)
+    set(_install_options)
 
     if(CHORUSKIT_INSTALL)
         install(TARGETS ${_target}
@@ -72,18 +83,36 @@ function(choruskit_add_library _target _type)
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
         )
 
-        set(_gen_include_options INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_inc_name}")
+        set(_install_options
+            INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_inc_name}"
+        )
     endif()
 
     if(NOT FUNC_NO_SYNC_INCLUDE)
         # Generate a standard include directory in build directory
-        qtmediate_sync_include(. "${CHORUSKIT_GENERATED_INCLUDE_DIR}/${_target}" CLEAN ${_gen_include_options})
+        qtmediate_sync_include(. "${CHORUSKIT_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options}
+            ${FUNC_SYNC_INCLUDE_OPTIONS}
+        )
         target_include_directories(${PROJECT_NAME} PUBLIC
             "$<BUILD_INTERFACE:${CHORUSKIT_GENERATED_INCLUDE_DIR}>"
         )
     endif()
 
     set_property(GLOBAL APPEND PROPERTY CHORUSKIT_TRANSLATE_TARGETS ${_target})
+endfunction()
+
+function(choruskit_configure_include _name)
+    target_include_directories(${PROJECT_NAME} PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    )
+
+    if(CHORUSKIT_INSTALL)
+        target_include_directories(${PROJECT_NAME} PUBLIC
+            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
+        )
+        file(GLOB _headers *.h)
+        install(FILES ${_headers} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_name}")
+    endif()
 endfunction()
 
 # ----------------------------------
@@ -93,7 +122,7 @@ add_subdirectory(3rdparty)
 
 add_subdirectory(appcore)
 
-add_subdirectory(loader)
+# add_subdirectory(loader)
 
 add_subdirectory(svsbasic)
 

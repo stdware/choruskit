@@ -3,7 +3,7 @@
 
 #include <QSharedPointer>
 
-#include "CkSVSBasicGlobal.h"
+#include <SVSBasic/CkSVSBasicGlobal.h>
 
 namespace SVS {
 

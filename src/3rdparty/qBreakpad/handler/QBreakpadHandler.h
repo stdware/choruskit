@@ -20,10 +20,9 @@
 #ifndef QBREAKPADHANDLER_H
 #define QBREAKPADHANDLER_H
 
-#include "singletone/singleton.h"
 #include <QString>
 #include <QUrl>
-
+#include <QObject>
 
 #include "QBreakpadGlobal.h"
 

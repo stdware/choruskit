@@ -27,8 +27,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ChorusKit::SingleApplication
 )
 
-choruskit_include_directories(${PROJECT_NAME} include)
-
 choruskit_install_headers(include)
 
 include(src/config/qasc.cmake)

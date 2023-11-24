@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include "CkSVSBasicGlobal.h"
+#include <SVSBasic/CkSVSBasicGlobal.h>
 
 namespace SVS {
 

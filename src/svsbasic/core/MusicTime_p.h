@@ -12,7 +12,7 @@
 
 #include <QPointer>
 
-#include "MusicTime.h"
+#include <SVSBasic/MusicTime.h>
 
 namespace SVS {
 

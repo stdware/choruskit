@@ -4,9 +4,8 @@
 #include <QListWidget>
 #include <QVBoxLayout>
 
-#include <QMWidgetsMacros.h>
-
-#include "BaseContainer.h"
+#include <QMWidgets/QMWidgetsMacros.h>
+#include <SVSWidgets/BaseContainer.h>
 
 namespace SVS {
 

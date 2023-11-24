@@ -3,9 +3,8 @@
 
 #include <QStyledItemDelegate>
 
-#include <QCssValueMap.h>
-
-#include "CkSVSWidgetsGlobal.h"
+#include <QMGui/QCssValueMap.h>
+#include <SVSWidgets/CkSVSWidgetsGlobal.h>
 
 namespace SVS {
 

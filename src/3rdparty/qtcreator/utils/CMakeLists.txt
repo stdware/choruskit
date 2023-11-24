@@ -30,16 +30,11 @@ if(QT_CREATOR_ENABLE_QML)
     list(APPEND _qt_modules Qml)
 endif()
 
-ck_add_qt_module(_qt_libs ${_qt_modules})
-
-configure_qtc_library(${PROJECT_NAME})
-
-target_sources(${PROJECT_NAME} PRIVATE ${_src})
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE QTCREATOR_UTILS_LIB)
-target_compile_definitions(${PROJECT_NAME} PUBLIC ${_defines})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE ${_platform_link_flags} ${_platform_libs})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${_qt_libs})
-
-choruskit_install_headers(. EXCLUDE_DIRS unused_src)
+configure_qtc_library(${PROJECT_NAME}
+    SOURCES ${_src}
+    LINKS ${_qt_libs}
+    LINKS_PRIVATE ${_platform_link_flags} ${_platform_libs}
+    QT_LINKS ${_qt_modules}
+    DEFINES  ${_defines}
+    DEFINES_PRIVATE QTCREATOR_UTILS_LIB
+)

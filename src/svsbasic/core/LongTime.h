@@ -4,7 +4,7 @@
 #include <QMetaType>
 #include <QStringList>
 
-#include "CkSVSBasicGlobal.h"
+#include <SVSBasic/CkSVSBasicGlobal.h>
 
 namespace SVS {
 

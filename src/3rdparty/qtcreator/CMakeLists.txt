@@ -8,7 +8,11 @@ function(configure_qtc_library _name)
     set(CMAKE_AUTOUIC ON)
     set(CMAKE_AUTORCC ON)
 
-    choruskit_add_library(${_name} SHARED)
+    string(TOLOWER ${_name} _name_lower)
+    choruskit_add_library(${_name} SHARED
+        NO_SYNC_INCLUDE NO_WIN_RC
+        ${ARGN}
+    )
 
     if(WIN32)
         qtmediate_add_win_rc(${_name}
@@ -22,10 +26,8 @@ function(configure_qtc_library _name)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         OUTPUT_NAME ${_name}36
     )
-
     target_compile_definitions(${_name} PRIVATE _UNICODE UNICODE)
-
-    choruskit_include_directories(${_name} . ..)
+    choruskit_configure_include(${_name_lower})
 endfunction()
 
 add_subdirectory(aggregation)

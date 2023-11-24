@@ -1,39 +1,20 @@
 if(CHORUSKIT_BUILD_TRANSLATIONS)
-    find_package(QT NAMES Qt6 Qt5 COMPONENTS LinguistTools REQUIRED)
-    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS LinguistTools REQUIRED)
+    qtmediate_find_qt_libraries(LinguistTools)
 
-    set(_my_ts_files)
-    set(_my_qm_files)
-    set(_qm_dir ${CMAKE_BUILD_SHARE_DIR}/${CHORUSKIT_INSTALL_NAME}/translations)
+    add_custom_target(choruskit_lupdate_task)
+    add_custom_target(choruskit_lrelease_task)
 
-    foreach(_item ${CHORUSKIT_TRANSLATIONS})
-        list(APPEND _my_ts_files ${CMAKE_CURRENT_SOURCE_DIR}/translations/choruskit_${_item}.ts)
-    endforeach()
-
-    set_source_files_properties(${_my_ts_files}
-        PROPERTIES OUTPUT_LOCATION ${_qm_dir}
-    )
-
+    # qtmediate
     get_property(_targets GLOBAL PROPERTY CHORUSKIT_TRANSLATE_TARGETS)
-    set(_src)
-
-    foreach(_item ${_targets})
-        get_target_property(_files ${_item} SOURCES)
-        list(FILTER _files INCLUDE REGEX ".+\\.(cpp|cc)")
-        list(FILTER _files EXCLUDE REGEX "(qasc|moc)_.+")
-
-        get_target_property(_dir ${_item} SOURCE_DIR)
-
-        foreach(_file ${_files})
-            get_filename_component(_abs_file ${_file} ABSOLUTE BASE_DIR ${_dir})
-            list(APPEND _src ${_abs_file})
-        endforeach()
-    endforeach()
-
-    qt5_create_translation(_my_qm_files ${_my_ts_files} ${_src})
-
-    add_custom_target(choruskit_lupdate_task DEPENDS ${_my_ts_files})
-    add_custom_target(choruskit_lrelease_task DEPENDS ${_my_qm_files})
+    qtmediate_add_translation(qtmediate_translations
+        LOCALES ja_JP zh_CN zh_HK
+        PREFIX qtmediate
+        TARGETS ${_targets}
+        TS_DIR translations
+        QM_DIR ${_qm_dir}
+        TS_DEPENDS choruskit_lupdate_task
+        QM_DEPENDS choruskit_lrelease_task
+    )
 
     if(CHORUSKIT_INSTALL)
         install(CODE "
@@ -41,7 +22,7 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
             execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target choruskit_lrelease_task)
         ")
         install(DIRECTORY ${_qm_dir}/
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CHORUSKIT_INSTALL_NAME}/translations
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${QTMEDIATE_INSTALL_NAME}/translations
             FILES_MATCHING PATTERN "*.qm"
         )
     endif()

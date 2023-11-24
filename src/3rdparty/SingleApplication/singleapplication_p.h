@@ -32,10 +32,11 @@
 #ifndef SINGLEAPPLICATION_P_H
 #define SINGLEAPPLICATION_P_H
 
-#include "singleapplication.h"
 #include <QtCore/QSharedMemory>
 #include <QtNetwork/QLocalServer>
 #include <QtNetwork/QLocalSocket>
+
+#include "singleapplication.h"
 
 struct InstancesInfo {
     bool primary;

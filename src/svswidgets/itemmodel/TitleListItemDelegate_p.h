@@ -1,11 +1,10 @@
 #ifndef TITLELISTITEMDELEGATEPRIVATE_H
 #define TITLELISTITEMDELEGATEPRIVATE_H
 
-#include <QFontInfoEx.h>
-#include <QPenInfo.h>
-#include <QRectInfo.h>
-
-#include "TitleListItemDelegate.h"
+#include <QMGui/QFontInfoEx.h>
+#include <QMGui/QPenInfo.h>
+#include <QMGui/QRectInfo.h>
+#include <SVSWidgets/TitleListItemDelegate.h>
 
 namespace SVS {
 

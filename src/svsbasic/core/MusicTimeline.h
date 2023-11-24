@@ -5,7 +5,7 @@
 #include <QSharedPointer>
 #include <QVariant>
 
-#include "MusicTime.h"
+#include <SVSBasic/MusicTime.h>
 
 namespace SVS {
 

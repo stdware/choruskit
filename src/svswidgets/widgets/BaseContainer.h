@@ -4,9 +4,8 @@
 #include <QFrame>
 #include <QWidget>
 
-#include <QMWidgetsMacros.h>
-
-#include "CkSVSWidgetsGlobal.h"
+#include <QMWidgets/QMWidgetsMacros.h>
+#include <SVSWidgets/CkSVSWidgetsGlobal.h>
 
 namespace SVS {
 
