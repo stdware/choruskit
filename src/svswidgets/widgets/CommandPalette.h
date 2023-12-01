@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 
 #include <QMWidgets/QMWidgetsMacros.h>
+
 #include <SVSWidgets/BaseContainer.h>
 
 namespace SVS {

@@ -1,12 +1,13 @@
 if(CHORUSKIT_BUILD_TRANSLATIONS)
-    qtmediate_find_qt_libraries(LinguistTools)
+    qm_import(Translate)
+    qm_find_qt(LinguistTools)
 
     add_custom_target(choruskit_lupdate_task)
     add_custom_target(choruskit_lrelease_task)
 
     # qtmediate
     get_property(_targets GLOBAL PROPERTY CHORUSKIT_TRANSLATE_TARGETS)
-    qtmediate_add_translation(qtmediate_translations
+    qm_add_translation(qtmediate_translations
         LOCALES ja_JP zh_CN zh_HK
         PREFIX qtmediate
         TARGETS ${_targets}

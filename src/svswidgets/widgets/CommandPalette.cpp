@@ -8,7 +8,7 @@
 #include <QMouseEvent>
 #include <QTimer>
 
-#include <CLineEdit.h>
+#include <QMWidgets/CLineEdit.h>
 
 #include "CkSVSWidgetsNamespace.h"
 

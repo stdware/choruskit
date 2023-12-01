@@ -15,7 +15,7 @@ function(configure_qtc_library _name)
     )
 
     if(WIN32)
-        qtmediate_add_win_rc(${_name}
+        qm_add_win_rc(${_name}
             NAME ${_name}
             VERSION ${PROJECT_VERSION}
             DESCRIPTION "Qt Creator 3.6"
@@ -27,7 +27,7 @@ function(configure_qtc_library _name)
         OUTPUT_NAME ${_name}36
     )
     target_compile_definitions(${_name} PRIVATE _UNICODE UNICODE)
-    choruskit_configure_include(${_name_lower})
+    choruskit_configure_include(${_name} ${_name_lower})
 endfunction()
 
 add_subdirectory(aggregation)

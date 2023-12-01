@@ -3,7 +3,7 @@
 
 #include <QFrame>
 
-#include "CkSVSWidgetsGlobal.h"
+#include <SVSWidgets/CkSVSWidgetsGlobal.h>
 
 namespace SVS {
 

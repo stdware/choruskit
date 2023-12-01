@@ -1,9 +1,10 @@
 #ifndef FULLICONBUTTON_H
 #define FULLICONBUTTON_H
 
-#include <CPushButton.h>
+#include <QMWidgets/CPushButton.h>
+#include <QMWidgets/QMWidgetsMacros.h>
 
-#include "CkSVSWidgetsGlobal.h"
+#include <SVSWidgets/CkSVSWidgetsGlobal.h>
 
 namespace SVS {
 

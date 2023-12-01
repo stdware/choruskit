@@ -7,7 +7,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-#include <QMarginsImpl.h>
+#include <QMGui/QMarginsImpl.h>
 
 namespace SVS {
 
@@ -280,26 +280,26 @@ namespace SVS {
 
         underlineColor = d->m_underline.color();
         if (!(option.state & QStyle::State_Enabled)) {
-            backgroundColor = d->m_backgroundType.color(QM::CS_Disabled);
-            fileColor = d->m_fileType.color(QM::CS_Disabled);
-            locColor = d->m_locType.color(QM::CS_Disabled);
-            dateColor = d->m_dateType.color(QM::CS_Disabled);
-            dateHighlightColor = d->m_dateHighlightType.color(QM::CS_Disabled);
-            dateBackColor = d->m_dateBackType.color(QM::CS_Disabled);
+            backgroundColor = d->m_backgroundType.color(QM::ButtonDisabled);
+            fileColor = d->m_fileType.color(QM::ButtonDisabled);
+            locColor = d->m_locType.color(QM::ButtonDisabled);
+            dateColor = d->m_dateType.color(QM::ButtonDisabled);
+            dateHighlightColor = d->m_dateHighlightType.color(QM::ButtonDisabled);
+            dateBackColor = d->m_dateBackType.color(QM::ButtonDisabled);
         } else if (option.state & QStyle::State_Selected) {
-            backgroundColor = d->m_backgroundType.color(QM::CS_Pressed);
-            fileColor = d->m_fileType.color(QM::CS_Pressed);
-            locColor = d->m_locType.color(QM::CS_Pressed);
-            dateColor = d->m_dateType.color(QM::CS_Pressed);
-            dateHighlightColor = d->m_dateHighlightType.color(QM::CS_Pressed);
-            dateBackColor = d->m_dateBackType.color(QM::CS_Pressed);
+            backgroundColor = d->m_backgroundType.color(QM::ButtonPressed);
+            fileColor = d->m_fileType.color(QM::ButtonPressed);
+            locColor = d->m_locType.color(QM::ButtonPressed);
+            dateColor = d->m_dateType.color(QM::ButtonPressed);
+            dateHighlightColor = d->m_dateHighlightType.color(QM::ButtonPressed);
+            dateBackColor = d->m_dateBackType.color(QM::ButtonPressed);
         } else if (option.state & QStyle::State_MouseOver) {
-            backgroundColor = d->m_backgroundType.color(QM::CS_Hover);
-            fileColor = d->m_fileType.color(QM::CS_Hover);
-            locColor = d->m_locType.color(QM::CS_Hover);
-            dateColor = d->m_dateType.color(QM::CS_Hover);
-            dateHighlightColor = d->m_dateHighlightType.color(QM::CS_Hover);
-            dateBackColor = d->m_dateBackType.color(QM::CS_Hover);
+            backgroundColor = d->m_backgroundType.color(QM::ButtonHover);
+            fileColor = d->m_fileType.color(QM::ButtonHover);
+            locColor = d->m_locType.color(QM::ButtonHover);
+            dateColor = d->m_dateType.color(QM::ButtonHover);
+            dateHighlightColor = d->m_dateHighlightType.color(QM::ButtonHover);
+            dateBackColor = d->m_dateBackType.color(QM::ButtonHover);
         } else {
             backgroundColor = d->m_backgroundType.color();
             underlineColor = d->m_underline.color();

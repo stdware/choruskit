@@ -1,9 +1,9 @@
-#include "TitleListWidget.h"
+#include <SVSWidgets/TitleListWidget.h>
 #include "TitleListWidget_p.h"
 
 #include <private/qlistwidget_p.h>
 
-#include <QMarginsImpl.h>
+#include <QMGui/QMarginsImpl.h>
 
 namespace SVS {
 

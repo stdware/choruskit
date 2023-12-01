@@ -7,9 +7,9 @@
 #include <QListWidget>
 #include <QMenu>
 
-#include <QCssValueMap.h>
+#include <QMGui/QCssValueMap.h>
 
-#include "CkSVSWidgetsGlobal.h"
+#include <SVSWidgets/CkSVSWidgetsGlobal.h>
 
 namespace SVS {
 

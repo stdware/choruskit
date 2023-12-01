@@ -1,8 +1,8 @@
 #ifndef TITLELISTWIDGET_P_H
 #define TITLELISTWIDGET_P_H
 
-#include "TitleListItemDelegate.h"
-#include "TitleListWidget.h"
+#include <SVSWidgets/TitleListItemDelegate.h>
+#include <SVSWidgets/TitleListWidget.h>
 
 namespace SVS {
 

@@ -18,7 +18,7 @@ choruskit_add_library(${PROJECT_NAME} STATIC
     singleapplication_p.h
     singleapplication_p.cpp
 )
-choruskit_configure_include(${PROJECT_NAME})
+choruskit_configure_include(${PROJECT_NAME} ${PROJECT_NAME})
 
 if(NOT QT_DEFAULT_MAJOR_VERSION)
     set(QT_DEFAULT_MAJOR_VERSION 5 CACHE STRING "Qt version to use (5 or 6), defaults to 5")
@@ -55,7 +55,6 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC QAPPLICATION_CLASS=${QAPPLICATION_CLASS})
 
 # target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     QT_NO_CAST_TO_ASCII
     QT_NO_CAST_FROM_ASCII

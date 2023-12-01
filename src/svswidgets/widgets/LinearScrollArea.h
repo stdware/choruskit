@@ -3,7 +3,7 @@
 
 #include <QScrollArea>
 
-#include "CkSVSWidgetsGlobal.h"
+#include <SVSWidgets/CkSVSWidgetsGlobal.h>
 
 namespace SVS {
 

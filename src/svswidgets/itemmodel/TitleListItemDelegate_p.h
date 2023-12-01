@@ -4,6 +4,7 @@
 #include <QMGui/QFontInfoEx.h>
 #include <QMGui/QPenInfo.h>
 #include <QMGui/QRectInfo.h>
+
 #include <SVSWidgets/TitleListItemDelegate.h>
 
 namespace SVS {

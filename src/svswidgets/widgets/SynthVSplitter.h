@@ -6,9 +6,9 @@
 #include <QLayout>
 #include <QSplitter>
 
-#include <QMWidgetsMacros.h>
+#include <QMWidgets/QMWidgetsMacros.h>
 
-#include "CkSVSWidgetsGlobal.h"
+#include <SVSWidgets/CkSVSWidgetsGlobal.h>
 
 namespace SVS {
 

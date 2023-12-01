@@ -1,3 +1,5 @@
+qm_import(Preprocess)
+
 if(NOT TARGET qtmediate::Core)
     find_package(qtmediate REQUIRED)
 endif()
@@ -29,7 +31,8 @@ function(choruskit_add_library _target _type)
     add_library(${_target} ${_type})
 
     if(WIN32 AND NOT FUNC_NO_WIN_RC AND(${_type} STREQUAL "SHARED"))
-        qtmediate_add_win_rc(${_target}
+        qm_add_win_rc(${_target}
+            NAME ${CHORUSKIT_INSTALL_NAME}
             DESCRIPTION ${CHORUSKIT_PROJECT_DESCRIPTION}
             COPYRIGHT ${CHORUSKIT_PROJECT_COPYRIGHT}
         )
@@ -42,26 +45,24 @@ function(choruskit_add_library _target _type)
     endif()
 
     # Set global definitions
-    qtmediate_export_defines(${_target} ${_prefix_option})
+    qm_export_defines(${_target} ${_prefix_option})
 
     # Configure target
-    qtmediate_configure_target(${_target} ${FUNC_UNPARSED_ARGUMENTS})
+    qm_configure_target(${_target} ${FUNC_UNPARSED_ARGUMENTS})
 
     # Add include directories
     target_include_directories(${_target} PRIVATE ${CHORUSKIT_BUILD_INCLUDE_DIR})
+    target_include_directories(${_target} PRIVATE .)
 
     # Library name
-    if(${_target} MATCHES "^Ck.*")
-        string(LENGTH "${_target}" _stringLength)
-        math(EXPR _startIndex "2")
-        math(EXPR _length "${_stringLength} - ${_startIndex}")
-        string(SUBSTRING "${_target}" ${_startIndex} ${_length} _name)
+    if(${_target} MATCHES "^Ck(.+)")
+        set(_name ${CMAKE_MATCH_1})
         set_target_properties(${_target} PROPERTIES EXPORT_NAME ${_name})
     else()
         set(_name ${_target})
     endif()
 
-    add_library(ChorusKit::${_name} ALIAS ${_target})
+    add_library(${CHORUSKIT_INSTALL_NAME}::${_name} ALIAS ${_target})
 
     if(FUNC_SYNC_INCLUDE_PREFIX)
         set(_inc_name ${FUNC_SYNC_INCLUDE_PREFIX})
@@ -79,7 +80,7 @@ function(choruskit_add_library _target _type)
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" OPTIONAL
         )
 
-        target_include_directories(${PROJECT_NAME} PUBLIC
+        target_include_directories(${_target} PUBLIC
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
         )
 
@@ -90,10 +91,10 @@ function(choruskit_add_library _target _type)
 
     if(NOT FUNC_NO_SYNC_INCLUDE)
         # Generate a standard include directory in build directory
-        qtmediate_sync_include(. "${CHORUSKIT_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options}
+        qm_sync_include(. "${CHORUSKIT_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options}
             ${FUNC_SYNC_INCLUDE_OPTIONS}
         )
-        target_include_directories(${PROJECT_NAME} PUBLIC
+        target_include_directories(${_target} PUBLIC
             "$<BUILD_INTERFACE:${CHORUSKIT_GENERATED_INCLUDE_DIR}>"
         )
     endif()
@@ -101,14 +102,14 @@ function(choruskit_add_library _target _type)
     set_property(GLOBAL APPEND PROPERTY CHORUSKIT_TRANSLATE_TARGETS ${_target})
 endfunction()
 
-function(choruskit_configure_include _name)
-    target_include_directories(${PROJECT_NAME} PUBLIC
+function(choruskit_configure_include _target _name)
+    target_include_directories(${_target} PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
     )
 
     if(CHORUSKIT_INSTALL)
-        target_include_directories(${PROJECT_NAME} PUBLIC
+        target_include_directories(${_target} PUBLIC
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_name}>"
         )
@@ -122,10 +123,9 @@ endfunction()
 # ----------------------------------
 add_subdirectory(3rdparty)
 
-add_subdirectory(appcore)
+# add_subdirectory(appcore)
 
 # add_subdirectory(loader)
-
 add_subdirectory(svsbasic)
 
 add_subdirectory(svswidgets)
@@ -162,7 +162,7 @@ if(CHORUSKIT_INSTALL)
     # Install cmake targets files
     install(EXPORT ${CHORUSKIT_INSTALL_NAME}Targets
         FILE "${CHORUSKIT_INSTALL_NAME}Targets.cmake"
-        NAMESPACE ChorusKit::
+        NAMESPACE ${CHORUSKIT_INSTALL_NAME}::
         DESTINATION ${_install_dir}
     )
 

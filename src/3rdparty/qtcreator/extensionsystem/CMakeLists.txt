@@ -6,6 +6,5 @@ configure_qtc_library(${PROJECT_NAME}
     SOURCES ${_src}
     LINKS Aggregation Utils
     QT_LINKS Core Widgets
+    SKIP_AUTOMOC "pluginmanager.cpp"
 )
-
-set_source_files_properties(pluginmanager.cpp PROPERTIES SKIP_AUTOMOC ON)

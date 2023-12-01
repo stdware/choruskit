@@ -4,8 +4,8 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 
-#include "CommandPalette.h"
-#include "TitleListWidget.h"
+#include <SVSWidgets/TitleListWidget.h>
+#include <SVSWidgets/CommandPalette.h>
 
 namespace SVS {
 

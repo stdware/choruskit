@@ -7,7 +7,7 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 
-#include "SynthVSplitter.h"
+#include <SVSWidgets/SynthVSplitter.h>
 
 namespace SVS {
 

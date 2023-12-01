@@ -189,7 +189,7 @@ function(ck_configure_application)
         endif()
 
         # Add mac bundle
-        qtmediate_add_mac_bundle(${_target}
+        qm_add_mac_bundle(${_target}
             ${_rc_args}
             ${_icns}
         )
@@ -207,13 +207,13 @@ function(ck_configure_application)
             endif()
 
             # Add windows rc file
-            qtmediate_add_win_rc_enhanced(${_target}
+            qm_add_win_rc_enhanced(${_target}
                 ${_rc_args}
                 ${_ico}
             )
 
             # Add manifest
-            qtmediate_add_win_manifest(${_target}
+            qm_add_win_manifest(${_target}
                 ${_rc_args}
                 ${_ico}
             )
@@ -227,7 +227,7 @@ function(ck_configure_application)
 
             # Add shortcut
             if(FUNC_WIN_SHORTCUT)
-                qtmediate_create_win_shortcut(${_target} ${CK_BUILD_MAIN_DIR}
+                qm_create_win_shortcut(${_target} ${CK_BUILD_MAIN_DIR}
                     OUTPUT_NAME ${_target}
                 )
             endif()
@@ -302,13 +302,13 @@ function(ck_add_plugin _target)
     # Add target level dependency
     add_dependencies(${CK_APPLICATION_NAME} ${_target})
 
-    qtmediate_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
+    qm_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
 
     if(WIN32)
         set(_copyright "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${_vendor}")
 
         # Add windows rc file
-        qtmediate_add_win_rc(${_target}
+        qm_add_win_rc(${_target}
             COPYRIGHT "${_copyright}"
             ${FUNC_UNPARSED_ARGUMENTS}
         )
@@ -328,7 +328,7 @@ function(ck_add_plugin _target)
         SRC ${_tmp_desc_file} DEST .
     )
 
-    qtmediate_set_value(_category FUNC_CATEGORY ${_target})
+    qm_set_value(_category FUNC_CATEGORY ${_target})
 
     set(_build_output_dir ${CK_BUILD_PLUGINS_DIR}/${_category})
     set(_install_output_dir ${CK_INSTALL_PLUGINS_DIR}/${_category})
@@ -387,16 +387,16 @@ function(ck_configure_plugin_metadata _target _plugin_json)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # Set plugin metadata
-    qtmediate_set_value(_name FUNC_NAME ${PROJECT_NAME}) # to be removed
-    qtmediate_set_value(_version FUNC_VERSION ${PROJECT_VERSION})
-    qtmediate_set_value(_compat_version FUNC_COMPAT_VERSION "0.0.0.0")
-    qtmediate_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
+    qm_set_value(_name FUNC_NAME ${PROJECT_NAME}) # to be removed
+    qm_set_value(_version FUNC_VERSION ${PROJECT_VERSION})
+    qm_set_value(_compat_version FUNC_COMPAT_VERSION "0.0.0.0")
+    qm_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
 
     # Fix version
-    qtmediate_parse_version(_ver ${_version})
+    qm_parse_version(_ver ${_version})
     set(PLUGIN_METADATA_VERSION ${_ver_1}.${_ver_2}.${_ver_3}_${_ver_4})
 
-    qtmediate_parse_version(_compat ${_compat_version})
+    qm_parse_version(_compat ${_compat_version})
     set(PLUGIN_METADATA_COMPAT_VERSION ${_compat_1}.${_compat_2}.${_compat_3}_${_compat_4})
     set(PLUGIN_METADATA_VENDOR ${_vendor})
 
@@ -467,14 +467,14 @@ function(ck_add_library _target)
         if(FUNC_COPYRIGHT)
             set(_copyright ${FUNC_COPYRIGHT})
         else()
-            qtmediate_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
+            qm_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
             set(_copyright "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${_vendor}")
         endif()
 
         get_target_property(_type ${_target} TYPE)
 
         if(_shared)
-            qtmediate_add_win_rc(${_target}
+            qm_add_win_rc(${_target}
                 COPYRIGHT "${_copyright}"
                 ${FUNC_UNPARSED_ARGUMENTS}
             )
@@ -588,7 +588,7 @@ function(ck_add_attached_files _target)
 
     set(_error)
     set(_resilt)
-    qtmediate_parse_copy_args("${FUNC_UNPARSED_ARGUMENTS}" _result _error)
+    _ck_parse_copy_args("${FUNC_UNPARSED_ARGUMENTS}" _result _error)
 
     if(_error)
         message(FATAL_ERROR "ck_add_attached_files: ${_error}")
@@ -598,7 +598,7 @@ function(ck_add_attached_files _target)
         list(POP_BACK _src _dest)
 
         if(NOT FUNC_SKIP_BUILD)
-            qtmediate_add_copy_command(${_target}
+            qm_add_copy_command(${_target}
                 SOURCES ${_src}
                 DESTINATION ${_dest}
             )
@@ -634,7 +634,7 @@ function(ck_add_shared_files)
 
     set(_error)
     set(_resilt)
-    qtmediate_parse_copy_args("${FUNC_UNPARSED_ARGUMENTS}" _result _error)
+    _ck_parse_copy_args("${FUNC_UNPARSED_ARGUMENTS}" _result _error)
 
     if(_error)
         message(FATAL_ERROR "ck_add_shared_files: ${_error}")
@@ -655,14 +655,14 @@ function(ck_add_shared_files)
         list(POP_BACK _src _dest)
 
         # Determine destination
-        qtmediate_has_genex(_has_genex ${_dest})
+        qm_has_genex(_has_genex ${_dest})
 
         if(NOT _has_genex AND NOT IS_ABSOLUTE ${_dest})
             set(_dest "${CK_BUILD_SHARE_DIR}/${FUNC_DESTINATION}")
         endif()
 
         if(NOT FUNC_SKIP_BUILD)
-            qtmediate_add_copy_command(${_target}
+            qm_add_copy_command(${_target}
                 SOURCES ${_src}
                 DESTINATION ${_dest}
             )
@@ -741,7 +741,7 @@ function(_ck_configure_plugin_desc _file)
     set(multiValueArgs SUBDIRS)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    qtmediate_set_value(_name FUNC_NAME ${PROJECT_NAME})
+    qm_set_value(_name FUNC_NAME ${PROJECT_NAME})
 
     set(_content "{\n    \"name\": \"${_name}\"")
 
@@ -794,7 +794,7 @@ function(_ck_install_resources _src_list _dest _relative_fallback_path)
     if(_relative_fallback_path)
         set(_relative_fallback "
             if(NOT IS_ABSOLUTE \${_dest})
-                file(RELATIVE_PATH _rel_path \"${CK_BUILD_MAIN_DIR}\" \"${_relative_fallback_path}/\${_dest}\")
+                file(RELATIVE_PATH _rel_path \"${_relative_fallback_path}/\${_dest}\" \"${CK_BUILD_MAIN_DIR}\")
                 set(_dest \"\${CMAKE_INSTALL_PREFIX}/\${_rel_path}\")
             endif()
         ")
@@ -821,4 +821,78 @@ function(_ck_install_resources _src_list _dest _relative_fallback_path)
             )
         endforeach()
     ")
+endfunction()
+
+
+#[[
+    _ck_parse_copy_args(<args> <RESULT> <ERROR>)
+
+    args:   SRC <files...> DEST <dir1>
+            SRC <files...> DEST <dir2> ...
+]] #
+function(_ck_parse_copy_args _args _result _error)
+    # State Machine
+    set(_src)
+    set(_dest)
+    set(_status NONE) # NONE, SRC, DEST
+    set(_count 0)
+
+    set(_list)
+
+    foreach(_item ${_args})
+        if(${_item} STREQUAL SRC)
+            if(${_status} STREQUAL NONE)
+                set(_src)
+                set(_status SRC)
+            elseif(${_status} STREQUAL DEST)
+                set(${_error} "missing directory name after DEST!" PARENT_SCOPE)
+                return()
+            else()
+                set(${_error} "missing source files after SRC!" PARENT_SCOPE)
+                return()
+            endif()
+        elseif(${_item} STREQUAL DEST)
+            if(${_status} STREQUAL SRC)
+                set(_status DEST)
+            elseif(${_status} STREQUAL DEST)
+                set(${_error} "missing directory name after DEST!" PARENT_SCOPE)
+                return()
+            else()
+                set(${_error} "no source files specified for DEST!" PARENT_SCOPE)
+                return()
+            endif()
+        else()
+            if(${_status} STREQUAL NONE)
+                set(${_error} "missing SRC or DEST token!" PARENT_SCOPE)
+                return()
+            elseif(${_status} STREQUAL DEST)
+                if(NOT _src)
+                    set(${_error} "no source files specified for DEST!" PARENT_SCOPE)
+                    return()
+                endif()
+
+                set(_status NONE)
+                math(EXPR _count "${_count} + 1")
+
+                string(JOIN "\\;" _src_str ${_src})
+                list(APPEND _list "${_src_str}\\;${_item}")
+            else()
+                get_filename_component(_path ${_item} ABSOLUTE)
+                list(APPEND _src ${_path})
+            endif()
+        endif()
+    endforeach()
+
+    if(${_status} STREQUAL SRC)
+        set(${_error} "missing DEST after source files!" PARENT_SCOPE)
+        return()
+    elseif(${_status} STREQUAL DEST)
+        set(${_error} "missing directory name after DEST!" PARENT_SCOPE)
+        return()
+    elseif(${_count} STREQUAL 0)
+        set(${_error} "no files specified!" PARENT_SCOPE)
+        return()
+    endif()
+
+    set(${_result} "${_list}" PARENT_SCOPE)
 endfunction()
