@@ -16,7 +16,7 @@ set(CHORUSKIT_BUILD_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../etc/include)
 # ----------------------------------
 # CMake API
 # ----------------------------------
-function(choruskit_add_library _target _type)
+macro(choruskit_add_library _target _type)
     set(options AUTOGEN NO_SYNC_INCLUDE NO_WIN_RC)
     set(oneValueArgs SYNC_INCLUDE_PREFIX PREFIX)
     set(multiValueArgs SYNC_INCLUDE_OPTIONS)
@@ -100,7 +100,7 @@ function(choruskit_add_library _target _type)
     endif()
 
     set_property(GLOBAL APPEND PROPERTY CHORUSKIT_TRANSLATE_TARGETS ${_target})
-endfunction()
+endmacro()
 
 function(choruskit_configure_include _target _name)
     target_include_directories(${_target} PUBLIC
@@ -126,9 +126,8 @@ add_subdirectory(3rdparty)
 # add_subdirectory(appcore)
 
 # add_subdirectory(loader)
-add_subdirectory(svsbasic)
-
-add_subdirectory(svswidgets)
+# add_subdirectory(svsbasic)
+# add_subdirectory(svswidgets)
 
 # ----------------------------------
 # Install
