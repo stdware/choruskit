@@ -1,88 +1,99 @@
 include_guard(DIRECTORY)
 
-if(NOT DEFINED QTMEDIATE_CMAKE_MODULES_DIR)
-    message(FATAL_ERROR "QTMEDIATE_CMAKE_MODULES_DIR not defined!")
-endif()
-
-include("${QTMEDIATE_CMAKE_MODULES_DIR}/QtMediateAPI.cmake")
-
 if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
 endif()
 
-if(NOT DEFINED CK_BUILD_MAIN_DIR)
-    set(CK_BUILD_MAIN_DIR ${CMAKE_BINARY_DIR}/out-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_BUILD_TYPE})
-endif()
-
-if(NOT DEFINED CK_RUN_SCRIPTS_VERBOSE)
-    set(CK_RUN_SCRIPTS_VERBOSE off)
-endif()
-
-if(NOT DEFINED CK_ENABLE_DEVEL)
-    set(CK_ENABLE_DEVEL off)
-endif()
-
-if(NOT DEFINED CK_ENABLE_CONSOLE)
-    set(CK_ENABLE_CONSOLE on)
-endif()
-
-set(CK_APPLICATION_NAME ChorusKit)
-set(CK_APPLICATION_VENDOR OpenVPI)
-set(CK_DEV_START_YEAR 2019)
-set(CK_INITIALIZED off)
-
 #[[
 Initialize ChorusKitApi global settings.
 
-    ck_init_buildsystem(<name>
-        [ROOT <dir>]
-    )
+    ck_init_buildsystem()
 ]] #
 macro(ck_init_build_system _app)
-    set(options)
-    set(oneValueArgs ROOT VENDOR)
-    set(multiValueArgs)
-    cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    # Find QMake (Required)
-    # We shouldn't call find_package in this environment, so we need to find program manually
-    if(NOT DEFINED QT_QMAKE_EXECUTABLE)
-        set(QT_QMAKE_EXECUTABLE)
-        include(${CK_CMAKE_MODULES_DIR}/modules/FindQMake.cmake)
-    endif()
-
-    if(QT_QMAKE_EXECUTABLE)
-        message(STATUS "Qmake found: ${QT_QMAKE_EXECUTABLE}")
+    # Check platform, only Windows/Macintosh/Linux is supported
+    if(APPLE)
+        set(CK_PLATFORM_NAME Macintosh)
+        set(CK_PLATFORM_LOWER mac)
+    elseif(WIN32)
+        set(CK_PLATFORM_NAME Windows)
+        set(CK_PLATFORM_LOWER win)
+    elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+        set(LINUX true CACHE BOOL "Linux System" FORCE)
+        set(CK_PLATFORM_NAME Linux)
+        set(CK_PLATFORM_LOWER linux)
     else()
-        message(FATAL_ERROR "Qmake not found")
+        message(FATAL_ERROR "Unsupported System ${CMAKE_HOST_SYSTEM_NAME}!!!")
     endif()
 
+    # Set main output directory
+    if(NOT DEFINED CK_BUILD_MAIN_DIR)
+        if(CMAKE_CONFIGURATION_TYPES OR NOT CMAKE_BUILD_TYPE)
+            message(FATAL_ERROR "ChorusKit: multi-config is not supported.")
+        endif()
+
+        set(CK_BUILD_MAIN_DIR ${CMAKE_BINARY_DIR}/out-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_BUILD_TYPE})
+    endif()
+
+    # Whether to build Windows Console executables
+    if(NOT DEFINED CK_ENABLE_CONSOLE)
+        set(CK_ENABLE_CONSOLE on)
+    endif()
+
+    # Whether to install developer files
+    if(NOT DEFINED CK_ENABLE_DEVEL)
+        set(CK_ENABLE_DEVEL off)
+    endif()
+
+    # Root directory
+    if(NOT DEFINED CK_REPO_ROOT_DIR)
+        set(CK_REPO_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
+    endif()
+
+    # Application name
+    if(NOT DEFINED CK_APPLICATION_NAME)
+        set(CK_APPLICATION_NAME ChorusKit)
+    endif()
+
+    # Application description
+    if(NOT DEFINED CK_APPLICATION_DESCRIPTION)
+        set(CK_APPLICATION_DESCRIPTION ${CK_APPLICATION_NAME})
+    endif()
+
+    # Application version
+    if(NOT DEFINED CK_APPLICATION_VERSION)
+        if(PROJECT_VERSION)
+            set(CK_APPLICATION_VERSION ${PROJECT_VERSION})
+        else()
+            set(CK_APPLICATION_VERSION "0.0.0.0")
+        endif()
+    endif()
+
+    # Application vendor
+    if(NOT DEFINED CK_APPLICATION_VENDOR)
+        set(CK_APPLICATION_VENDOR OpenVPI)
+    endif()
+
+    # Set time variables
+    set(CK_DEV_START_YEAR 2019)
+    string(TIMESTAMP CK_CURRENT_YEAR "%Y")
+
+    # Initialization guard
     if(CK_INITIALIZED)
         message(FATAL_ERROR "ck_init_build_system: build system has initialized")
     endif()
 
     set(CK_INITIALIZED on)
 
-    # Meta
-    set(CK_APPLICATION_NAME ${_app})
+    # Source directory when configuring
     set(CK_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+    # Export targets
     set(CK_INSTALL_EXPORT ${_app}Targets)
 
-    if(FUNC_ROOT)
-        get_filename_component(CK_REPO_ROOT_DIR ${FUNC_ROOT} ABSOLUTE)
-    else()
-        set(CK_REPO_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-    endif()
-
-    if(FUNC_VENDOR)
-        set(CK_APPLICATION_VENDOR ${FUNC_VENDOR})
-    endif()
-
+    # Set output directories
     set(CK_ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/etc)
-
     set(CK_BUILD_INCLUDE_DIR ${CK_ARCHIVE_OUTPUT_PATH}/include)
 
-    # Build
     if(APPLE)
         set(CK_BUILD_MAIN_DIR ${CK_BUILD_MAIN_DIR}/${_app}.app/Contents)
 
@@ -100,9 +111,6 @@ macro(ck_init_build_system _app)
         set(CK_INSTALL_SHARE_DIR ${_CK_INSTALL_BASE_DIR}/Resources)
         set(CK_INSTALL_INCLUDE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/include/${_app})
         set(CK_INSTALL_CMAKE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/lib/cmake/${_app})
-
-        set(CK_PLATFORM_NAME Macintosh)
-        set(CK_PLATFORM_LOWER mac)
     else()
         set(CK_BUILD_RUNTIME_DIR ${CK_BUILD_MAIN_DIR}/bin)
         set(CK_BUILD_LIBRARY_DIR ${CK_BUILD_MAIN_DIR}/lib)
@@ -116,17 +124,6 @@ macro(ck_init_build_system _app)
         set(CK_INSTALL_SHARE_DIR share)
         set(CK_INSTALL_INCLUDE_DIR include/${_app})
         set(CK_INSTALL_CMAKE_DIR lib/cmake/${_app})
-
-        if(WIN32)
-            set(CK_PLATFORM_NAME Windows)
-            set(CK_PLATFORM_LOWER win)
-        elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
-            set(LINUX true CACHE BOOL "Linux System" FORCE)
-            set(CK_PLATFORM_NAME Linux)
-            set(CK_PLATFORM_LOWER linux)
-        else()
-            message(FATAL_ERROR "Unsupported System !!!")
-        endif()
     endif()
 
     # Store data during configuration
@@ -142,149 +139,33 @@ macro(ck_init_build_system _app)
     add_custom_target(ChorusKit_CopySharedFiles)
 
     # Used ChorusKit Metadata Keys:
-    # CONFIG_DEFINITIONS
-    # LIBRARY_SEARCHING_PATHS
     # APPLICATION_PLUGINS
     # APPLICATION_LIBRARIES
 endmacro()
 
 #[[
-Do final work.
-
-    ck_finish_build_system()
-]] #
-function(ck_finish_build_system)
-    if(NOT CK_INITIALIZED)
-        message(FATAL_ERROR "ck_finish_build_system: build system not initialized")
-    endif()
-
-    include(${CK_CMAKE_MODULES_DIR}/modules/BuildInfo.cmake)
-
-    # Generate config header
-    set(_config_header "${CK_BUILD_INCLUDE_DIR}/choruskit_config.h")
-
-    get_target_property(_def_list ChorusKit_Metadata CONFIG_DEFINITIONS)
-
-    if(_def_list)
-        ck_generate_config_header("${_def_list}" "${_config_header}")
-    else()
-        file(WRITE ${_config_header} "")
-    endif()
-
-    # Generate build info header
-    set(_buildinfo_header "${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h")
-    ck_generate_build_info_header("${_buildinfo_header}")
-
-    _ck_post_deploy()
-endfunction()
-
-#[[
-Add compile definitions to ChorusKit config header.
-
-    ck_add_definition(<key> [value])
-]] #
-function(ck_add_definition)
-    set(_def)
-
-    set(_list ${ARGN})
-    list(LENGTH _list _len)
-
-    if(${_len} EQUAL 1)
-        set(_def ${_list})
-    elseif(${_len} EQUAL 2)
-        # Get key
-        list(POP_FRONT _list _key)
-        list(POP_FRONT _list _val)
-
-        # Boolean
-        string(TOLOWER ${_val} _val_lower)
-
-        if(${_val_lower} STREQUAL "off" OR ${_val_lower} STREQUAL "false")
-            return()
-        elseif(${_val_lower} STREQUAL "on" OR ${_val_lower} STREQUAL "true")
-            set(_def ${_key})
-        else()
-            set(_def "${_key}=${_val}")
-        endif()
-    else()
-        message(FATAL_ERROR "ck_add_definition: called with incorrect number of arguments")
-    endif()
-
-    set_property(TARGET ChorusKit_Metadata APPEND PROPERTY CONFIG_DEFINITIONS "${_def}")
-endfunction()
-
-#[[
-Add library searching paths to build system, only Windows need this function.
-
-    ck_add_library_searching_paths(<path or target ...>)
-]] #
-function(ck_add_library_searching_paths)
-    if(NOT WIN32)
-        return()
-    endif()
-
-    get_target_property(_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
-
-    if(NOT _paths)
-        set(_paths)
-    endif()
-
-    if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL Debug)
-        set(_config_upper DEBUG)
-    else()
-        string(TOUPPER ${CMAKE_BUILD_TYPE} _config_upper)
-    endif()
-
-    foreach(_item ${ARGN})
-        if(TARGET ${_item})
-            # Resolve location
-            get_target_property(_imported ${_item} IMPORTED)
-
-            if(NOT _imported)
-                continue()
-            endif()
-
-            get_target_property(_path ${_item} LOCATION_${_config_upper})
-
-            if(NOT _path OR ${_path} IN_LIST _result)
-                continue()
-            endif()
-
-            get_filename_component(_path ${_path} DIRECTORY)
-            set(_item ${_path})
-        endif()
-
-        if(${_item} IN_LIST _paths)
-            continue()
-        endif()
-
-        list(APPEND _paths ${_item})
-    endforeach()
-
-    set_target_properties(ChorusKit_Metadata PROPERTIES LIBRARY_SEARCHING_PATHS "${_paths}")
-endfunction()
-
-#[[
 Add application target.
 
-    ck_configure_application(<ICO ico> <ICNS icns>
+    ck_configure_application(
+        [ICO ico...]
+        [ICNS icns]
+
+        [WIN_SHORTCUT]
         [SKIP_EXPORT]
-        [NAME           name] 
-        [VERSION        version] 
-        [DESCRIPTION    desc]
     )
 
-    ICO: set Windows icon file
+    ICO:  set Windows icon file
     ICNS: set Mac icon file
+
+    WIN_SHORTCUT: create shortcut after build
 ]] #
 function(ck_configure_application)
-    set(options)
-    set(oneValueArgs ICO ICNS)
-    set(multiValueArgs)
+    set(options WIN_SHORTCUT)
+    set(oneValueArgs ICNS)
+    set(multiValueArgs ICO)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     set(_target ${CK_APPLICATION_NAME})
-
     add_executable(${_target})
 
     # Make location dependent executable, otherwise GNOME cannot recognize
@@ -292,8 +173,13 @@ function(ck_configure_application)
         target_link_options(${_target} PRIVATE "-no-pie")
     endif()
 
-    string(TIMESTAMP _year "%Y")
-    set(_copyright "Copyright ${CK_DEV_START_YEAR}-${_year} ${CK_APPLICATION_VENDOR}")
+    # Set resource files arguments
+    set(_rc_args
+        NAME ${CK_APPLICATION_NAME}
+        VERSION ${CK_APPLICATION_VERSION}
+        DESCRIPTION ${CK_APPLICATION_DESCRIPTION}
+        COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${CK_APPLICATION_VENDOR}"
+    )
 
     if(APPLE)
         if(FUNC_ICNS)
@@ -303,16 +189,35 @@ function(ck_configure_application)
         endif()
 
         # Add mac bundle
-        qtmediate_add_mac_bundle(${_target}
-            COPYRIGHT "${_copyright}"
+        qm_add_mac_bundle(${_target}
+            ${_rc_args}
             ${_icns}
-            ${FUNC_UNPARSED_ARGUMENTS}
         )
+
+        # Set output directory
         set_target_properties(${_target} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CK_BUILD_MAIN_DIR}
         )
     else()
         if(WIN32)
+            if(FUNC_ICO)
+                set(_ico ICONS ${FUNC_ICO})
+            else()
+                set(_ico)
+            endif()
+
+            # Add windows rc file
+            qm_add_win_rc_enhanced(${_target}
+                ${_rc_args}
+                ${_ico}
+            )
+
+            # Add manifest
+            qm_add_win_manifest(${_target}
+                ${_rc_args}
+                ${_ico}
+            )
+
             # Set windows application type
             if(NOT CK_ENABLE_CONSOLE)
                 set_target_properties(${_target} PROPERTIES
@@ -320,30 +225,12 @@ function(ck_configure_application)
                 )
             endif()
 
-            if(FUNC_ICO)
-                set(_ico ICON ${FUNC_ICO})
-            else()
-                set(_ico)
-            endif()
-
-            # Add windows rc file
-            qtmediate_add_win_rc(${_target}
-                COPYRIGHT "${_copyright}"
-                ${_ico}
-                ${FUNC_UNPARSED_ARGUMENTS}
-            )
-
-            # Add manifest
-            qtmediate_add_win_manifest(${_target}
-                COPYRIGHT "${_copyright}"
-                ${_ico}
-                ${FUNC_UNPARSED_ARGUMENTS}
-            )
-
             # Add shortcut
-            qtmediate_create_win_shortcut(${_target} ${CK_BUILD_MAIN_DIR}
-                OUTPUT_NAME "${_target}"
-            )
+            if(FUNC_WIN_SHORTCUT)
+                qm_create_win_shortcut(${_target} ${CK_BUILD_MAIN_DIR}
+                    OUTPUT_NAME ${_target}
+                )
+            endif()
         endif()
 
         set_target_properties(${_target} PROPERTIES
@@ -351,6 +238,7 @@ function(ck_configure_application)
         )
     endif()
 
+    # Setup install commands
     if(FUNC_SKIP_EXPORT OR NOT CK_ENABLE_DEVEL)
         set(_export)
     else()
@@ -380,7 +268,7 @@ endfunction()
 #[[
 Add an application plugin.
 
-    ck_add_application_plugin(<target>
+    ck_add_plugin(<target>
         [SKIP_EXPORT]   [NO_PLUGIN_JSON]
         [CATEGORY       category]
         [PLUGIN_JSON    plugin.json.in]
@@ -398,7 +286,7 @@ Add an application plugin.
     CATEGORY: set the sub-directory name for plugin to output, which is same as `PROJECT_NAME` by default
     PLUGIN_JSON: set the custom plugin.json.in file to configure, otherwise configure the plugin.json.in in currect directory
 ]] #
-function(ck_add_application_plugin _target)
+function(ck_add_plugin _target)
     set(options SKIP_EXPORT)
     set(oneValueArgs VENDOR PLUGIN_JSON)
     set(multiValueArgs)
@@ -409,26 +297,18 @@ function(ck_add_application_plugin _target)
 
     # Add library target and attach definitions
     _ck_add_library_internal(${_target} SHARED ${FUNC_UNPARSED_ARGUMENTS})
-
-    if(CK_INITIALIZED)
-        add_library(${CK_APPLICATION_NAME}::${_target} ALIAS ${_target})
-    endif()
+    add_library(${CK_APPLICATION_NAME}::${_target} ALIAS ${_target})
 
     # Add target level dependency
     add_dependencies(${CK_APPLICATION_NAME} ${_target})
 
-    # Set parsed name as output name if not set
-    _ck_try_set_output_name(${_target} ${_target})
-
-    qtmediate_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
+    qm_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
 
     if(WIN32)
-        string(TIMESTAMP _year "%Y")
-
-        set(_copyright "Copyright ${CK_DEV_START_YEAR}-${_year} ${_vendor}")
+        set(_copyright "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${_vendor}")
 
         # Add windows rc file
-        qtmediate_add_win_rc(${_target}
+        qm_add_win_rc(${_target}
             COPYRIGHT "${_copyright}"
             ${FUNC_UNPARSED_ARGUMENTS}
         )
@@ -448,7 +328,7 @@ function(ck_add_application_plugin _target)
         SRC ${_tmp_desc_file} DEST .
     )
 
-    qtmediate_set_value(_category FUNC_CATEGORY ${_target})
+    qm_set_value(_category FUNC_CATEGORY ${_target})
 
     set(_build_output_dir ${CK_BUILD_PLUGINS_DIR}/${_category})
     set(_install_output_dir ${CK_INSTALL_PLUGINS_DIR}/${_category})
@@ -507,22 +387,21 @@ function(ck_configure_plugin_metadata _target _plugin_json)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # Set plugin metadata
-    qtmediate_set_value(_name FUNC_NAME ${PROJECT_NAME}) # to be removed
-    qtmediate_set_value(_version FUNC_VERSION ${PROJECT_VERSION})
-    qtmediate_set_value(_compat_version FUNC_COMPAT_VERSION "0.0.0.0")
-    qtmediate_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
+    qm_set_value(_name FUNC_NAME ${PROJECT_NAME}) # to be removed
+    qm_set_value(_version FUNC_VERSION ${PROJECT_VERSION})
+    qm_set_value(_compat_version FUNC_COMPAT_VERSION "0.0.0.0")
+    qm_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
 
     # Fix version
-    qtmediate_parse_version(_ver ${_version})
+    qm_parse_version(_ver ${_version})
     set(PLUGIN_METADATA_VERSION ${_ver_1}.${_ver_2}.${_ver_3}_${_ver_4})
 
-    qtmediate_parse_version(_compat ${_compat_version})
+    qm_parse_version(_compat ${_compat_version})
     set(PLUGIN_METADATA_COMPAT_VERSION ${_compat_1}.${_compat_2}.${_compat_3}_${_compat_4})
     set(PLUGIN_METADATA_VENDOR ${_vendor})
 
     # Get year
-    string(TIMESTAMP _year "%Y")
-    set(PLUGIN_METADATA_YEAR "${_year}")
+    set(PLUGIN_METADATA_YEAR "${CK_CURRENT_YEAR}")
 
     configure_file(
         ${_plugin_json}
@@ -576,6 +455,7 @@ function(ck_add_library _target)
     _ck_add_library_internal(${_target} ${FUNC_UNPARSED_ARGUMENTS})
 
     # Get target type
+    set(_shared)
     _ck_check_shared_library(${_target} _shared)
 
     if(CK_INITIALIZED)
@@ -584,19 +464,17 @@ function(ck_add_library _target)
 
     # Add windows rc file
     if(WIN32)
-        string(TIMESTAMP _year "%Y")
-
         if(FUNC_COPYRIGHT)
             set(_copyright ${FUNC_COPYRIGHT})
         else()
-            qtmediate_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
-            set(_copyright "Copyright ${CK_DEV_START_YEAR}-${_year} ${_vendor}")
+            qm_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
+            set(_copyright "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${_vendor}")
         endif()
 
         get_target_property(_type ${_target} TYPE)
 
         if(_shared)
-            qtmediate_add_win_rc(${_target}
+            qm_add_win_rc(${_target}
                 COPYRIGHT "${_copyright}"
                 ${FUNC_UNPARSED_ARGUMENTS}
             )
@@ -676,29 +554,124 @@ function(ck_add_executable _target)
         endif()
     endif()
 
-    set_target_properties(${_target} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CK_BUILD_RUNTIME_DIR}
-    )
+    if(APPLE)
+        set_target_properties(${_target} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CK_BUILD_MAIN_DIR}
+        )
+    else()
+        set_target_properties(${_target} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CK_BUILD_RUNTIME_DIR}
+        )
+    endif()
 
     set_property(TARGET ChorusKit_Metadata APPEND PROPERTY PLAIN_EXECUTABLES ${_target})
 endfunction()
 
 #[[
-Get shorter version.
+Add a resources copying command after building the target.
 
-    ck_get_short_version(<VAR> <version> <count>)
+    ck_add_attached_files(<target>
+        [SKIP_BUILD] [SKIP_INSTALL]
+
+        SRC <files1...> DEST <dir1>
+        SRC <files2...> DEST <dir2> ...
+    )
+    
+    SRC: source files or directories, use "*" to collect all items in directory
+    DEST: destination directory, can be a generator expression
 ]] #
-function(ck_get_short_version _var _version _count)
-    qtmediate_parse_version(FUNC ${_version})
+function(ck_add_attached_files _target)
+    set(options SKIP_BUILD SKIP_INSTALL)
+    set(oneValueArgs)
+    set(multiValueArgs)
+    cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(_list)
+    set(_error)
+    set(_resilt)
+    _ck_parse_copy_args("${FUNC_UNPARSED_ARGUMENTS}" _result _error)
 
-    foreach(_i RANGE 1 ${_count})
-        list(APPEND _list ${FUNC_${_i}})
+    if(_error)
+        message(FATAL_ERROR "ck_add_attached_files: ${_error}")
+    endif()
+
+    foreach(_src ${_result})
+        list(POP_BACK _src _dest)
+
+        if(NOT FUNC_SKIP_BUILD)
+            qm_add_copy_command(${_target}
+                SOURCES ${_src}
+                DESTINATION ${_dest}
+            )
+        endif()
+
+        if(NOT FUNC_SKIP_INSTALL)
+            _ck_install_resources(_src ${_dest} "$<TARGET_FILE_DIR:${_target}>")
+        endif()
     endforeach()
+endfunction()
 
-    string(JOIN "." _short_version ${_list})
-    set(${_var} ${_short_version} PARENT_SCOPE)
+#[[
+Add a resources copying command for whole project.
+
+    ck_add_shared_files(
+        [SKIP_BUILD] [SKIP_INSTALL]
+
+        SRC <files1...> DEST <dir1>
+        SRC <files2...> DEST <dir2> ...
+    )
+
+    SRC: source files or directories, use "*" to collect all items in directory
+    DEST: destination directory, can be a generator expression
+    
+    Related Targets:
+        ChorusKit_CopySharedFiles
+]] #
+function(ck_add_shared_files)
+    set(options TARGET SKIP_BUILD SKIP_INSTALL)
+    set(oneValueArgs)
+    set(multiValueArgs)
+    cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    set(_error)
+    set(_resilt)
+    _ck_parse_copy_args("${FUNC_UNPARSED_ARGUMENTS}" _result _error)
+
+    if(_error)
+        message(FATAL_ERROR "ck_add_shared_files: ${_error}")
+    endif()
+
+    if(FUNC_TARGET)
+        set(_target ${FUNC_TARGET})
+    else()
+        string(RANDOM LENGTH 8 _rand)
+        set(_target shared_copy_command_${_rand})
+    endif()
+
+    if(TARGET ChorusKit_CopySharedFiles)
+        add_dependencies(ChorusKit_CopySharedFiles ${_target})
+    endif()
+
+    foreach(_src ${_result})
+        list(POP_BACK _src _dest)
+
+        # Determine destination
+        qm_has_genex(_has_genex ${_dest})
+
+        if(NOT _has_genex AND NOT IS_ABSOLUTE ${_dest})
+            set(_dest "${CK_BUILD_SHARE_DIR}/${FUNC_DESTINATION}")
+        endif()
+
+        if(NOT FUNC_SKIP_BUILD)
+            qm_add_copy_command(${_target}
+                SOURCES ${_src}
+                DESTINATION ${_dest}
+            )
+        endif()
+
+        if(NOT FUNC_SKIP_INSTALL)
+            _ck_install_resources(_src ${_dest} off)
+        endif()
+    endforeach()
 endfunction()
 
 # ----------------------------------
@@ -768,7 +741,7 @@ function(_ck_configure_plugin_desc _file)
     set(multiValueArgs SUBDIRS)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    qtmediate_set_value(_name FUNC_NAME ${PROJECT_NAME})
+    qm_set_value(_name FUNC_NAME ${PROJECT_NAME})
 
     set(_content "{\n    \"name\": \"${_name}\"")
 
@@ -809,124 +782,117 @@ function(_ck_try_set_output_name _target _name)
     endif()
 endfunction()
 
-function(_ck_post_deploy)
-    if(NOT Python_EXECUTABLE)
-        # Python
-        find_package(Python QUIET)
+function(_ck_install_resources _src_list _dest _relative_fallback_path)
+    set(_src_quoted)
 
-        if(Python_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL 3.8)
-            message(STATUS "Python found: ${Python_EXECUTABLE} (version ${Python_VERSION})")
-        else()
-            message(WARNING "Python not found, the installation maybe incomplete")
-            return()
-        endif()
-    endif()
-
-    add_custom_target(ChorusKit_AppLocalDeps DEPENDS ChorusKit_ReleaseTranslations)
-
-    # Add application
-    set(_binary_paths $<TARGET_FILE:${CK_APPLICATION_NAME}>)
-
-    # Add plugins
-    get_target_property(_plugin_list ChorusKit_Metadata APPLICATION_PLUGINS)
-
-    if(_plugin_list)
-        foreach(_item ${_plugin_list})
-            list(APPEND _binary_paths $<TARGET_FILE:${_item}>)
-        endforeach()
-    endif()
-
-    # Add libraries
-    get_target_property(_library_list ChorusKit_Metadata APPLICATION_LIBRARIES)
-
-    if(_library_list)
-        foreach(_item ${_library_list})
-            list(APPEND _binary_paths $<TARGET_FILE:${_item}>)
-        endforeach()
-    endif()
-
-    # Add executables
-    get_target_property(_executable_list ChorusKit_Metadata PLAIN_EXECUTABLES)
-    set(_executable_paths)
-
-    if(_executable_list)
-        foreach(_item ${_executable_list})
-            list(APPEND _executable_paths $<TARGET_FILE:${_item}>)
-        endforeach()
-    endif()
-
-    # Get petool
-    if(TARGET ckwindeps)
-        set(_petool "$<TARGET_FILE:ckwindeps>")
-    else()
-        get_target_property(_petool ChorusKit::windeps LOCATION)
-    endif()
-
-    # Compute escaped path string
-    set(_binary_paths_escaped "")
-
-    foreach(_item ${_binary_paths})
-        set(_binary_paths_escaped "${_binary_paths_escaped} \"${_item}\"")
+    foreach(_item IN LISTS ${_src_list})
+        set(_src_quoted "${_src_quoted}\"${_item}\" ")
     endforeach()
 
-    # Run command
-    if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL Debug)
-        set(_debug --debug)
-    else()
-        set(_debug)
-    endif()
+    set(_relative_fallback)
 
-    if(CK_RUN_SCRIPTS_VERBOSE)
-        set(_verbose --verbose)
-    else()
-        set(_verbose)
-    endif()
-
-    if(WIN32)
-        # Get library searching paths
-        get_target_property(_searching_paths ChorusKit_Metadata LIBRARY_SEARCHING_PATHS)
-
-        # Compute escaped path string 2
-        set(_searching_paths_escaped "")
-
-        foreach(_item ${_searching_paths})
-            set(_searching_paths_escaped "${_searching_paths_escaped} \"${_item}\"")
-        endforeach()
-
-        add_custom_command(TARGET ChorusKit_AppLocalDeps POST_BUILD
-            COMMAND ${Python_EXECUTABLE} "${CK_CMAKE_MODULES_DIR}/python/windeploy.py"
-            --prefix ${CK_BUILD_MAIN_DIR}
-            --qmake ${QT_QMAKE_EXECUTABLE}
-            --petool ${_petool}
-            --dirs ${_searching_paths}
-            --files ${_binary_paths} ${_executable_paths}
-            ${_debug} ${_verbose}
-            COMMENT "Running post deploy script..."
-            WORKING_DIRECTORY ${CK_BUILD_MAIN_DIR}
-        )
-
-        install(CODE "
-            message(STATUS \"Running post deploy script...\")
-            execute_process(
-                COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target ChorusKit_ReleaseTranslations
-                COMMAND \"${Python_EXECUTABLE}\" \"${CK_CMAKE_MODULES_DIR}/python/windeploy.py\"
-                --prefix \"${CMAKE_INSTALL_PREFIX}\"
-                --qmake \"${QT_QMAKE_EXECUTABLE}\"
-                --petool \"${_petool}\"
-                --dirs ${_searching_paths_escaped}
-                --files ${_binary_paths_escaped}
-                ${_debug} ${_verbose}
-                WORKING_DIRECTORY \"${CK_BUILD_MAIN_DIR}\"
-            )
+    if(_relative_fallback_path)
+        set(_relative_fallback "
+            if(NOT IS_ABSOLUTE \${_dest})
+                file(RELATIVE_PATH _rel_path \"${_relative_fallback_path}/\${_dest}\" \"${CK_BUILD_MAIN_DIR}\")
+                set(_dest \"\${CMAKE_INSTALL_PREFIX}/\${_rel_path}\")
+            endif()
         ")
-    elseif(APPLE)
-    # TODO...
-    else()
-        # TODO...
     endif()
+
+    install(CODE "
+        set(_src ${_src_quoted})
+        set(_dest \"${_dest}\")
+
+        ${_relative_fallback}
+
+        foreach(_file \${_src})
+            get_filename_component(_path \${_file} ABSOLUTE BASE_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
+
+            if(IS_DIRECTORY \${_path})
+                set(_type DIRECTORY)
+            else()
+                set(_type FILE)
+            endif()
+
+            file(INSTALL DESTINATION \"\${_dest}\"
+                TYPE \${_type}
+                FILES \${_path}
+            )
+        endforeach()
+    ")
 endfunction()
 
-include(${CK_CMAKE_MODULES_DIR}/modules/Basic.cmake)
-include(${CK_CMAKE_MODULES_DIR}/modules/FileCopy.cmake)
-include(${CK_CMAKE_MODULES_DIR}/modules/Target.cmake)
-include(${CK_CMAKE_MODULES_DIR}/modules/Translate.cmake)
+
+#[[
+    _ck_parse_copy_args(<args> <RESULT> <ERROR>)
+
+    args:   SRC <files...> DEST <dir1>
+            SRC <files...> DEST <dir2> ...
+]] #
+function(_ck_parse_copy_args _args _result _error)
+    # State Machine
+    set(_src)
+    set(_dest)
+    set(_status NONE) # NONE, SRC, DEST
+    set(_count 0)
+
+    set(_list)
+
+    foreach(_item ${_args})
+        if(${_item} STREQUAL SRC)
+            if(${_status} STREQUAL NONE)
+                set(_src)
+                set(_status SRC)
+            elseif(${_status} STREQUAL DEST)
+                set(${_error} "missing directory name after DEST!" PARENT_SCOPE)
+                return()
+            else()
+                set(${_error} "missing source files after SRC!" PARENT_SCOPE)
+                return()
+            endif()
+        elseif(${_item} STREQUAL DEST)
+            if(${_status} STREQUAL SRC)
+                set(_status DEST)
+            elseif(${_status} STREQUAL DEST)
+                set(${_error} "missing directory name after DEST!" PARENT_SCOPE)
+                return()
+            else()
+                set(${_error} "no source files specified for DEST!" PARENT_SCOPE)
+                return()
+            endif()
+        else()
+            if(${_status} STREQUAL NONE)
+                set(${_error} "missing SRC or DEST token!" PARENT_SCOPE)
+                return()
+            elseif(${_status} STREQUAL DEST)
+                if(NOT _src)
+                    set(${_error} "no source files specified for DEST!" PARENT_SCOPE)
+                    return()
+                endif()
+
+                set(_status NONE)
+                math(EXPR _count "${_count} + 1")
+
+                string(JOIN "\\;" _src_str ${_src})
+                list(APPEND _list "${_src_str}\\;${_item}")
+            else()
+                get_filename_component(_path ${_item} ABSOLUTE)
+                list(APPEND _src ${_path})
+            endif()
+        endif()
+    endforeach()
+
+    if(${_status} STREQUAL SRC)
+        set(${_error} "missing DEST after source files!" PARENT_SCOPE)
+        return()
+    elseif(${_status} STREQUAL DEST)
+        set(${_error} "missing directory name after DEST!" PARENT_SCOPE)
+        return()
+    elseif(${_count} STREQUAL 0)
+        set(${_error} "no files specified!" PARENT_SCOPE)
+        return()
+    endif()
+
+    set(${_result} "${_list}" PARENT_SCOPE)
+endfunction()

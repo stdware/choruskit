@@ -1,17 +1,8 @@
 project(Aggregation VERSION ${QT_CREATOR_VERSION} LANGUAGES CXX)
 
-ck_add_qt_module(_qt_libs Core)
-
 file(GLOB _src *.h *.cpp)
 
-configure_qtc_library(${PROJECT_NAME})
-
-target_sources(${PROJECT_NAME} PRIVATE ${_src})
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE AGGREGATION_LIBRARY)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC
-    ${_qt_libs}
+configure_qtc_library(${PROJECT_NAME}
+    SOURCES ${_src}
+    QT_LINKS Core
 )
-
-choruskit_install_headers(. EXCLUDE_DIRS examples)
