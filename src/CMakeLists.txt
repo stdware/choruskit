@@ -102,22 +102,6 @@ macro(choruskit_add_library _target _type)
     set_property(GLOBAL APPEND PROPERTY CHORUSKIT_TRANSLATE_TARGETS ${_target})
 endmacro()
 
-function(choruskit_configure_include _target _name)
-    target_include_directories(${_target} PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
-    )
-
-    if(CHORUSKIT_INSTALL)
-        target_include_directories(${_target} PUBLIC
-            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}>"
-            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_name}>"
-        )
-        file(GLOB _headers *.h)
-        install(FILES ${_headers} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${CHORUSKIT_INSTALL_NAME}/${_name}")
-    endif()
-endfunction()
-
 # ----------------------------------
 # Main Project
 # ----------------------------------
@@ -125,7 +109,7 @@ add_subdirectory(3rdparty)
 
 # add_subdirectory(appcore)
 
-# add_subdirectory(loader)
+add_subdirectory(loader)
 
 # ----------------------------------
 # Install

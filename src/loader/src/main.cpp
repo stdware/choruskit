@@ -7,9 +7,9 @@
 #include <QTextStream>
 
 #include <QMCore/QMSystem.h>
-#include <QMGui/QMCss.h>
 #include <QMWidgets/QMAppExtension.h>
 #include <QMWidgets/QMDecoratorV2.h>
+#include <QMWidgets/private/qmcss_p.h>
 
 #include <extensionsystem/pluginmanager.h>
 #include <extensionsystem/pluginspec.h>
@@ -225,7 +225,7 @@ public:
     }
 
     void load(const QString &fileName, SplashScreen *splash) {
-        QString configDir = QMFs::PathFindDirPath(fileName);
+        QString configDir = QM::PathFindDirPath(fileName);
 
         // Load configuration
         LoadConfig configFile;
@@ -262,7 +262,7 @@ public:
         }
 
         // Setup splash
-        double ratio = splash->screen()->logicalDotsPerInch() / QMOs::unitDpi() * 0.8;
+        double ratio = splash->screen()->logicalDotsPerInch() / QM::unitDpi() * 0.8;
         if (configFile.resizable) {
             splashSize *= ratio;
         }
@@ -332,11 +332,17 @@ int main_entry(LoaderConfiguration *loadConfig) {
         argsParser.parse(arguments);
 
         // Root privilege detection
-        if (!g_loadConfig->allowRoot && !argsParser.allowRoot && !argsParser.showHelp && QMOs::isUserRoot()) {
+        if (!g_loadConfig->allowRoot && !argsParser.allowRoot && !argsParser.showHelp && QM::isUserRoot()) {
             QString msg = QCoreApplication::translate("Application",
                                                       "You're trying to start %1 as the %2, which is "
                                                       "extremely dangerous and therefore strongly not recommended.")
-                              .arg(qApp->applicationName(), QMOs::rootUserName());
+                              .arg(qApp->applicationName(),
+#ifdef Q_OS_WINDOWS
+                                   QCoreApplication::translate("Application", "Administrator")
+#else
+                                   QCoreApplication::translate("Application", "Root")
+#endif
+                              );
             qAppExt->showMessage(nullptr, QMAppExtension::Warning, qApp->applicationName(), msg);
             return false;
         }
