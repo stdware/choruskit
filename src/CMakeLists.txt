@@ -126,8 +126,6 @@ add_subdirectory(3rdparty)
 # add_subdirectory(appcore)
 
 # add_subdirectory(loader)
-# add_subdirectory(svsbasic)
-# add_subdirectory(svswidgets)
 
 # ----------------------------------
 # Install
