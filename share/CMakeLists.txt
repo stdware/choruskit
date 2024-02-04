@@ -7,6 +7,7 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
 
     # choruskit
     get_property(_targets GLOBAL PROPERTY CHORUSKIT_TRANSLATE_TARGETS)
+    set(_qm_dir ${CMAKE_CURRENT_BINARY_DIR}/translations)
     qm_add_translation(choruskit_translations
         LOCALES ja_JP zh_CN zh_HK
         PREFIX choruskit
@@ -23,7 +24,7 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
             execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target choruskit_lrelease_task)
         ")
         install(DIRECTORY ${_qm_dir}/
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${CHORUSKIT_INSTALL_NAME}/translations
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/${CHORUSKIT_INSTALL_NAME}/translations
             FILES_MATCHING PATTERN "*.qm"
         )
     endif()
@@ -31,6 +32,6 @@ endif()
 
 if(CHORUSKIT_INSTALL)
     install(DIRECTORY doc/
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/${CHORUSKIT_INSTALL_NAME}
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/${CHORUSKIT_INSTALL_NAME}
     )
 endif()

@@ -107,7 +107,7 @@ endmacro()
 # ----------------------------------
 add_subdirectory(3rdparty)
 
-# add_subdirectory(appcore)
+add_subdirectory(appcore)
 
 add_subdirectory(loader)
 
