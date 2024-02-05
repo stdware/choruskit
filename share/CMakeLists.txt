@@ -7,7 +7,7 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
 
     # choruskit
     get_property(_targets GLOBAL PROPERTY CHORUSKIT_TRANSLATE_TARGETS)
-    set(_qm_dir ${CMAKE_CURRENT_BINARY_DIR}/translations)
+    set(_qm_dir ${CMAKE_BUILD_SHARE_DIR}/${CHORUSKIT_INSTALL_NAME}/translations)
     qm_add_translation(choruskit_translations
         LOCALES ja_JP zh_CN zh_HK
         PREFIX choruskit

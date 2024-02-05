@@ -11,7 +11,7 @@ if(NOT DEFINED CK_CMAKE_MODULES_DIR)
 endif()
 
 #[[
-Initialize ChorusKitApi global configuration.
+    Initialize ChorusKitApi global configuration.
 
     ck_init_buildsystem()
 
@@ -114,6 +114,7 @@ macro(ck_init_buildsystem)
     # Set output directories
     set(CK_ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/etc)
     set(CK_BUILD_INCLUDE_DIR ${CK_ARCHIVE_OUTPUT_PATH}/include)
+    set(CK_GENERATED_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include)
 
     if(APPLE)
         set(CK_BUILD_MAIN_DIR ${CK_BUILD_MAIN_DIR}/${CK_APPLICATION_NAME}.app/Contents)
@@ -123,6 +124,8 @@ macro(ck_init_buildsystem)
         set(CK_BUILD_LIBRARY_DIR ${_CK_BUILD_BASE_DIR}/Frameworks)
         set(CK_BUILD_PLUGINS_DIR ${_CK_BUILD_BASE_DIR}/Plugins)
         set(CK_BUILD_SHARE_DIR ${_CK_BUILD_BASE_DIR}/Resources)
+        set(CK_BUILD_DATA_DIR ${CK_BUILD_SHARE_DIR})
+        set(CK_BUILD_DOC_DIR ${CK_BUILD_SHARE_DIR}/doc)
         set(CK_BUILD_QT_CONF_DIR ${_CK_BUILD_BASE_DIR}/Resources)
 
         set(_CK_INSTALL_BASE_DIR ${CK_APPLICATION_NAME}.app/Contents)
@@ -130,6 +133,8 @@ macro(ck_init_buildsystem)
         set(CK_INSTALL_LIBRARY_DIR ${_CK_INSTALL_BASE_DIR}/Frameworks)
         set(CK_INSTALL_PLUGINS_DIR ${_CK_INSTALL_BASE_DIR}/Plugins)
         set(CK_INSTALL_SHARE_DIR ${_CK_INSTALL_BASE_DIR}/Resources)
+        set(CK_INSTALL_DATA_DIR ${CK_INSTALL_SHARE_DIR})
+        set(CK_INSTALL_DOC_DIR ${CK_INSTALL_SHARE_DIR}/doc)
         set(CK_INSTALL_INCLUDE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/include/${CK_APPLICATION_NAME})
         set(CK_INSTALL_CMAKE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/lib/cmake/${CK_APPLICATION_NAME})
     else()
@@ -137,12 +142,16 @@ macro(ck_init_buildsystem)
         set(CK_BUILD_LIBRARY_DIR ${CK_BUILD_MAIN_DIR}/lib)
         set(CK_BUILD_PLUGINS_DIR ${CK_BUILD_MAIN_DIR}/lib/${CK_APPLICATION_NAME}/plugins)
         set(CK_BUILD_SHARE_DIR ${CK_BUILD_MAIN_DIR}/share)
+        set(CK_BUILD_DATA_DIR ${CK_BUILD_SHARE_DIR}/${CK_APPLICATION_NAME})
+        set(CK_BUILD_DOC_DIR ${CK_BUILD_SHARE_DIR}/doc/${CK_APPLICATION_NAME})
         set(CK_BUILD_QT_CONF_DIR ${CK_BUILD_MAIN_DIR}/bin)
 
         set(CK_INSTALL_RUNTIME_DIR bin)
         set(CK_INSTALL_LIBRARY_DIR lib)
         set(CK_INSTALL_PLUGINS_DIR ${CK_BUILD_MAIN_DIR}/Plugins)
         set(CK_INSTALL_SHARE_DIR share)
+        set(CK_INSTALL_DATA_DIR ${CK_INSTALL_SHARE_DIR}/${CK_APPLICATION_NAME})
+        set(CK_INSTALL_DOC_DIR ${CK_INSTALL_SHARE_DIR}/doc/${CK_APPLICATION_NAME})
         set(CK_INSTALL_INCLUDE_DIR include/${CK_APPLICATION_NAME})
         set(CK_INSTALL_CMAKE_DIR lib/cmake/${CK_APPLICATION_NAME})
     endif()
@@ -168,12 +177,13 @@ macro(ck_init_buildsystem)
 endmacro()
 
 #[[
-Finish ChorusKitApi global configuration.
+    Finish ChorusKitApi global configuration.
 
     ck_finish_buildsystem()
 #]]
 macro(ck_finish_buildsystem)
     qm_generate_config(${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
+    qm_generate_build_info(${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h YEAR TIME)
 
     if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL)
         install(FILES ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h
@@ -183,7 +193,7 @@ macro(ck_finish_buildsystem)
 endmacro()
 
 #[[
-Add application target.
+    Add application target.
 
     ck_configure_application(
         [ICO ico...]
@@ -317,7 +327,7 @@ function(ck_configure_application)
 endfunction()
 
 #[[
-Add an application plugin.
+    Add an application plugin.
 
     ck_add_plugin(<target>
         [SKIP_EXPORT]   [NO_PLUGIN_JSON]
@@ -347,8 +357,19 @@ function(ck_add_plugin _target)
     _ck_set_cmake_autoxxx(on)
 
     # Add library target and attach definitions
+    set(_vcpkg_applocal_deps off)
+
+    if(DEFINED VCPKG_APPLOCAL_DEPS AND VCPKG_APPLOCAL_DEPS)
+        set(_vcpkg_applocal_deps on)
+        set(VCPKG_APPLOCAL_DEPS off) # Temporarily disable VCPKG_APPLOCAL_DEPS
+    endif()
+
     _ck_add_library_internal(${_target} SHARED ${FUNC_UNPARSED_ARGUMENTS})
     add_library(${CK_APPLICATION_NAME}::${_target} ALIAS ${_target})
+
+    if(_vcpkg_applocal_deps)
+        set(VCPKG_APPLOCAL_DEPS on)
+    endif()
 
     # Add target level dependency
     add_dependencies(${CK_APPLICATION_NAME} ${_target})
@@ -419,7 +440,7 @@ function(ck_add_plugin _target)
 endfunction()
 
 #[[
-Configure plugin metadata json.
+    Configure plugin metadata json.
 
     ck_configure_plugin_metadata(<target>
         [NAME               name            ] 
@@ -465,7 +486,7 @@ function(ck_configure_plugin_metadata _target _plugin_json)
 endfunction()
 
 #[[
-Add a library, default to static library.
+    Add a library, default to static library.
 
     ck_add_library(<target>
         [SHARED] [AUTOGEN] [SKIP_INSTALL] [SKIP_EXPORT]
@@ -572,7 +593,7 @@ function(ck_add_library _target)
 endfunction()
 
 #[[
-Add plain executable target, won't be installed.
+    Add plain executable target, won't be installed.
 
     ck_add_executable(<target> [sources]
         [AUTOGEN] [CONSOLE] [WINDOWS]
@@ -618,6 +639,52 @@ function(ck_add_executable _target)
     endif()
 
     set_property(TARGET ChorusKit_Metadata APPEND PROPERTY PLAIN_EXECUTABLES ${_target})
+endfunction()
+
+#[[
+    Sync include files for library or plugin target.
+
+    ck_sync_include(<target>
+        [DIRECTORY <dir>]
+        [PREFIX <prefix>]
+        [OPTIONS <options...>]
+    )
+]] #
+function(ck_sync_include _target)
+    set(options)
+    set(oneValueArgs DIRECTORY PREFIX)
+    set(multiValueArgs OPTIONS)
+    cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    set(_inc_name)
+    qm_set_value(_inc_name FUNC_PREFIX ${_target})
+
+    set(_dir)
+    qm_set_value(_dir FUNC_DIRECTORY .)
+
+    set(_install_options)
+
+    if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL)
+        target_include_directories(${_target} PUBLIC
+            "$<INSTALL_INTERFACE:${CK_INSTALL_INCLUDE_DIR}>"
+        )
+
+        set(_install_options
+            INSTALL_DIR "${CK_INSTALL_INCLUDE_DIR}/${_inc_name}"
+        )
+    endif()
+
+    target_include_directories(${_target} PUBLIC
+        "$<BUILD_INTERFACE:${CK_GENERATED_INCLUDE_DIR}>"
+        "$<BUILD_INTERFACE:${CK_GENERATED_INCLUDE_DIR}/${_inc_name}>"
+    )
+
+    target_include_directories(${_target} PRIVATE ${_dir})
+
+    # Generate a standard include directory in build directory
+    qm_sync_include(${_dir} "${CK_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options}
+        ${FUNC_OPTIONS}
+    )
 endfunction()
 
 #[[
