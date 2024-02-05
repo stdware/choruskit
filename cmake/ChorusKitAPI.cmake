@@ -1,15 +1,29 @@
 include_guard(DIRECTORY)
 
+if(NOT TARGET qmsetup::library)
+    find_package(qmsetup REQUIRED)
+endif()
+
+qm_import(Filesystem Preprocess)
+
 if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
 endif()
 
 #[[
-Initialize ChorusKitApi global settings.
+Initialize ChorusKitApi global configuration.
 
     ck_init_buildsystem()
+
+    Customizable Variables:
+        CK_APPLICATION_NAME
+        CK_APPLICATION_DESCRIPTION
+        CK_APPLICATION_VERSION
+        CK_APPLICATION_VENDOR
+        CK_DEV_START_YEAR
+        CK_CMAKE_SOURCE_DIR (not suggested)
 ]] #
-macro(ck_init_build_system _app)
+macro(ck_init_buildsystem)
     # Check platform, only Windows/Macintosh/Linux is supported
     if(APPLE)
         set(CK_PLATFORM_NAME Macintosh)
@@ -26,17 +40,22 @@ macro(ck_init_build_system _app)
     endif()
 
     # Set main output directory
-    if(NOT DEFINED CK_BUILD_MAIN_DIR)
-        if(CMAKE_CONFIGURATION_TYPES OR NOT CMAKE_BUILD_TYPE)
-            message(FATAL_ERROR "ChorusKit: multi-config is not supported.")
-        endif()
-
-        set(CK_BUILD_MAIN_DIR ${CMAKE_BINARY_DIR}/out-${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_BUILD_TYPE})
-    endif()
+    qm_init_directories()
+    set(CK_BUILD_MAIN_DIR ${QMSETUP_BUILD_DIR})
 
     # Whether to build Windows Console executables
     if(NOT DEFINED CK_ENABLE_CONSOLE)
         set(CK_ENABLE_CONSOLE on)
+    endif()
+
+    # Install or not
+    if(NOT DEFINED CK_ENABLE_INSTALL)
+        set(CK_ENABLE_INSTALL on)
+    endif()
+
+    if(CK_ENABLE_INSTALL)
+        include(GNUInstallDirs)
+        include(CMakePackageConfigHelpers)
     endif()
 
     # Whether to install developer files
@@ -51,7 +70,7 @@ macro(ck_init_build_system _app)
 
     # Application name
     if(NOT DEFINED CK_APPLICATION_NAME)
-        set(CK_APPLICATION_NAME ChorusKit)
+        set(CK_APPLICATION_NAME Application)
     endif()
 
     # Application description
@@ -61,20 +80,20 @@ macro(ck_init_build_system _app)
 
     # Application version
     if(NOT DEFINED CK_APPLICATION_VERSION)
-        if(PROJECT_VERSION)
-            set(CK_APPLICATION_VERSION ${PROJECT_VERSION})
-        else()
-            set(CK_APPLICATION_VERSION "0.0.0.0")
-        endif()
+        set(CK_APPLICATION_VERSION)
+        qm_set_value(CK_APPLICATION_VERSION PROJECT_VERSION "0.0.0.0")
     endif()
 
     # Application vendor
     if(NOT DEFINED CK_APPLICATION_VENDOR)
-        set(CK_APPLICATION_VENDOR OpenVPI)
+        set(CK_APPLICATION_VENDOR unknown)
     endif()
 
     # Set time variables
-    set(CK_DEV_START_YEAR 2019)
+    if(NOT DEFINED CK_DEV_START_YEAR)
+        set(CK_DEV_START_YEAR 2019)
+    endif()
+
     string(TIMESTAMP CK_CURRENT_YEAR "%Y")
 
     # Initialization guard
@@ -85,17 +104,19 @@ macro(ck_init_build_system _app)
     set(CK_INITIALIZED on)
 
     # Source directory when configuring
-    set(CK_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    if(NOT DEFINED CK_CMAKE_SOURCE_DIR)
+        set(CK_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
 
     # Export targets
-    set(CK_INSTALL_EXPORT ${_app}Targets)
+    set(CK_INSTALL_EXPORT ${CK_APPLICATION_NAME}Targets)
 
     # Set output directories
     set(CK_ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/etc)
     set(CK_BUILD_INCLUDE_DIR ${CK_ARCHIVE_OUTPUT_PATH}/include)
 
     if(APPLE)
-        set(CK_BUILD_MAIN_DIR ${CK_BUILD_MAIN_DIR}/${_app}.app/Contents)
+        set(CK_BUILD_MAIN_DIR ${CK_BUILD_MAIN_DIR}/${CK_APPLICATION_NAME}.app/Contents)
 
         set(_CK_BUILD_BASE_DIR ${CK_BUILD_MAIN_DIR})
         set(CK_BUILD_RUNTIME_DIR ${_CK_BUILD_BASE_DIR}/MacOS)
@@ -104,17 +125,17 @@ macro(ck_init_build_system _app)
         set(CK_BUILD_SHARE_DIR ${_CK_BUILD_BASE_DIR}/Resources)
         set(CK_BUILD_QT_CONF_DIR ${_CK_BUILD_BASE_DIR}/Resources)
 
-        set(_CK_INSTALL_BASE_DIR ${_app}.app/Contents)
+        set(_CK_INSTALL_BASE_DIR ${CK_APPLICATION_NAME}.app/Contents)
         set(CK_INSTALL_RUNTIME_DIR ${_CK_INSTALL_BASE_DIR}/MacOS)
         set(CK_INSTALL_LIBRARY_DIR ${_CK_INSTALL_BASE_DIR}/Frameworks)
         set(CK_INSTALL_PLUGINS_DIR ${_CK_INSTALL_BASE_DIR}/Plugins)
         set(CK_INSTALL_SHARE_DIR ${_CK_INSTALL_BASE_DIR}/Resources)
-        set(CK_INSTALL_INCLUDE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/include/${_app})
-        set(CK_INSTALL_CMAKE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/lib/cmake/${_app})
+        set(CK_INSTALL_INCLUDE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/include/${CK_APPLICATION_NAME})
+        set(CK_INSTALL_CMAKE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/lib/cmake/${CK_APPLICATION_NAME})
     else()
         set(CK_BUILD_RUNTIME_DIR ${CK_BUILD_MAIN_DIR}/bin)
         set(CK_BUILD_LIBRARY_DIR ${CK_BUILD_MAIN_DIR}/lib)
-        set(CK_BUILD_PLUGINS_DIR ${CK_BUILD_MAIN_DIR}/lib/${_app}/plugins)
+        set(CK_BUILD_PLUGINS_DIR ${CK_BUILD_MAIN_DIR}/lib/${CK_APPLICATION_NAME}/plugins)
         set(CK_BUILD_SHARE_DIR ${CK_BUILD_MAIN_DIR}/share)
         set(CK_BUILD_QT_CONF_DIR ${CK_BUILD_MAIN_DIR}/bin)
 
@@ -122,9 +143,12 @@ macro(ck_init_build_system _app)
         set(CK_INSTALL_LIBRARY_DIR lib)
         set(CK_INSTALL_PLUGINS_DIR ${CK_BUILD_MAIN_DIR}/Plugins)
         set(CK_INSTALL_SHARE_DIR share)
-        set(CK_INSTALL_INCLUDE_DIR include/${_app})
-        set(CK_INSTALL_CMAKE_DIR lib/cmake/${_app})
+        set(CK_INSTALL_INCLUDE_DIR include/${CK_APPLICATION_NAME})
+        set(CK_INSTALL_CMAKE_DIR lib/cmake/${CK_APPLICATION_NAME})
     endif()
+
+    # Set definition configuration
+    set(QMSETUP_DEFINITION_SCOPE DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     # Store data during configuration
     add_custom_target(ChorusKit_Metadata)
@@ -141,6 +165,21 @@ macro(ck_init_build_system _app)
     # Used ChorusKit Metadata Keys:
     # APPLICATION_PLUGINS
     # APPLICATION_LIBRARIES
+endmacro()
+
+#[[
+Finish ChorusKitApi global configuration.
+
+    ck_finish_buildsystem()
+#]]
+macro(ck_finish_buildsystem)
+    qm_generate_config(${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
+
+    if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL)
+        install(FILES ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h
+            DESTINATION ${CK_INSTALL_INCLUDE_DIR}
+        )
+    endif()
 endmacro()
 
 #[[
@@ -169,8 +208,18 @@ function(ck_configure_application)
     add_executable(${_target})
 
     # Make location dependent executable, otherwise GNOME cannot recognize
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    if(LINUX)
         target_link_options(${_target} PRIVATE "-no-pie")
+    endif()
+
+    target_include_directories(${_target} PUBLIC
+        $<BUILD_INTERFACE:${CK_BUILD_INCLUDE_DIR}>
+    )
+
+    if(CK_ENABLE_INSTALL)
+        target_include_directories(${_target} PUBLIC
+            $<INSTALL_INTERFACE:${CK_INSTALL_INCLUDE_DIR}>
+        )
     endif()
 
     # Set resource files arguments
@@ -238,25 +287,27 @@ function(ck_configure_application)
         )
     endif()
 
-    # Setup install commands
-    if(FUNC_SKIP_EXPORT OR NOT CK_ENABLE_DEVEL)
-        set(_export)
-    else()
-        set(_export EXPORT ${CK_INSTALL_EXPORT})
-    endif()
+    if(CK_ENABLE_INSTALL)
+        # Setup install commands
+        if(FUNC_SKIP_EXPORT OR NOT CK_ENABLE_DEVEL)
+            set(_export)
+        else()
+            set(_export EXPORT ${CK_INSTALL_EXPORT})
+        endif()
 
-    if(APPLE)
-        # Install to .
-        install(TARGETS ${_target}
-            ${_export}
-            DESTINATION . OPTIONAL
-        )
-    else()
-        # Install to bin
-        install(TARGETS ${_target}
-            ${_export}
-            DESTINATION ${CK_INSTALL_RUNTIME_DIR} OPTIONAL
-        )
+        if(APPLE)
+            # Install to .
+            install(TARGETS ${_target}
+                ${_export}
+                DESTINATION . OPTIONAL
+            )
+        else()
+            # Install to bin
+            install(TARGETS ${_target}
+                ${_export}
+                DESTINATION ${CK_INSTALL_RUNTIME_DIR} OPTIONAL
+            )
+        endif()
     endif()
 
     # Add post build events to distribute shared files
@@ -278,7 +329,7 @@ Add an application plugin.
         [DESCRIPTION    desc]
         [VENDOR         vendor]
         [MACRO_PREFIX   prefix]
-        [TYPE_MACRO     macro]
+        [STATIC_MACRO   macro]
         [LIBRARY_MACRO  macro]
     )
 
@@ -340,26 +391,28 @@ function(ck_add_plugin _target)
         ARCHIVE_OUTPUT_DIRECTORY ${_build_output_dir}
     )
 
-    # Install target
-    if(FUNC_SKIP_EXPORT)
-        set(_export)
-    else()
-        set(_export EXPORT ${CK_INSTALL_EXPORT})
-    endif()
+    if(CK_ENABLE_INSTALL)
+        # Install target
+        if(FUNC_SKIP_EXPORT)
+            set(_export)
+        else()
+            set(_export EXPORT ${CK_INSTALL_EXPORT})
+        endif()
 
-    if(CK_ENABLE_DEVEL)
-        install(TARGETS ${_target}
-            ${_export}
-            RUNTIME DESTINATION ${_install_output_dir}
-            LIBRARY DESTINATION ${_install_output_dir}
-            ARCHIVE DESTINATION ${_install_output_dir}
-        )
-    else()
-        install(TARGETS ${_target}
-            ${_export}
-            RUNTIME DESTINATION ${_install_output_dir}
-            LIBRARY DESTINATION ${_install_output_dir}
-        )
+        if(CK_ENABLE_DEVEL)
+            install(TARGETS ${_target}
+                ${_export}
+                RUNTIME DESTINATION ${_install_output_dir}
+                LIBRARY DESTINATION ${_install_output_dir}
+                ARCHIVE DESTINATION ${_install_output_dir}
+            )
+        else()
+            install(TARGETS ${_target}
+                ${_export}
+                RUNTIME DESTINATION ${_install_output_dir}
+                LIBRARY DESTINATION ${_install_output_dir}
+            )
+        endif()
     endif()
 
     set_property(TARGET ChorusKit_Metadata APPEND PROPERTY APPLICATION_PLUGINS ${_target})
@@ -421,7 +474,7 @@ Add a library, default to static library.
         [DESCRIPTION    desc]
         [COPYRIGHT copyright | VENDOR vendor]
         [MACRO_PREFIX   prefix]
-        [TYPE_MACRO     macro]
+        [STATIC_MACRO   macro]
         [LIBRARY_MACRO  macro]
     )
 
@@ -498,7 +551,7 @@ function(ck_add_library _target)
         set(_export EXPORT ${CK_INSTALL_EXPORT})
     endif()
 
-    if(NOT FUNC_SKIP_INSTALL)
+    if(NOT FUNC_SKIP_INSTALL AND CK_ENABLE_INSTALL)
         if(CK_ENABLE_DEVEL)
             install(TARGETS ${_target}
                 ${_export}
@@ -594,19 +647,26 @@ function(ck_add_attached_files _target)
         message(FATAL_ERROR "ck_add_attached_files: ${_error}")
     endif()
 
+    set(_options)
+
+    if(FUNC_SKIP_BUILD)
+        list(APPEND _options SKIP_BUILD)
+    endif()
+
+    if(FUNC_SKIP_INSTALL OR NOT CK_ENABLE_INSTALL)
+        list(APPEND _options SKIP_INSTALL)
+    else()
+        list(APPEND _options INSTALL_DIR .)
+    endif()
+
     foreach(_src ${_result})
         list(POP_BACK _src _dest)
 
-        if(NOT FUNC_SKIP_BUILD)
-            qm_add_copy_command(${_target}
-                SOURCES ${_src}
-                DESTINATION ${_dest}
-            )
-        endif()
-
-        if(NOT FUNC_SKIP_INSTALL)
-            _ck_install_resources(_src ${_dest} "$<TARGET_FILE_DIR:${_target}>")
-        endif()
+        qm_add_copy_command(${_target}
+            SOURCES ${_src}
+            DESTINATION ${_dest}
+            ${_options}
+        )
     endforeach()
 endfunction()
 
@@ -651,26 +711,26 @@ function(ck_add_shared_files)
         add_dependencies(ChorusKit_CopySharedFiles ${_target})
     endif()
 
+    set(_options)
+
+    if(FUNC_SKIP_BUILD)
+        list(APPEND _options SKIP_BUILD)
+    endif()
+
+    if(FUNC_SKIP_INSTALL)
+        list(APPEND _options SKIP_INSTALL)
+    else()
+        list(APPEND _options INSTALL_DIR .)
+    endif()
+
     foreach(_src ${_result})
         list(POP_BACK _src _dest)
 
-        # Determine destination
-        qm_has_genex(_has_genex ${_dest})
-
-        if(NOT _has_genex AND NOT IS_ABSOLUTE ${_dest})
-            set(_dest "${CK_BUILD_SHARE_DIR}/${FUNC_DESTINATION}")
-        endif()
-
-        if(NOT FUNC_SKIP_BUILD)
-            qm_add_copy_command(${_target}
-                SOURCES ${_src}
-                DESTINATION ${_dest}
-            )
-        endif()
-
-        if(NOT FUNC_SKIP_INSTALL)
-            _ck_install_resources(_src ${_dest} off)
-        endif()
+        qm_add_copy_command(${_target}
+            SOURCES ${_src}
+            DESTINATION ${_dest}
+            ${_options}
+        )
     endforeach()
 endfunction()
 
@@ -685,9 +745,11 @@ endmacro()
 
 function(_ck_add_library_internal _target)
     set(options SHARED)
-    set(oneValueArgs NAME MACRO_PREFIX LIBRARY_MACRO TYPE_MACRO)
+    set(oneValueArgs NAME MACRO_PREFIX LIBRARY_MACRO STATIC_MACRO)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    set(_options)
 
     if(FUNC_MACRO_PREFIX)
         set(_prefix ${FUNC_MACRO_PREFIX})
@@ -697,20 +759,14 @@ function(_ck_add_library_internal _target)
         string(TOUPPER ${_target} _prefix)
     endif()
 
+    list(APPEND _options PREFIX ${_prefix})
+
     if(FUNC_LIBRARY_MACRO)
-        set(_library_macro ${FUNC_LIBRARY_MACRO})
-    else()
-        set(_library_macro ${_prefix}_LIBRARY)
+        list(APPEND _options LIBRARY ${FUNC_LIBRARY_MACRO})
     endif()
 
-    if(FUNC_TYPE_MACRO)
-        set(_type_macro ${FUNC_TYPE_MACRO})
-    else()
-        if(FUNC_SHARED)
-            set(_type_macro ${_prefix}_SHARED)
-        else()
-            set(_type_macro ${_prefix}_STATIC)
-        endif()
+    if(FUNC_STATIC_MACRO)
+        list(APPEND _options STATIC ${FUNC_STATIC_MACRO})
     endif()
 
     if(FUNC_SHARED)
@@ -723,8 +779,17 @@ function(_ck_add_library_internal _target)
         set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${FUNC_NAME})
     endif()
 
-    target_compile_definitions(${_target} PUBLIC ${_type_macro})
-    target_compile_definitions(${_target} PRIVATE ${_library_macro})
+    qm_export_defines(${_target} ${_options})
+
+    target_include_directories(${_target} PUBLIC
+        $<BUILD_INTERFACE:${CK_BUILD_INCLUDE_DIR}>
+    )
+
+    if(CK_ENABLE_INSTALL)
+        target_include_directories(${_target} PUBLIC
+            $<INSTALL_INTERFACE:${CK_INSTALL_INCLUDE_DIR}>
+        )
+    endif()
 endfunction()
 
 function(_ck_try_set_output_name _target _name)
@@ -760,7 +825,8 @@ function(_ck_configure_plugin_desc _file)
 
     set(_content "${_content}\n}")
 
-    file(GENERATE OUTPUT ${_file} CONTENT ${_content})
+    # file(GENERATE OUTPUT ${_file} CONTENT ${_content})
+    file(WRITE ${_file} ${_content})
 endfunction()
 
 function(_ck_check_shared_library _target _out)
@@ -781,48 +847,6 @@ function(_ck_try_set_output_name _target _name)
         set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_name})
     endif()
 endfunction()
-
-function(_ck_install_resources _src_list _dest _relative_fallback_path)
-    set(_src_quoted)
-
-    foreach(_item IN LISTS ${_src_list})
-        set(_src_quoted "${_src_quoted}\"${_item}\" ")
-    endforeach()
-
-    set(_relative_fallback)
-
-    if(_relative_fallback_path)
-        set(_relative_fallback "
-            if(NOT IS_ABSOLUTE \${_dest})
-                file(RELATIVE_PATH _rel_path \"${_relative_fallback_path}/\${_dest}\" \"${CK_BUILD_MAIN_DIR}\")
-                set(_dest \"\${CMAKE_INSTALL_PREFIX}/\${_rel_path}\")
-            endif()
-        ")
-    endif()
-
-    install(CODE "
-        set(_src ${_src_quoted})
-        set(_dest \"${_dest}\")
-
-        ${_relative_fallback}
-
-        foreach(_file \${_src})
-            get_filename_component(_path \${_file} ABSOLUTE BASE_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
-
-            if(IS_DIRECTORY \${_path})
-                set(_type DIRECTORY)
-            else()
-                set(_type FILE)
-            endif()
-
-            file(INSTALL DESTINATION \"\${_dest}\"
-                TYPE \${_type}
-                FILES \${_path}
-            )
-        endforeach()
-    ")
-endfunction()
-
 
 #[[
     _ck_parse_copy_args(<args> <RESULT> <ERROR>)
@@ -877,7 +901,19 @@ function(_ck_parse_copy_args _args _result _error)
                 string(JOIN "\\;" _src_str ${_src})
                 list(APPEND _list "${_src_str}\\;${_item}")
             else()
+                set(_slash off)
+
+                if(${_item} MATCHES "(.+)/\\**$")
+                    set(_slash on)
+                    set(_item ${CMAKE_MATCH_1})
+                endif()
+
                 get_filename_component(_path ${_item} ABSOLUTE)
+
+                if(_slash)
+                    set(_path "${_path}/")
+                endif()
+
                 list(APPEND _src ${_path})
             endif()
         endif()

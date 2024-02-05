@@ -21,6 +21,10 @@
 
 #include "loaderconfig.h"
 
+using Loader::LoadConfig;
+using Loader::LoaderConfiguration;
+using Loader::SplashScreen;
+
 #define CONFIG_USE_NATIVE_MESSAGEBOX
 
 Q_LOGGING_CATEGORY(loaderLog, "apploader")
@@ -133,7 +137,9 @@ static inline void displayHelpText(const QString &t) {
 static inline void printVersion(const PluginSpec *coreplugin) {
     QString version;
     QTextStream str(&version);
-    str << '\n' << qApp->applicationName() << ' ' << coreplugin->version() << " based on Qt " << qVersion() << "\n\n";
+    str << '\n'
+        << qApp->applicationName() << ' ' << coreplugin->version() << " based on Qt " << qVersion()
+        << "\n\n";
     PluginManager::formatPluginVersions(str);
     str << '\n' << coreplugin->copyright() << '\n';
     displayHelpText(version);
@@ -168,141 +174,148 @@ static inline QString msgCoreLoadFailure(const QString &why) {
     return QCoreApplication::translate("Application", "Failed to load core: %1").arg(why);
 }
 
-class Restarter {
-public:
-    Restarter(const QString &workingDir) : m_workingDir(workingDir) {
-    }
+namespace {
 
-    int restartOrExit(int exitCode) {
-        return qApp->property("restart").toBool() ? restart(exitCode) : exitCode;
-    }
+    class Restarter {
+    public:
+        Restarter(const QString &workingDir) : m_workingDir(workingDir) {
+        }
 
-    int restart(int exitCode) {
-        QProcess::startDetached(QApplication::applicationFilePath(), QApplication::arguments(), m_workingDir);
-        return exitCode;
-    }
+        int restartOrExit(int exitCode) {
+            return qApp->property("restart").toBool() ? restart(exitCode) : exitCode;
+        }
 
-private:
-    QString m_workingDir;
-};
+        int restart(int exitCode) {
+            QProcess::startDetached(QApplication::applicationFilePath(), QApplication::arguments(),
+                                    m_workingDir);
+            return exitCode;
+        }
 
-class ArgumentParser {
-public:
-    bool allowRoot;
-    bool showHelp;
-    QStringList customPluginPaths;
+    private:
+        QString m_workingDir;
+    };
 
-    ArgumentParser() : allowRoot(false), showHelp(false) {
-    }
+    class ArgumentParser {
+    public:
+        bool allowRoot;
+        bool showHelp;
+        QStringList customPluginPaths;
 
-    void parse(QStringList &arguments) {
-        QMutableStringListIterator it(arguments);
-        while (it.hasNext()) {
-            const QString &arg = it.next();
-            if (!g_loadConfig->allowRoot && arg == QLatin1String(ALLOW_ROOT_OPTION)) {
-                it.remove();
-                allowRoot = true;
-            } else if (arg == QLatin1String(PLUGIN_PATH_OPTION)) {
-                it.remove();
-                if (it.hasNext()) {
-                    customPluginPaths << it.next();
+        ArgumentParser() : allowRoot(false), showHelp(false) {
+        }
+
+        void parse(QStringList &arguments) {
+            QMutableStringListIterator it(arguments);
+            while (it.hasNext()) {
+                const QString &arg = it.next();
+                if (!g_loadConfig->allowRoot && arg == QLatin1String(ALLOW_ROOT_OPTION)) {
                     it.remove();
-                }
-            } else if (arg == HELP_OPTION1 || arg == HELP_OPTION2) {
-                showHelp = true;
-            } else if (arg.startsWith('-')) {
-                if (it.hasNext()) {
-                    it.next();
-                }
-            }
-        }
-    }
-};
-
-class SplashConfigLoader {
-public:
-    SplashConfigLoader() {
-    }
-
-    void load(const QString &fileName, SplashScreen *splash) {
-        QString configDir = QM::PathFindDirPath(fileName);
-
-        // Load configuration
-        LoadConfig configFile;
-        if (configFile.load(fileName)) {
-            if (!configFile.splashImage.isEmpty()) {
-                QString path = configFile.splashImage;
-                if (QDir::isRelativePath(path)) {
-                    path = configDir + "/" + path;
-                }
-                splashImagePath = path;
-            }
-            if (configFile.splashSize.size() == 2) {
-                splashSize = QSize(configFile.splashSize.front(), configFile.splashSize.back());
-            }
-            for (const auto &file : qAsConst(configFile.resourceFiles)) {
-                if (QDir::isRelativePath(file)) {
-                    resourcesFiles.append(configDir + "/" + file);
-                } else {
-                    resourcesFiles.append(file);
+                    allowRoot = true;
+                } else if (arg == QLatin1String(PLUGIN_PATH_OPTION)) {
+                    it.remove();
+                    if (it.hasNext()) {
+                        customPluginPaths << it.next();
+                        it.remove();
+                    }
+                } else if (arg == HELP_OPTION1 || arg == HELP_OPTION2) {
+                    showHelp = true;
+                } else if (arg.startsWith('-')) {
+                    if (it.hasNext()) {
+                        it.next();
+                    }
                 }
             }
         }
+    };
 
-        splashImage = QImage(splashImagePath);
-        // splashImage = QImage();
-        if (splashImage.isNull()) {
-            splashImagePath = ":/A60.jpg";
+    class SplashConfigLoader {
+    public:
+        SplashConfigLoader() {
+        }
+
+        void load(const QString &fileName, SplashScreen *splash) {
+            QString configDir = QM::PathFindDirPath(fileName);
+
+            // Load configuration
+            LoadConfig configFile;
+            if (configFile.load(fileName)) {
+                if (!configFile.splashImage.isEmpty()) {
+                    QString path = configFile.splashImage;
+                    if (QDir::isRelativePath(path)) {
+                        path = configDir + "/" + path;
+                    }
+                    splashImagePath = path;
+                }
+                if (configFile.splashSize.size() == 2) {
+                    splashSize = QSize(configFile.splashSize.front(), configFile.splashSize.back());
+                }
+                for (const auto &file : qAsConst(configFile.resourceFiles)) {
+                    if (QDir::isRelativePath(file)) {
+                        resourcesFiles.append(configDir + "/" + file);
+                    } else {
+                        resourcesFiles.append(file);
+                    }
+                }
+            }
+
             splashImage = QImage(splashImagePath);
-            splashSize = splashImage.size();
-        }
-
-        if (splashSize.isEmpty()) {
-            splashSize = splashImage.size();
-        }
-
-        // Setup splash
-        double ratio = splash->screen()->logicalDotsPerInch() / QM::unitDpi() * 0.8;
-        if (configFile.resizable) {
-            splashSize *= ratio;
-        }
-
-        QPixmap pixmap;
-        if (splashImagePath.endsWith(".svg", Qt::CaseInsensitive)) {
-            pixmap = QIcon(splashImagePath).pixmap(splashSize);
-        } else {
-            pixmap = QPixmap::fromImage(splashImage.scaled(splashSize));
-        }
-        splash->setPixmap(pixmap);
-
-        for (auto it = configFile.splashSettings.texts.begin(); it != configFile.splashSettings.texts.end(); ++it) {
-            const auto &item = it.value();
-            SplashScreen::Attribute attr;
-            attr.pos = item.pos.size() == 2 ? QPoint(item.pos[0], item.pos[1]) : attr.pos;
-            attr.anchor = item.anchor.size() == 2 ? qMakePair(item.anchor[0], item.anchor[1]) : attr.anchor;
-            attr.fontSize = item.fontSize > 0 ? item.fontSize : attr.fontSize;
-            attr.fontColor = QMCss::parseColor(item.fontColor);
-            attr.maxWidth = item.maxWidth > 0 ? item.maxWidth : attr.maxWidth;
-            attr.text = item.text;
-
-            if (configFile.resizable) {
-                attr.pos *= ratio;
-                attr.anchor.first *= ratio;
-                attr.anchor.second *= ratio;
-                attr.fontSize *= ratio;
-                attr.maxWidth *= ratio;
+            // splashImage = QImage();
+            if (splashImage.isNull()) {
+                splashImagePath = ":/A60.jpg";
+                splashImage = QImage(splashImagePath);
+                splashSize = splashImage.size();
             }
 
-            splash->setTextAttribute(it.key(), attr);
-        }
-    }
+            if (splashSize.isEmpty()) {
+                splashSize = splashImage.size();
+            }
 
-private:
-    QString splashImagePath;
-    QImage splashImage;
-    QSize splashSize;
-    QStringList resourcesFiles; // Unused
-};
+            // Setup splash
+            double ratio = splash->screen()->logicalDotsPerInch() / QM::unitDpi() * 0.8;
+            if (configFile.resizable) {
+                splashSize *= ratio;
+            }
+
+            QPixmap pixmap;
+            if (splashImagePath.endsWith(".svg", Qt::CaseInsensitive)) {
+                pixmap = QIcon(splashImagePath).pixmap(splashSize);
+            } else {
+                pixmap = QPixmap::fromImage(splashImage.scaled(splashSize));
+            }
+            splash->setPixmap(pixmap);
+
+            for (auto it = configFile.splashSettings.texts.begin();
+                 it != configFile.splashSettings.texts.end(); ++it) {
+                const auto &item = it.value();
+                SplashScreen::Attribute attr;
+                attr.pos = item.pos.size() == 2 ? QPoint(item.pos[0], item.pos[1]) : attr.pos;
+                attr.anchor = item.anchor.size() == 2 ? qMakePair(item.anchor[0], item.anchor[1])
+                                                      : attr.anchor;
+                attr.fontSize = item.fontSize > 0 ? item.fontSize : attr.fontSize;
+                attr.fontColor = QMCss::parseColor(item.fontColor);
+                attr.maxWidth = item.maxWidth > 0 ? item.maxWidth : attr.maxWidth;
+                attr.text = item.text;
+
+                if (configFile.resizable) {
+                    attr.pos *= ratio;
+                    attr.anchor.first *= ratio;
+                    attr.anchor.second *= ratio;
+                    attr.fontSize *= ratio;
+                    attr.maxWidth *= ratio;
+                }
+
+                splash->setTextAttribute(it.key(), attr);
+            }
+        }
+
+    private:
+        QString splashImagePath;
+        QImage splashImage;
+        QSize splashSize;
+        QStringList resourcesFiles; // Unused
+    };
+
+}
 
 int main_entry(LoaderConfiguration *loadConfig) {
     Q_INIT_RESOURCE(ckloader_res);
@@ -332,17 +345,19 @@ int main_entry(LoaderConfiguration *loadConfig) {
         argsParser.parse(arguments);
 
         // Root privilege detection
-        if (!g_loadConfig->allowRoot && !argsParser.allowRoot && !argsParser.showHelp && QM::isUserRoot()) {
-            QString msg = QCoreApplication::translate("Application",
-                                                      "You're trying to start %1 as the %2, which is "
-                                                      "extremely dangerous and therefore strongly not recommended.")
-                              .arg(qApp->applicationName(),
+        if (!g_loadConfig->allowRoot && !argsParser.allowRoot && !argsParser.showHelp &&
+            QM::isUserRoot()) {
+            QString msg =
+                QCoreApplication::translate(
+                    "Application", "You're trying to start %1 as the %2, which is "
+                                   "extremely dangerous and therefore strongly not recommended.")
+                    .arg(qApp->applicationName(),
 #ifdef Q_OS_WINDOWS
-                                   QCoreApplication::translate("Application", "Administrator")
+                         QCoreApplication::translate("Application", "Administrator")
 #else
-                                   QCoreApplication::translate("Application", "Root")
+                         QCoreApplication::translate("Application", "Root")
 #endif
-                              );
+                    );
             qAppExt->showMessage(nullptr, QMAppExtension::Warning, qApp->applicationName(), msg);
             return false;
         }
@@ -358,10 +373,12 @@ int main_entry(LoaderConfiguration *loadConfig) {
     PluginManager pluginManager;
     pluginManager.setPluginIID(loadConfig->pluginIID);
     pluginManager.setSettings( //
-        new QSettings(QString("%1/%2.plugins.ini").arg(loadConfig->userSettingsPath, qApp->applicationName()),
-                      QSettings::IniFormat));
+        new QSettings(
+            QString("%1/%2.plugins.ini").arg(loadConfig->userSettingsPath, qApp->applicationName()),
+            QSettings::IniFormat));
     pluginManager.setGlobalSettings( //
-        new QSettings(QString("%1/%2.plugins.ini").arg(loadConfig->systemSettingsPath, qApp->applicationName()),
+        new QSettings(QString("%1/%2.plugins.ini")
+                          .arg(loadConfig->systemSettingsPath, qApp->applicationName()),
                       QSettings::IniFormat));
 
     SplashScreen splash;
@@ -438,7 +455,8 @@ int main_entry(LoaderConfiguration *loadConfig) {
     }
 
     // Show version or full help information
-    if (foundAppOptions.contains(QLatin1String(VERSION_OPTION1)) || foundAppOptions.contains(VERSION_OPTION2)) {
+    if (foundAppOptions.contains(QLatin1String(VERSION_OPTION1)) ||
+        foundAppOptions.contains(VERSION_OPTION2)) {
         printVersion(coreplugin);
         return 0;
     }
@@ -482,13 +500,15 @@ int main_entry(LoaderConfiguration *loadConfig) {
     loadConfig->afterLoadPlugins();
 
     // Set up remote arguments handler
-    QObject::connect(&single, &SingleApplication::receivedMessage, [&](quint32 instanceId, QByteArray message) {
-        QDataStream stream(&message, QIODevice::ReadOnly);
-        QString msg;
-        stream >> msg;
-        qCDebug(loaderLog).noquote().nospace() << " remote message from " << instanceId << ", " << msg;
-        pluginManager.remoteArguments(msg, nullptr);
-    });
+    QObject::connect(&single, &SingleApplication::receivedMessage,
+                     [&](quint32 instanceId, QByteArray message) {
+                         QDataStream stream(&message, QIODevice::ReadOnly);
+                         QString msg;
+                         stream >> msg;
+                         qCDebug(loaderLog).noquote().nospace()
+                             << " remote message from " << instanceId << ", " << msg;
+                         pluginManager.remoteArguments(msg, nullptr);
+                     });
 
     // shutdown plugin manager on the exit
     QObject::connect(&a, &QApplication::aboutToQuit, &pluginManager, &PluginManager::shutdown);

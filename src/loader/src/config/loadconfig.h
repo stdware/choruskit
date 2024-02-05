@@ -5,38 +5,41 @@
 
 #include "qjsonstream.h"
 
-struct SplashText {
-    QAS_JSON(SplashText)
+namespace Loader {
 
-    QList<int> pos;
-    QList<int> anchor;
-    int fontSize;
-    QString fontColor;
-    int maxWidth;
+    struct SplashText {
+        QAS_JSON(SplashText)
 
-    QString text;
+        QList<int> pos;
+        QList<int> anchor;
+        int fontSize;
+        QString fontColor;
+        int maxWidth;
 
-    SplashText();
-};
+        QString text;
 
-struct SplashSettings {
-    QAS_JSON(SplashSettings)
+        SplashText();
+    };
 
-    QList<int> size;
-    QMap<QString, SplashText> texts;
-};
+    struct SplashSettings {
+        QAS_JSON(SplashSettings)
 
-struct LoadConfig {
-    QAS_JSON(LoadConfig)
+        QList<int> size;
+        QMap<QString, SplashText> texts;
+    };
 
-    QString splashImage;
-    SplashSettings splashSettings;
-    QStringList resourceFiles;
-    bool resizable;
-    QList<int> splashSize;
+    struct LoadConfig {
+        QAS_JSON(LoadConfig)
 
-    bool load(const QString &filename);
-};
+        QString splashImage;
+        SplashSettings splashSettings;
+        QStringList resourceFiles;
+        bool resizable;
+        QList<int> splashSize;
 
+        bool load(const QString &filename);
+    };
+
+}
 
 #endif // LOADCONFIG_H

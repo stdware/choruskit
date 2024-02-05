@@ -1,17 +1,21 @@
 #include "loaderconfig.h"
 
-bool LoaderConfiguration::preprocessArguments(QStringList &arguments, int *code) {
-    return false;
-}
+extern int main_entry(Loader::LoaderConfiguration *loadConfig);
 
-void LoaderConfiguration::beforeLoadPlugins(QSplashScreen *screen) {
-}
+namespace Loader {
 
-void LoaderConfiguration::afterLoadPlugins() {
-}
+    bool LoaderConfiguration::preprocessArguments(QStringList &arguments, int *code) {
+        return false;
+    }
 
-extern int main_entry(LoaderConfiguration *loadConfig);
+    void LoaderConfiguration::beforeLoadPlugins(QSplashScreen *screen) {
+    }
 
-int LoaderConfiguration::run() {
-    return main_entry(this);
+    void LoaderConfiguration::afterLoadPlugins() {
+    }
+
+    int LoaderConfiguration::run() {
+        return main_entry(this);
+    }
+
 }
