@@ -280,7 +280,8 @@ namespace {
             if (splashImagePath.endsWith(".svg", Qt::CaseInsensitive)) {
                 pixmap = QIcon(splashImagePath).pixmap(splashSize);
             } else {
-                pixmap = QPixmap::fromImage(splashImage.scaled(splashSize));
+                pixmap = QPixmap::fromImage(splashImage.scaled(splashSize, Qt::IgnoreAspectRatio,
+                                                               Qt::SmoothTransformation));
             }
             splash->setPixmap(pixmap);
 

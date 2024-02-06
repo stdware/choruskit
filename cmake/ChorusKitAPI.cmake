@@ -148,7 +148,7 @@ macro(ck_init_buildsystem)
 
         set(CK_INSTALL_RUNTIME_DIR bin)
         set(CK_INSTALL_LIBRARY_DIR lib)
-        set(CK_INSTALL_PLUGINS_DIR ${CK_BUILD_MAIN_DIR}/Plugins)
+        set(CK_INSTALL_PLUGINS_DIR lib/${CK_APPLICATION_NAME}/plugins)
         set(CK_INSTALL_SHARE_DIR share)
         set(CK_INSTALL_DATA_DIR ${CK_INSTALL_SHARE_DIR}/${CK_APPLICATION_NAME})
         set(CK_INSTALL_DOC_DIR ${CK_INSTALL_SHARE_DIR}/doc/${CK_APPLICATION_NAME})
