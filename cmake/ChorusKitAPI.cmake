@@ -506,7 +506,7 @@ endfunction()
     NAME: set output file name and name property in Windows RC, which is same as target name by default
     VERSION: set version property in Windows RC, which is same as `PROJECT_VERSION` by default
     DESCRIPTION: set description property in Windows RC, which is same as target name by default
-    VENDOR: set vendor with default copyright string in Windows RC, which would be `OpenVPI` by defult
+    VENDOR: set vendor with default copyright string in Windows RC
     COPYRIGHT: set custom copyright string in Windows RC, and VENDOR will be ignored
     MACRO_PREFIX: set a prefered prefix to define library type macro and library internal macro,
                   otherwise the fallback prefix is same as NAME value if NAME is set,
