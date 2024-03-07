@@ -547,7 +547,7 @@ namespace Core {
         d->iWindows.append(this);
 
         // Get quit control
-        qApp->setQuitOnLastWindowClosed(false);
+        // qApp->setQuitOnLastWindowClosed(false);
 
         // Create window
         auto win = createWindow(nullptr);

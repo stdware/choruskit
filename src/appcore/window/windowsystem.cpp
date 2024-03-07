@@ -133,31 +133,31 @@ namespace Core {
             return;
         }
 
-        {
-            bool lastWindowClosed = true;
-            for (const auto &w : QApplication::topLevelWidgets()) {
-                if (!w->isVisible() || w->parentWidget() || !w->testAttribute(Qt::WA_QuitOnClose) ||
-                    w->property("choruskit_managed_window").toBool())
-                    continue;
+        // {
+        //     bool lastWindowClosed = true;
+        //     for (const auto &w : QApplication::topLevelWidgets()) {
+        //         if (!w->isVisible() || w->parentWidget() || !w->testAttribute(Qt::WA_QuitOnClose) ||
+        //             w->property("choruskit_managed_window").toBool())
+        //             continue;
 
-                lastWindowClosed = false;
-                break;
-            }
+        //         lastWindowClosed = false;
+        //         break;
+        //     }
 
-            if (!lastWindowClosed) {
-                // Release quit control
-                qApp->setQuitOnLastWindowClosed(true);
-                return;
-            }
-        }
+        //     if (!lastWindowClosed) {
+        //         // Release quit control
+        //         qApp->setQuitOnLastWindowClosed(true);
+        //         return;
+        //     }
+        // }
 
-        QCloseEvent e;
-        qApp->sendEvent(q, &e);
-        if (e.isAccepted() && iWindows.isEmpty()) {
-            // auto e2 = new QEvent(QEvent::Quit);
-            // qApp->postEvent(qApp, e2);
-            qApp->quit();
-        }
+        // QCloseEvent e;
+        // qApp->sendEvent(q, &e);
+        // if (e.isAccepted() && iWindows.isEmpty()) {
+        //     // auto e2 = new QEvent(QEvent::Quit);
+        //     // qApp->postEvent(qApp, e2);
+        //     qApp->quit();
+        // }
     }
 
     static WindowSystem *m_instance = nullptr;
