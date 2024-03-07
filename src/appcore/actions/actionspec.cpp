@@ -70,7 +70,7 @@ namespace Core {
     void ActionSpec::setShortcuts(const QList<QKeySequence> &shortcuts) {
         Q_D(ActionSpec);
         d->shortcuts = shortcuts;
-        emit shortcutsChanged();
+        Q_EMIT shortcutsChanged();
     }
 
     QList<QKeySequence> ActionSpec::cachedShortcuts() const {
@@ -86,7 +86,7 @@ namespace Core {
     void ActionSpec::setIcon(const QIcon &icon) {
         Q_D(ActionSpec);
         d->icon = icon;
-        emit iconChanged();
+        Q_EMIT iconChanged();
     }
 
     QIcon ActionSpec::cachedIcon() const {

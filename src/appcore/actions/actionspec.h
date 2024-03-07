@@ -68,7 +68,7 @@ namespace Core {
         void setIcon(const QIcon &icon);
         QIcon cachedIcon() const;
 
-    signals:
+    Q_SIGNALS:
         void shortcutsChanged();
         void iconChanged();
 

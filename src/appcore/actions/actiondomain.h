@@ -89,7 +89,7 @@ namespace Core {
         void buildDomain(const QMap<QString, QWidget *> &topLevelMenus, const QList<ActionItem *> &items,
                          const ActionDomainState &state) const;
 
-    signals:
+    Q_SIGNALS:
         void stateChanged();
 
     protected:

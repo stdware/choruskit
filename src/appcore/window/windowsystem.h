@@ -38,7 +38,7 @@ namespace Core {
         void loadSplitterSizes(const QString &id, QSplitter *s, const QList<int> &fallback = {}) const;
         void saveSplitterSizes(const QString &id, QSplitter *s);
 
-    signals:
+    Q_SIGNALS:
         void windowCreated(IWindow *iWin);
         void windowDestroyed(IWindow *iWin);
 

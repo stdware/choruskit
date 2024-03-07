@@ -66,7 +66,7 @@ namespace Core {
 
         virtual QWidget *dialogParent() const;
 
-    signals:
+    Q_SIGNALS:
         void changed();
         void docInfoChanged();
 

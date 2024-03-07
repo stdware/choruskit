@@ -31,7 +31,7 @@ namespace Loader {
         // So we firstly display the image background, then show texts
         void showTexts();
 
-    signals:
+    Q_SIGNALS:
         void closed();
 
     protected:

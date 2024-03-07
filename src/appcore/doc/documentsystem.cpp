@@ -273,7 +273,7 @@ namespace Core {
         if (fileName.isEmpty())
             return;
         _modify_unique_file(fileName, d->m_recentFiles);
-        emit recentFilesChanged();
+        Q_EMIT recentFilesChanged();
     }
 
     void DocumentSystem::removeRecentFile(const QString &fileName) {
@@ -282,13 +282,13 @@ namespace Core {
         if (fileName.isEmpty())
             return;
         _modify_unique_file(fileName, d->m_recentFiles, true);
-        emit recentFilesChanged();
+        Q_EMIT recentFilesChanged();
     }
 
     void DocumentSystem::clearRecentFiles() {
         Q_D(DocumentSystem);
         d->m_recentFiles.clear();
-        emit recentFilesChanged();
+        Q_EMIT recentFilesChanged();
     }
 
     QStringList DocumentSystem::recentFiles() const {
@@ -302,13 +302,13 @@ namespace Core {
         if (fileName.isEmpty())
             return;
         _modify_unique_file(fileName, d->m_recentDirs);
-        emit recentDirsChanged();
+        Q_EMIT recentDirsChanged();
     }
 
     void DocumentSystem::clearRecentDirs() {
         Q_D(DocumentSystem);
         d->m_recentDirs.clear();
-        emit recentDirsChanged();
+        Q_EMIT recentDirsChanged();
     }
 
     QStringList DocumentSystem::recentDirs() const {

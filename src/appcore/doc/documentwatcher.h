@@ -62,7 +62,7 @@ namespace Core {
         virtual void documentChanged(IDocument *document);
         virtual void documentRemoved(IDocument *document);
 
-    signals:
+    Q_SIGNALS:
         /* Used to notify e.g. the code model to update the given files. Does *not*
            lead to any editors to reload or any other editor manager actions. */
         void filesChangedInternally(const QStringList &files);

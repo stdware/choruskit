@@ -17,13 +17,13 @@ namespace Core {
     }
 
     void ObjectPoolPrivate::objectAdded(const QString &id, QObject *obj) {
-        emit q->objectAdded(id, obj);
+        Q_EMIT q->objectAdded(id, obj);
         connect(obj, &QObject::destroyed, this, &ObjectPoolPrivate::_q_objectDestroyed);
     }
 
     void ObjectPoolPrivate::aboutToRemoveObject(const QString &id, QObject *obj) {
         disconnect(obj, &QObject::destroyed, this, &ObjectPoolPrivate::_q_objectDestroyed);
-        emit q->aboutToRemoveObject(id, obj);
+        Q_EMIT q->aboutToRemoveObject(id, obj);
     }
 
     void ObjectPoolPrivate::setGlobalAttribute_helper(const QString &id, const QVariant &var,
@@ -66,7 +66,7 @@ namespace Core {
                                           Q_ARG(bool, checkable.reverse ^ var.toBool()));
             }
         }
-        emit q->globalAttributeChanged(id, var, org);
+        Q_EMIT q->globalAttributeChanged(id, var, org);
     }
 
     void ObjectPoolPrivate::removeCheckable_helper(const QString &id, bool disconnect) {
@@ -315,7 +315,7 @@ namespace Core {
     }
 
     void ObjectPool::requestGlobalEvent(const QString &id, const QVariantHash &args) {
-        emit globalEventRequested(id, args);
+        Q_EMIT globalEventRequested(id, args);
     }
 
 }

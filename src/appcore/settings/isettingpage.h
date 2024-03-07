@@ -46,7 +46,7 @@ namespace Core {
         virtual bool accept() = 0;
         virtual void finish() = 0;
 
-    signals:
+    Q_SIGNALS:
         void titleChanged(const QString &title);
         void descriptionChanged(const QString &description);
 

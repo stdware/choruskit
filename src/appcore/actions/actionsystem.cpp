@@ -442,7 +442,7 @@ namespace Core {
 
         auto action = this->action(actionId);
         if (action) {
-            emit action->shortcutsChanged();
+            Q_EMIT action->shortcutsChanged();
         }
     }
 
@@ -457,7 +457,7 @@ namespace Core {
 
         auto action = this->action(actionId);
         if (action) {
-            emit action->iconChanged();
+            Q_EMIT action->iconChanged();
         }
     }
 

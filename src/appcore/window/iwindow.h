@@ -65,7 +65,7 @@ namespace Core {
         void setDragFileHandler(const QString &suffix, QObject *obj, const char *member, int maxCount = 0);
         void removeDragFileHandler(const QString &suffix);
 
-    signals:
+    Q_SIGNALS:
         void widgetAdded(const QString &id, QWidget *w);
         void aboutToRemoveWidget(const QString &id, QWidget *w);
 

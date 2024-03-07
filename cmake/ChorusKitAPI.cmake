@@ -648,10 +648,11 @@ endfunction()
         [DIRECTORY <dir>]
         [PREFIX <prefix>]
         [OPTIONS <options...>]
+        [SKIP_INSTALL]
     )
 ]] #
 function(ck_sync_include _target)
-    set(options)
+    set(options SKIP_INSTALL)
     set(oneValueArgs DIRECTORY PREFIX)
     set(multiValueArgs OPTIONS)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -664,7 +665,7 @@ function(ck_sync_include _target)
 
     set(_install_options)
 
-    if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL)
+    if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL AND NOT FUNC_SKIP_INSTALL)
         target_include_directories(${_target} PUBLIC
             "$<INSTALL_INTERFACE:${CK_INSTALL_INCLUDE_DIR}>"
         )

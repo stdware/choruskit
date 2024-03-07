@@ -87,7 +87,7 @@ namespace Core {
 
         void requestGlobalEvent(const QString &id, const QVariantHash &args = {});
 
-    signals:
+    Q_SIGNALS:
         void objectAdded(const QString &id, QObject *obj);
         void aboutToRemoveObject(const QString &id, QObject *obj);
 

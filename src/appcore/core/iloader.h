@@ -56,7 +56,7 @@ namespace Core {
             return m_routines;
         }
 
-    signals:
+    Q_SIGNALS:
         void done();
 
     protected:

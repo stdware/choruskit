@@ -409,7 +409,7 @@ namespace Core {
         Q_Q(IWindow);
         q->nextLoadingState(state);
         this->state = state;
-        emit q->loadingStateChanged(state);
+        Q_EMIT q->loadingStateChanged(state);
     }
 
     void IWindowPrivate::setWindow(QWidget *w, WindowSystemPrivate *d) {
@@ -509,7 +509,7 @@ namespace Core {
         if (delayedInitializeQueue.empty()) {
             delete delayedInitializeTimer;
             delayedInitializeTimer = nullptr;
-            emit q->initializationDone();
+            Q_EMIT q->initializationDone();
         } else {
             delayedInitializeTimer->start();
         }
@@ -561,7 +561,7 @@ namespace Core {
 
         d_func()->setWindow(win, d);
 
-        emit winMgr->windowCreated(this);
+        Q_EMIT winMgr->windowCreated(this);
 
         win->show();
     }
@@ -587,7 +587,7 @@ namespace Core {
             return;
         }
         d->widgetMap.insert(id, w);
-        emit widgetAdded(id, w);
+        Q_EMIT widgetAdded(id, w);
     }
 
     void IWindow::removeWidget(const QString &id) {
@@ -598,7 +598,7 @@ namespace Core {
             return;
         }
         auto w = it.value();
-        emit aboutToRemoveWidget(id, w);
+        Q_EMIT aboutToRemoveWidget(id, w);
         d->widgetMap.erase(it);
     }
 

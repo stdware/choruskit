@@ -20,7 +20,7 @@ namespace Core {
     void SettingCatalogPrivate::addPageRecursive(ISettingPage *page) {
         auto doIt = [this](ISettingPage *page) {
             allPages[page->id()].insert(page);
-            emit q_ptr->pageAdded(page);
+            Q_EMIT q_ptr->pageAdded(page);
 
             connect(page, &ISettingPage::titleChanged, this,
                     &SettingCatalogPrivate::_q_pageTitleChanged);
@@ -54,7 +54,7 @@ namespace Core {
             disconnect(page, &ISettingPage::pageRemoved, this,
                        &SettingCatalogPrivate::_q_pageRemoved);
 
-            emit q_ptr->pageRemoved(page);
+            Q_EMIT q_ptr->pageRemoved(page);
         };
 
         doIt(page);
@@ -65,12 +65,12 @@ namespace Core {
 
     void SettingCatalogPrivate::_q_pageTitleChanged(const QString &title) {
         Q_Q(SettingCatalog);
-        emit q->titleChanged(qobject_cast<ISettingPage *>(sender()), title);
+        Q_EMIT q->titleChanged(qobject_cast<ISettingPage *>(sender()), title);
     }
 
     void SettingCatalogPrivate::_q_pageDescriptionChanged(const QString &desc) {
         Q_Q(SettingCatalog);
-        emit q->descriptionChanged(qobject_cast<ISettingPage *>(sender()), desc);
+        Q_EMIT q->descriptionChanged(qobject_cast<ISettingPage *>(sender()), desc);
     }
 
     void SettingCatalogPrivate::_q_pageAdded(ISettingPage *page) {

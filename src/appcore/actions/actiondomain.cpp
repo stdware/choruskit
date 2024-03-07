@@ -43,13 +43,13 @@ namespace Core {
         Q_Q(ActionDomain);
         stateDirty = true;
         cachedStateDirty = true;
-        emit q->stateChanged();
+        Q_EMIT q->stateChanged();
     }
 
     void ActionDomainPrivate::setCachedStateDirty() {
         Q_Q(ActionDomain);
         cachedStateDirty = true;
-        emit q->stateChanged();
+        Q_EMIT q->stateChanged();
     }
 
     struct RuleData {

@@ -66,7 +66,7 @@ namespace Core {
         void documentChanged(IDocument *document) override;
         void documentRemoved(IDocument *document) override;
 
-    signals:
+    Q_SIGNALS:
         void recentFilesChanged();
         void recentDirsChanged();
 

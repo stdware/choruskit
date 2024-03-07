@@ -37,7 +37,7 @@ namespace Core {
         Q_D(ISettingPage);
         d->title = title;
 
-        emit titleChanged(title);
+        Q_EMIT titleChanged(title);
     }
 
     QString ISettingPage::description() const {
@@ -49,7 +49,7 @@ namespace Core {
         Q_D(ISettingPage);
         d->description = description;
 
-        emit descriptionChanged(description);
+        Q_EMIT descriptionChanged(description);
     }
 
     bool ISettingPage::addPage(ISettingPage *page) {
@@ -65,7 +65,7 @@ namespace Core {
 
         page->setParent(this);
         d->pages.append(page->id(), page);
-        emit pageAdded(page);
+        Q_EMIT pageAdded(page);
 
         return true;
     }
@@ -90,7 +90,7 @@ namespace Core {
         auto page = it.value();
         page->setParent(nullptr);
         d->pages.erase(it);
-        emit pageRemoved(page);
+        Q_EMIT pageRemoved(page);
 
         return true;
     }

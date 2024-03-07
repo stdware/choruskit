@@ -94,7 +94,7 @@ namespace Loader {
     }
 
     void SplashScreen::closeEvent(QCloseEvent *event) {
-        emit closed();
+        Q_EMIT closed();
     }
 
 }

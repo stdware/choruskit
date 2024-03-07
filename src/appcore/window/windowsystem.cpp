@@ -124,7 +124,7 @@ namespace Core {
     void WindowSystemPrivate::windowClosed(IWindow *iWin) {
         Q_Q(WindowSystem);
 
-        emit q->windowDestroyed(iWin);
+        Q_EMIT q->windowDestroyed(iWin);
 
         iWindows.remove(iWin);
         windowMap.remove(iWin->window());

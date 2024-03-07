@@ -495,7 +495,7 @@ namespace Core {
         if (!doc || doc == d->m_blockedIDocument)
             return;
 
-        emit q->documentRenamed(doc, oldName, newName);
+        Q_EMIT q->documentRenamed(doc, oldName, newName);
 
         q->documentChanged(doc);
     }
@@ -665,7 +665,7 @@ namespace Core {
             d->m_blockedIDocument = nullptr;
         }
 
-        emit allDocumentsRenamed(from, to);
+        Q_EMIT allDocumentsRenamed(from, to);
     }
 
     void DocumentWatcher::expectFileChange(const QString &fileName) {
@@ -722,7 +722,7 @@ namespace Core {
     }
 
     void DocumentWatcher::notifyFilesChangedInternally(const QStringList &files) {
-        emit filesChangedInternally(files);
+        Q_EMIT filesChangedInternally(files);
     }
 
     QString DocumentWatcher::fixFileName(const QString &fileName,

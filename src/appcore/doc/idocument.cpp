@@ -56,7 +56,7 @@ namespace Core {
     void IDocument::setDocInfo(const QJsonObject &docInfo) {
         Q_D(IDocument);
         d->docInfo = docInfo;
-        emit docInfoChanged();
+        Q_EMIT docInfoChanged();
     }
 
     IDocument::ReloadBehavior IDocument::reloadBehavior(IDocument::ChangeTrigger state,
@@ -100,8 +100,8 @@ namespace Core {
         // Update descriptions in log file
         // d->updateLogDesc();
 
-        emit filePathChanged(oldName, d->filePath);
-        emit changed();
+        Q_EMIT filePathChanged(oldName, d->filePath);
+        Q_EMIT changed();
     }
 
     QString IDocument::plainDisplayName() const {
@@ -125,7 +125,7 @@ namespace Core {
         if (name == d->preferredDisplayName)
             return;
         d->preferredDisplayName = name;
-        emit changed();
+        Q_EMIT changed();
     }
 
     QString IDocument::displayName() const {
@@ -174,11 +174,11 @@ namespace Core {
     }
 
     void IDocument::raise() {
-        emit raiseRequested();
+        Q_EMIT raiseRequested();
     }
 
     void IDocument::close() {
-        emit closeRequested();
+        Q_EMIT closeRequested();
     }
 
     QWidget *IDocument::dialogParent() const {

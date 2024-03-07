@@ -24,7 +24,7 @@ namespace Core {
         QList<ISettingPage *> pages(const QString &id) const;
         QList<ISettingPage *> allPages() const;
 
-    signals:
+    Q_SIGNALS:
         void titleChanged(ISettingPage *page, const QString &title);
         void descriptionChanged(ISettingPage *page, const QString &description);
 
