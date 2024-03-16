@@ -4,7 +4,6 @@
 #include <QDateTime>
 #include <QJsonObject>
 #include <QSettings>
-#include <QSplashScreen>
 
 #include <CoreApi/objectpool.h>
 
@@ -22,9 +21,11 @@ namespace Core {
 
         static ILoader *instance();
 
-        static QDateTime atime();
+        static QDateTime startTime();
 
         static QJsonObject *tempSettings();
+
+        static void *&quickData(int index); // index <= 512
 
     public:
         QString settingsPath(QSettings::Scope scope) const;
@@ -39,29 +40,6 @@ namespace Core {
         ILoader(ILoaderPrivate &d, QObject *parent = nullptr);
 
         QScopedPointer<ILoaderPrivate> d_ptr;
-    };
-
-    class CKAPPCORE_EXPORT InitialRoutine : public QObject {
-        Q_OBJECT
-    public:
-        explicit InitialRoutine(QSplashScreen *screen, QObject *parent = nullptr) : QObject(parent), m_screen(screen) {
-        }
-
-    public:
-        inline QSplashScreen *splash() const {
-            return m_screen;
-        }
-
-        inline QList<std::function<void()>> &routines() {
-            return m_routines;
-        }
-
-    Q_SIGNALS:
-        void done();
-
-    protected:
-        QSplashScreen *m_screen;
-        QList<std::function<void()>> m_routines;
     };
 
 }

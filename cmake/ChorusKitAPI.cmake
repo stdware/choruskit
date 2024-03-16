@@ -665,8 +665,22 @@ function(ck_sync_include _target)
 
     set(_install_options)
 
+    set(_scope PUBLIC)
+    get_target_property(_type ${_target} TYPE)
+
+    if(_type STREQUAL "INTERFACE_LIBRARY")
+        set(_scope INTERFACE)
+    else()
+        target_include_directories(${_target} PRIVATE ${_dir})
+    endif()
+
+    target_include_directories(${_target} ${_scope}
+        "$<BUILD_INTERFACE:${CK_GENERATED_INCLUDE_DIR}>"
+        "$<BUILD_INTERFACE:${CK_GENERATED_INCLUDE_DIR}/${_inc_name}>"
+    )
+
     if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL AND NOT FUNC_SKIP_INSTALL)
-        target_include_directories(${_target} PUBLIC
+        target_include_directories(${_target} ${_scope}
             "$<INSTALL_INTERFACE:${CK_INSTALL_INCLUDE_DIR}>"
         )
 
@@ -674,13 +688,6 @@ function(ck_sync_include _target)
             INSTALL_DIR "${CK_INSTALL_INCLUDE_DIR}/${_inc_name}"
         )
     endif()
-
-    target_include_directories(${_target} PUBLIC
-        "$<BUILD_INTERFACE:${CK_GENERATED_INCLUDE_DIR}>"
-        "$<BUILD_INTERFACE:${CK_GENERATED_INCLUDE_DIR}/${_inc_name}>"
-    )
-
-    target_include_directories(${_target} PRIVATE ${_dir})
 
     # Generate a standard include directory in build directory
     qm_sync_include(${_dir} "${CK_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options}
@@ -812,7 +819,7 @@ macro(_ck_set_cmake_autoxxx _val)
 endmacro()
 
 function(_ck_add_library_internal _target)
-    set(options SHARED)
+    set(options SHARED INTERFACE)
     set(oneValueArgs NAME MACRO_PREFIX LIBRARY_MACRO STATIC_MACRO)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -837,24 +844,31 @@ function(_ck_add_library_internal _target)
         list(APPEND _options STATIC ${FUNC_STATIC_MACRO})
     endif()
 
+    set(_scope PUBLIC)
+
     if(FUNC_SHARED)
         add_library(${_target} SHARED)
+    elseif(FUNC_INTERFACE)
+        set(_scope INTERFACE)
+        add_library(${_target} INTERFACE)
     else()
         add_library(${_target} STATIC)
     endif()
 
-    if(FUNC_NAME)
-        set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${FUNC_NAME})
+    if(NOT FUNC_INTERFACE)
+        if(FUNC_NAME)
+            set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${FUNC_NAME})
+        endif()
+
+        qm_export_defines(${_target} ${_options})
     endif()
 
-    qm_export_defines(${_target} ${_options})
-
-    target_include_directories(${_target} PUBLIC
+    target_include_directories(${_target} ${_scope}
         $<BUILD_INTERFACE:${CK_BUILD_INCLUDE_DIR}>
     )
 
     if(CK_ENABLE_INSTALL)
-        target_include_directories(${_target} PUBLIC
+        target_include_directories(${_target} ${_scope}
             $<INSTALL_INTERFACE:${CK_INSTALL_INCLUDE_DIR}>
         )
     endif()

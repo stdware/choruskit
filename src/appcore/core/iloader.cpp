@@ -62,7 +62,8 @@ namespace Core {
         m_instance = this;
 
         // Must initialize `m_atime`
-        qDebug().noquote() << "ILoader: initialize at" << m_atime->toString("yyyy/MM/dd hh:mm:ss:zzz");
+        qDebug().noquote() << "ILoader: initialize at"
+                           << m_atime->toString("yyyy/MM/dd hh:mm:ss:zzz");
 
         connect(this, &ILoader::objectAdded, this, [&](const QString &id, QObject *obj) {
             qDebug().nospace() << "ILoader: object added (" << id << ", " << obj << ")"; //
@@ -86,12 +87,17 @@ namespace Core {
         return m_instance;
     }
 
-    QDateTime ILoader::atime() {
+    QDateTime ILoader::startTime() {
         return *m_atime;
     }
 
     QJsonObject *ILoader::tempSettings() {
         return m_tempSettings;
+    }
+
+    void *&ILoader::quickData(int index) {
+        static void *dataList[512] = {};
+        return dataList[index];
     }
 
     QString ILoader::settingsPath(QSettings::Scope scope) const {
