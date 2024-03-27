@@ -4,7 +4,7 @@ if(NOT TARGET qmsetup::library)
     find_package(qmsetup REQUIRED)
 endif()
 
-qm_import(Filesystem Preprocess)
+qm_import(Filesystem Preprocess Deploy)
 
 if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
@@ -95,6 +95,11 @@ macro(ck_init_buildsystem)
     endif()
 
     string(TIMESTAMP CK_CURRENT_YEAR "%Y")
+
+    # Set windows dependencies deploy variables
+    if(NOT DEFINED CK_WIN_APPLOCAL_DEPS)
+        set(CK_WIN_APPLOCAL_DEPS off)
+    endif()
 
     # Initialization guard
     if(CK_INITIALIZED)
@@ -189,10 +194,12 @@ macro(ck_finish_buildsystem)
     qm_generate_config(${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
     qm_generate_build_info(${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h YEAR TIME PREFIX ${CK_BUILDINFO_PREFIX})
 
-    if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL)
-        install(FILES ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h
-            DESTINATION ${CK_INSTALL_INCLUDE_DIR}
-        )
+    if(CK_ENABLE_INSTALL)
+        if(CK_ENABLE_DEVEL)
+            install(FILES ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h
+                DESTINATION ${CK_INSTALL_INCLUDE_DIR}
+            )
+        endif()
     endif()
 endmacro()
 
@@ -224,6 +231,10 @@ function(ck_configure_application)
     # Make location dependent executable, otherwise GNOME cannot recognize
     if(LINUX)
         target_link_options(${_target} PRIVATE "-no-pie")
+    elseif(WIN32)
+        if(CK_WIN_APPLOCAL_DEPS)
+            qm_win_applocal_deps(${_target} OUTPUT_DIR ${CK_BUILD_RUNTIME_DIR})
+        endif()
     endif()
 
     target_include_directories(${_target} PUBLIC
@@ -619,16 +630,22 @@ function(ck_add_executable _target)
 
     add_executable(${_target} ${FUNC_UNPARSED_ARGUMENTS})
 
-    if(WIN32 AND NOT FUNC_CONSOLE)
-        if(FUNC_WINDOWS)
-            set_target_properties(${_target} PROPERTIES WIN32_EXECUTABLE TRUE)
-        else()
-            # Set windows application type
-            if(NOT CK_ENABLE_CONSOLE)
-                set_target_properties(${_target} PROPERTIES
-                    WIN32_EXECUTABLE TRUE
-                )
+    if(WIN32)
+        if(NOT FUNC_CONSOLE)
+            if(FUNC_WINDOWS)
+                set_target_properties(${_target} PROPERTIES WIN32_EXECUTABLE TRUE)
+            else()
+                # Set windows application type
+                if(NOT CK_ENABLE_CONSOLE)
+                    set_target_properties(${_target} PROPERTIES
+                        WIN32_EXECUTABLE TRUE
+                    )
+                endif()
             endif()
+        endif()
+
+        if(CK_WIN_APPLOCAL_DEPS)
+            qm_win_applocal_deps(${_target} OUTPUT_DIR ${CK_BUILD_RUNTIME_DIR})
         endif()
     endif()
 
@@ -852,6 +869,12 @@ function(_ck_add_library_internal _target)
 
     if(FUNC_SHARED)
         add_library(${_target} SHARED)
+
+        if(WIN32)
+            if(CK_WIN_APPLOCAL_DEPS)
+                qm_win_applocal_deps(${_target} OUTPUT_DIR ${CK_BUILD_RUNTIME_DIR})
+            endif()
+        endif()
     elseif(FUNC_INTERFACE)
         set(_scope INTERFACE)
         add_library(${_target} INTERFACE)
