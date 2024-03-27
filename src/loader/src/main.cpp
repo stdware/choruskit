@@ -93,7 +93,7 @@ static inline void formatOption(QTextStream &str, const QStringList &opts, const
     str << description << '\n';
 }
 
-static inline void displayError(const QString &t) {
+void displayError(const QString &t, int exitCode = -1) {
 #ifndef CONFIG_USE_NATIVE_MESSAGEBOX
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Critical);
@@ -110,7 +110,7 @@ static inline void displayError(const QString &t) {
     }
     qAppExt->showMessage(nullptr, QMAppExtension::Critical, qApp->applicationName(), t);
 #endif
-    std::exit(-1);
+    std::exit(exitCode);
 }
 
 static inline void displayHelpText(const QString &t) {
@@ -364,8 +364,8 @@ int main_entry(LoaderConfiguration *loadConfig) {
         }
 
 
-        // If need to show help, we simply ignore this error and continue loading plugins
-        int code;
+        // If you need to show help, we simply ignore this error and continue loading plugins
+        int code = -1;
         if (!loadConfig->preprocessArguments(arguments, &code) && !argsParser.showHelp) {
             return code;
         }
@@ -384,7 +384,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
 
     SplashScreen splash;
     g_splash = &splash;
-    loadConfig->beforeLoadPlugins(&splash);
+    loadConfig->splashWillShow(&splash);
 
     SplashConfigLoader configFileLoader;
     configFileLoader.load(loadConfig->splashSettingPath, &splash);
@@ -427,8 +427,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
     }
 
     // Check core plugin
-    QString reason;
-    auto loadCorePlugin = [&]() {
+    const auto &loadCorePlugin = [](PluginSpec *coreplugin, QString &reason) {
         if (!coreplugin) {
             reason = QCoreApplication::translate("Application", "Could not find Core plugin!");
             return false;
@@ -445,7 +444,7 @@ int main_entry(LoaderConfiguration *loadConfig) {
         return true;
     };
 
-    if (!loadCorePlugin()) {
+    if (QString reason; !loadCorePlugin(coreplugin, reason)) {
         // Ignore errors if need to show help
         if (argsParser.showHelp) {
             printHelp();
@@ -487,6 +486,8 @@ int main_entry(LoaderConfiguration *loadConfig) {
     } else {
         qCDebug(loaderLog) << "primary instance initializing...";
     }
+
+    loadConfig->beforeLoadPlugins();
 
     // Update loader text
     splash.showMessage(QCoreApplication::translate("Application", "Loading plugins..."));

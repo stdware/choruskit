@@ -36,13 +36,19 @@ namespace Loader {
         virtual bool preprocessArguments(QStringList &arguments, int *code = nullptr);
 
         // You may need to show text on splash
-        virtual void beforeLoadPlugins(QSplashScreen *screen);
+        virtual void splashWillShow(QSplashScreen *screen);
+
+        // You may need to do some jobs before loading all plugins
+        virtual void beforeLoadPlugins();
 
         // You may need to do some jobs after loading all plugins
         virtual void afterLoadPlugins();
 
         // Create `QApplication` and `QMAppExtension` instances before calling it (Important!!!)
         int run();
+
+    public:
+        static void showError(const QString &err, int exitCode = -1);
     };
 
 }
