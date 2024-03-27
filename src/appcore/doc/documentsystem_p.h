@@ -45,6 +45,6 @@ namespace Core {
         void _q_documentDestroyed();
     };
 
-} // namespace Core
+}
 
 #endif // DOCUMENTSYSTEM_P_H

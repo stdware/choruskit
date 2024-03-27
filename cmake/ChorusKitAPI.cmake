@@ -182,8 +182,12 @@ endmacro()
     ck_finish_buildsystem()
 #]]
 macro(ck_finish_buildsystem)
+    if(NOT DEFINED CK_BUILDINFO_PREFIX)
+        set(CK_BUILDINFO_PREFIX ${CK_APPLICATION_NAME})
+    endif()
+
     qm_generate_config(${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
-    qm_generate_build_info(${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h YEAR TIME)
+    qm_generate_build_info(${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h YEAR TIME PREFIX ${CK_BUILDINFO_PREFIX})
 
     if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL)
         install(FILES ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h

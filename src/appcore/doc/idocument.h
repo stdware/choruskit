@@ -86,6 +86,6 @@ namespace Core {
         friend class DocumentSystem;
     };
 
-} // namespace Core
+}
 
 #endif // IDOCUMENT_H

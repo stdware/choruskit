@@ -365,4 +365,4 @@ namespace Core {
         d.q_ptr = this;
         d.init();
     }
-} // namespace Core
+}

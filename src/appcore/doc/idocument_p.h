@@ -45,6 +45,6 @@ namespace Core {
         bool temporary;
     };
 
-} // namespace Core
+}
 
 #endif // IDOCUMENTPRIVATE_H

@@ -59,6 +59,6 @@ namespace Core {
 
         void windowClosed(IWindow *iWin);
     };
-} // namespace Core
+}
 
 #endif // WINDOWSYSTEM_P_H

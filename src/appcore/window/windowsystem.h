@@ -57,6 +57,6 @@ namespace Core {
         for (const auto &id : ids)
             addAddOn(id, metaObject, factory);
     }
-} // namespace Core
+}
 
 #endif // WINDOWSYSTEM_H

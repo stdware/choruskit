@@ -130,6 +130,6 @@ namespace Core {
         return p;
     }
 
-} // namespace Core
+}
 
 #endif // IWINDOW_H

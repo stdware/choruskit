@@ -793,4 +793,4 @@ namespace Core {
         d.init();
     }
 
-} // namespace Core
+}

@@ -186,7 +186,7 @@ namespace Core {
         while (p->parent()) {
             p = p->parent();
         }
-        return p->isWidgetType() ? qobject_cast<QWidget *>(p) : nullptr;
+        return qobject_cast<QWidget *>(p);
     }
 
     IDocument::IDocument(IDocumentPrivate &d, const QString &id, QObject *parent) : QObject(parent), d_ptr(&d) {
@@ -196,4 +196,4 @@ namespace Core {
         d.init();
     }
 
-} // namespace Core
+}
