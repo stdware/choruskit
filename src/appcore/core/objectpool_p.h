@@ -1,9 +1,9 @@
 #ifndef OBJECTPOOL_P_H
 #define OBJECTPOOL_P_H
 
-#include "ObjectPool.h"
-
 #include <QMCore/qmchronoset.h>
+
+#include <CoreApi/objectpool.h>
 
 namespace Core {
 

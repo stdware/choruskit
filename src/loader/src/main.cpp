@@ -6,9 +6,9 @@
 #include <QProcess>
 #include <QTextStream>
 
-#include <QMCore/QMSystem.h>
-#include <QMWidgets/QMAppExtension.h>
-#include <QMWidgets/QMDecoratorV2.h>
+#include <QMCore/qmsystem.h>
+#include <QMWidgets/qmappextension.h>
+#include <QMWidgets/qmdecoratorv2.h>
 #include <QMWidgets/private/qmcss_p.h>
 
 #include <extensionsystem/pluginmanager.h>
@@ -299,8 +299,6 @@ namespace {
 
                 if (configFile.resizable) {
                     attr.pos *= ratio;
-                    attr.anchor.first *= ratio;
-                    attr.anchor.second *= ratio;
                     attr.fontSize *= ratio;
                     attr.maxWidth *= ratio;
                 }

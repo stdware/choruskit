@@ -12,7 +12,7 @@
 
 #include <QIcon>
 
-#include "DocumentSpec.h"
+#include <CoreApi/documentspec.h>
 
 namespace Core {
 

@@ -20,7 +20,7 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
 
     if(CHORUSKIT_INSTALL)
         install(CODE "
-            execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target choruskit_lupdate_task)
+            # execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target choruskit_lupdate_task)
             execute_process(COMMAND \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --target choruskit_lrelease_task)
         ")
         install(DIRECTORY ${_qm_dir}/

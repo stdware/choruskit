@@ -148,7 +148,7 @@ if(CHORUSKIT_INSTALL)
     )
 
     # Install cmake modules
-    install(DIRECTORY ${CK_CMAKE_MODULES_DIR}/
+    install(DIRECTORY ../cmake/
         DESTINATION ${_install_dir}/cmake
         PATTERN "__pycache__" EXCLUDE
     )

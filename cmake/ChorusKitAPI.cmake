@@ -122,9 +122,7 @@ macro(ck_init_buildsystem)
     set(CK_GENERATED_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include)
 
     if(APPLE)
-        set(CK_BUILD_MAIN_DIR ${CK_BUILD_MAIN_DIR}/${CK_APPLICATION_NAME}.app/Contents)
-
-        set(_CK_BUILD_BASE_DIR ${CK_BUILD_MAIN_DIR})
+        set(_CK_BUILD_BASE_DIR ${CK_BUILD_MAIN_DIR}/${CK_APPLICATION_NAME}.app/Contents)
         set(CK_BUILD_RUNTIME_DIR ${_CK_BUILD_BASE_DIR}/MacOS)
         set(CK_BUILD_LIBRARY_DIR ${_CK_BUILD_BASE_DIR}/Frameworks)
         set(CK_BUILD_PLUGINS_DIR ${_CK_BUILD_BASE_DIR}/Plugins)
@@ -570,8 +568,8 @@ function(ck_add_library _target)
         endif()
     endif()
 
-    set(_build_output_dir ${CK_BUILD_LIBRARY_DIR}/${CK_APPLICATION_NAME})
-    set(_install_output_dir ${CK_INSTALL_LIBRARY_DIR}/${CK_APPLICATION_NAME})
+    set(_build_output_dir ${CK_BUILD_LIBRARY_DIR})
+    set(_install_output_dir ${CK_INSTALL_LIBRARY_DIR})
 
     # Set output directories
     set_target_properties(${_target} PROPERTIES

@@ -1,7 +1,7 @@
 #ifndef SETTINGCATALOGPRIVATE_H
 #define SETTINGCATALOGPRIVATE_H
 
-#include <QMCore/QMChronoMap.h>
+#include <QMCore/qmchronomap.h>
 
 #include <CoreApi/settingcatalog.h>
 
