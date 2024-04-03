@@ -96,6 +96,11 @@ macro(ck_init_buildsystem)
 
     string(TIMESTAMP CK_CURRENT_YEAR "%Y")
 
+    # Set configure variables
+    if(NOT DEFINED CK_BUILDINFO_PREFIX)
+        set(CK_BUILDINFO_PREFIX ${CK_APPLICATION_NAME})
+    endif()
+
     # Set windows dependencies deploy variables
     if(NOT DEFINED CK_WIN_APPLOCAL_DEPS)
         set(CK_WIN_APPLOCAL_DEPS off)
@@ -135,8 +140,8 @@ macro(ck_init_buildsystem)
         set(CK_INSTALL_RUNTIME_DIR ${_CK_INSTALL_BASE_DIR}/MacOS)
         set(CK_INSTALL_LIBRARY_DIR ${_CK_INSTALL_BASE_DIR}/Frameworks)
         set(CK_INSTALL_PLUGINS_DIR ${_CK_INSTALL_BASE_DIR}/Plugins)
-        set(CK_INSTALL_SHARE_DIR ${_CK_INSTALL_BASE_DIR}/Resources)
-        set(CK_INSTALL_DATA_DIR ${CK_INSTALL_SHARE_DIR})
+        set(CK_INSTALL_SHARE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/share)
+        set(CK_INSTALL_DATA_DIR ${_CK_INSTALL_BASE_DIR}/Resources)
         set(CK_INSTALL_DOC_DIR ${CK_INSTALL_SHARE_DIR}/doc)
         set(CK_INSTALL_INCLUDE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/include/${CK_APPLICATION_NAME})
         set(CK_INSTALL_CMAKE_DIR ${_CK_INSTALL_BASE_DIR}/Resources/lib/cmake/${CK_APPLICATION_NAME})
@@ -185,16 +190,15 @@ endmacro()
     ck_finish_buildsystem()
 #]]
 macro(ck_finish_buildsystem)
-    if(NOT DEFINED CK_BUILDINFO_PREFIX)
-        set(CK_BUILDINFO_PREFIX ${CK_APPLICATION_NAME})
-    endif()
+    set(_ck_config_file ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
+    set(_ck_buildinfo_file ${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h)
 
-    qm_generate_config(${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
-    qm_generate_build_info(${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h YEAR TIME PREFIX ${CK_BUILDINFO_PREFIX})
+    qm_generate_config(${_ck_config_file})
+    qm_generate_build_info(${_ck_buildinfo_file} YEAR TIME PREFIX ${CK_BUILDINFO_PREFIX})
 
-    if(CK_ENABLE_INSTALL)
-        if(CK_ENABLE_DEVEL)
-            install(FILES ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h
+    if(CK_ENABLE_INSTALL AND CK_ENABLE_DEVEL)
+        if(EXISTS ${_ck_config_file})
+            install(FILES ${_ck_config_file}
                 DESTINATION ${CK_INSTALL_INCLUDE_DIR}
             )
         endif()
@@ -437,14 +441,18 @@ function(ck_add_plugin _target)
             install(TARGETS ${_target}
                 ${_export}
                 RUNTIME DESTINATION ${_install_output_dir}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
                 LIBRARY DESTINATION ${_install_output_dir}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
                 ARCHIVE DESTINATION ${_install_output_dir}
             )
         else()
             install(TARGETS ${_target}
                 ${_export}
                 RUNTIME DESTINATION ${_install_output_dir}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
                 LIBRARY DESTINATION ${_install_output_dir}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
             )
         endif()
     endif()
@@ -514,8 +522,8 @@ endfunction()
 
     SHARED: build shared library, otherwise build static library if not set
     AUTOGEN: set CMAKE_AUTOMOC, CMAKE_AUTOUIC, CMAKE_AUTORCC
-    SKIP_INSTALL: skip install the test target
-    SKIP_EXPORT: skip export the test target to installed cmake package
+    SKIP_INSTALL: skip install the target
+    SKIP_EXPORT: skip export the target to installed cmake package
     NAME: set output file name and name property in Windows RC, which is same as target name by default
     VERSION: set version property in Windows RC, which is same as `PROJECT_VERSION` by default
     DESCRIPTION: set description property in Windows RC, which is same as target name by default
@@ -568,7 +576,15 @@ function(ck_add_library _target)
         endif()
     endif()
 
-    set(_build_output_dir ${CK_BUILD_LIBRARY_DIR})
+    if(APPLE)
+        # When CMake installs Mac bundle application, it simply copies the bundle directory in
+        # build directory to the install destination, as a result, some build phase files may
+        # be mistakenly installed because the release doesn't need them.
+        set(_build_output_dir ${CK_BUILD_MAIN_DIR}/lib)
+    else()
+        set(_build_output_dir ${CK_BUILD_LIBRARY_DIR})
+    endif()
+
     set(_install_output_dir ${CK_INSTALL_LIBRARY_DIR})
 
     # Set output directories
@@ -590,14 +606,18 @@ function(ck_add_library _target)
             install(TARGETS ${_target}
                 ${_export}
                 RUNTIME DESTINATION ${CK_INSTALL_RUNTIME_DIR}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
                 LIBRARY DESTINATION ${_install_output_dir}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
                 ARCHIVE DESTINATION ${_install_output_dir}
             )
         elseif(_shared)
             install(TARGETS ${_target}
                 ${_export}
                 RUNTIME DESTINATION ${CK_INSTALL_RUNTIME_DIR}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
                 LIBRARY DESTINATION ${_install_output_dir}
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
             )
         endif()
     endif()
