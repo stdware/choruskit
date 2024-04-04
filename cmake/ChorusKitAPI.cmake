@@ -129,7 +129,12 @@ macro(ck_init_buildsystem)
     if(APPLE)
         set(_CK_BUILD_BASE_DIR ${CK_BUILD_MAIN_DIR}/${CK_APPLICATION_NAME}.app/Contents)
         set(CK_BUILD_RUNTIME_DIR ${_CK_BUILD_BASE_DIR}/MacOS)
-        set(CK_BUILD_LIBRARY_DIR ${_CK_BUILD_BASE_DIR}/Frameworks)
+
+        # When CMake installs Mac bundle application, it simply copies the bundle directory in
+        # build directory to the install destination, as a result, some build phase files may
+        # be mistakenly installed because the release doesn't need them.
+        set(CK_BUILD_LIBRARY_DIR ${CK_BUILD_MAIN_DIR}/lib)
+        
         set(CK_BUILD_PLUGINS_DIR ${_CK_BUILD_BASE_DIR}/Plugins)
         set(CK_BUILD_SHARE_DIR ${_CK_BUILD_BASE_DIR}/Resources)
         set(CK_BUILD_DATA_DIR ${CK_BUILD_SHARE_DIR})
@@ -576,15 +581,7 @@ function(ck_add_library _target)
         endif()
     endif()
 
-    if(APPLE)
-        # When CMake installs Mac bundle application, it simply copies the bundle directory in
-        # build directory to the install destination, as a result, some build phase files may
-        # be mistakenly installed because the release doesn't need them.
-        set(_build_output_dir ${CK_BUILD_MAIN_DIR}/lib)
-    else()
-        set(_build_output_dir ${CK_BUILD_LIBRARY_DIR})
-    endif()
-
+    set(_build_output_dir ${CK_BUILD_LIBRARY_DIR})
     set(_install_output_dir ${CK_INSTALL_LIBRARY_DIR})
 
     # Set output directories
