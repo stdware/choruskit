@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QPainter>
 
+#include <QMWidgets/qmappextension.h>
+
 namespace Loader {
 
     SplashScreen::SplashScreen(QScreen *screen) : QSplashScreen(screen) {
@@ -44,10 +46,7 @@ namespace Loader {
         for (const auto &item : qAsConst(m_texts)) {
             const Attribute &attr = item;
 
-            QFont font;
-#ifdef Q_OS_WINDOWS
-            // font.setFamily("Microsoft YaHei");
-#endif
+            QFont font = QMAppExtension::systemDefaultFont();
             font.setPixelSize(attr.fontSize
                               //* screen()->logicalDotsPerInch() / QMOs::unitDpi()
             );
