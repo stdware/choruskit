@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="zh_HK">
+<TS version="2.1" language="zh_TW">
 <context>
     <name>Application</name>
     <message>
@@ -9,32 +9,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="351"/>
+        <location filename="../../src/loader/src/main.cpp" line="350"/>
         <source>You&apos;re trying to start %1 as the %2, which is extremely dangerous and therefore strongly not recommended.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="356"/>
+        <location filename="../../src/loader/src/main.cpp" line="355"/>
         <source>Administrator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="358"/>
+        <location filename="../../src/loader/src/main.cpp" line="357"/>
         <source>Root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="397"/>
+        <location filename="../../src/loader/src/main.cpp" line="396"/>
         <source>Searching plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="432"/>
+        <location filename="../../src/loader/src/main.cpp" line="430"/>
         <source>Could not find Core plugin!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="437"/>
+        <location filename="../../src/loader/src/main.cpp" line="435"/>
         <source>Core plugin is disabled.</source>
         <translation type="unfinished"></translation>
     </message>

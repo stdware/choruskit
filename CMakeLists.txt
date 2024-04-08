@@ -31,7 +31,7 @@ endif()
 set(CHORUSKIT_VERSION ${PROJECT_VERSION})
 set(CHORUSKIT_INSTALL_NAME ${PROJECT_NAME})
 set(CHORUSKIT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(CHORUSKIT_TRANSLATIONS zh_CN zh_HK ja_JP)
+set(CHORUSKIT_TRANSLATIONS zh_CN zh_TW ja_JP)
 
 # ----------------------------------
 # Find basic dependencies
