@@ -10,7 +10,6 @@
 namespace Core {
 
     class DocumentSystemPrivate : public DocumentWatcherPrivate {
-        Q_OBJECT
         Q_DECLARE_PUBLIC(DocumentSystem)
     public:
         DocumentSystemPrivate();
@@ -35,7 +34,6 @@ namespace Core {
         mutable QString openFileLastVisitDir;
         mutable QString openDirLastVisitDir;
         mutable QString saveFileLastVisitDir;
-        mutable bool selectAllWhenRecover;
 
         mutable bool openFilesSaved;
         void postSaveOpenFilesTask();

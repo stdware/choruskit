@@ -1,5 +1,7 @@
 #include "windowelementsadaptor.h"
 
+#include <QMainWindow>
+
 namespace Core {
 
     static const QChar m_modifiedIdentifier[] = {0x25cf};
@@ -25,7 +27,8 @@ namespace Core {
         }
     };
 
-    WindowElementsAdaptor::WindowElementsAdaptor(QWidget *w) : d(new WindowElementsAdaptorPrivate(this)) {
+    WindowElementsAdaptor::WindowElementsAdaptor(QWidget *w)
+        : d(new WindowElementsAdaptorPrivate(this)) {
         d->w = w;
     }
 
@@ -73,27 +76,27 @@ namespace Core {
     }
 
     QMenuBar *WindowElementsAdaptor::menuBar() const {
-        return nullptr;
+        return static_cast<QMainWindow *>(d->w)->menuBar();
     }
 
     void WindowElementsAdaptor::setMenuBar(QMenuBar *menuBar) {
-        Q_UNUSED(menuBar);
+        static_cast<QMainWindow *>(d->w)->setMenuBar(menuBar);
     }
 
     QWidget *WindowElementsAdaptor::centralWidget() const {
-        return nullptr;
+        return static_cast<QMainWindow *>(d->w)->centralWidget();
     }
 
     void WindowElementsAdaptor::setCentralWidget(QWidget *widget) {
-        Q_UNUSED(widget);
+        static_cast<QMainWindow *>(d->w)->setCentralWidget(widget);
     }
 
     QStatusBar *WindowElementsAdaptor::statusBar() const {
-        return nullptr;
+        return static_cast<QMainWindow *>(d->w)->statusBar();
     }
 
     void WindowElementsAdaptor::setStatusBar(QStatusBar *statusBar) {
-        Q_UNUSED(statusBar);
+        static_cast<QMainWindow *>(d->w)->setStatusBar(statusBar);
     }
 
     void WindowElementsAdaptor::setWindow(QWidget *w) {

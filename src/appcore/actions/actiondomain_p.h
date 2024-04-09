@@ -39,7 +39,8 @@ namespace Core {
         void setStateDirty();
         void setCachedStateDirty();
 
-        ActionDomainState calcState(const ActionDomainState &existingState, const decltype(rules) &rules) const;
+        ActionDomainState calcState(const ActionDomainState &existingState,
+                                    const decltype(rules) &rules) const;
     };
 
 }

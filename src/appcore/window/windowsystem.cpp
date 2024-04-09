@@ -121,10 +121,10 @@ namespace Core {
         settings->insert(settingCatalogC, obj);
     }
 
-    void WindowSystemPrivate::windowClosed(IWindow *iWin) {
+    void WindowSystemPrivate::windowExit(IWindow *iWin) {
         Q_Q(WindowSystem);
 
-        Q_EMIT q->windowDestroyed(iWin);
+        Q_EMIT q->windowAboutToDestroy(iWin);
 
         iWindows.remove(iWin);
         windowMap.remove(iWin->window());

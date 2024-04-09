@@ -39,8 +39,6 @@ namespace Core {
     static const char openDirLastVisitDirC[] = "OpenDir";
     static const char saveFileLastVisitDirC[] = "SaveFile";
 
-    static const char selectAllWhenRecoverC[] = "SelectAllWhenRecover";
-
     DocumentSystemPrivate::DocumentSystemPrivate() {
         openFilesSaved = true;
     }
@@ -83,8 +81,6 @@ namespace Core {
         openFileLastVisitDir = lastVisitObj.value(openFileLastVisitDirC).toString();
         openDirLastVisitDir = lastVisitObj.value(openDirLastVisitDirC).toString();
         saveFileLastVisitDir = lastVisitObj.value(saveFileLastVisitDirC).toString();
-
-        selectAllWhenRecover = obj.value(selectAllWhenRecoverC).toBool();
     }
 
     void DocumentSystemPrivate::saveSettings() const {
@@ -102,8 +98,6 @@ namespace Core {
         lastVisitObj.insert(QLatin1String(openDirLastVisitDirC), openDirLastVisitDir);
         lastVisitObj.insert(QLatin1String(saveFileLastVisitDirC), saveFileLastVisitDir);
         obj.insert(lastVisitGroupC, lastVisitObj);
-
-        obj.insert(selectAllWhenRecoverC, selectAllWhenRecover);
 
         s->insert(settingCategoryC, obj);
     }
@@ -416,128 +410,6 @@ namespace Core {
         }
         return res;
     }
-
-    //    int DocumentSystem::checkRemainingLogs(QWidget *parent) const {
-    //        Q_D(const DocumentSystem);
-
-    //        QDir baseDir(DocumentSystemPrivate::logBaseDir());
-    //        QFileInfoList fileInfos = baseDir.entryInfoList(QDir::Dirs | QDir::NoSymLinks |
-    //        QDir::NoDotAndDotDot);
-
-    //        struct Remaining {
-    //            DocumentSpec *spec;
-    //            QString file;
-    //            QString logDir;
-    //        };
-
-    //        QList<Remaining> remaining;
-    //        for (const auto &info : qAsConst(fileInfos)) {
-    //            if (info.birthTime() > ILoader::atime()) {
-    //                continue;
-    //            }
-
-    //            QDir dir(info.absoluteFilePath());
-    //            IDocumentSettings settings(dir.path());
-
-    //            const QString &id = settings.docType();
-    //            const QString &path = settings.fileName();
-
-    //            auto spec = docType(id);
-    //            if (spec && spec->canRecover() && !path.isEmpty()) {
-    //                remaining.append({spec, path, dir.path()});
-    //                continue;
-    //            }
-    //            dir.removeRecursively();
-    //        }
-
-    //        if (remaining.isEmpty())
-    //            return 0;
-
-    //        auto listWidget = new QListWidget();
-    //        for (const auto &rem : qAsConst(remaining)) {
-    //            auto item = new QListWidgetItem();
-    //            item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
-    //            item->setText(QDir::toNativeSeparators(rem.file));
-    //            item->setCheckState(Qt::Checked);
-    //            listWidget->addItem(item);
-    //        }
-
-    //        auto allCheckbox = new QCheckBox(QApplication::translate("Core::DocumentSystem",
-    //        "Restore all")); connect(allCheckbox, &QCheckBox::toggled, listWidget,
-    //        &QListWidget::setDisabled);
-
-    //        QMessageBox msgBox(parent);
-    //        // msgBox.setWindowFlag(Qt::MSWindowsFixedSizeDialogHint, false);
-    //        msgBox.setIcon(QMessageBox::Question);
-    //        msgBox.setText(QApplication::translate(
-    //            "Core::DocumentSystem",
-    //            "The following files have been detected that closed unexpectedly, would you like
-    //            to restore them?"));
-    //        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-    //        msgBox.setCheckBox(allCheckbox);
-
-    //        auto layout = qobject_cast<QGridLayout *>(msgBox.layout());
-    //        int index = layout->indexOf(allCheckbox);
-    //        int row, column, rowSpan, columnSpan;
-    //        layout->getItemPosition(index, &row, &column, &rowSpan, &columnSpan);
-    //        layout->addWidget(listWidget, row + 1, column, rowSpan, columnSpan);
-
-    //        double ratio = (msgBox.screen()->logicalDotsPerInch() / QMOs::unitDpi());
-    //        auto horizontalSpacer = new QSpacerItem(qMax<int>(ratio * 500,
-    //        listWidget->sizeHint().width() + 100), 0,
-    //                                                QSizePolicy::Minimum, QSizePolicy::Expanding);
-    //        layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
-
-    //        allCheckbox->setChecked(d->selectAllWhenRecover);
-    //        int result = msgBox.exec();
-    //        d->selectAllWhenRecover = allCheckbox->isChecked();
-
-    //        if (result == QMessageBox::No) {
-    //            for (const auto &rem : qAsConst(remaining)) {
-    //                QDir(rem.logDir).removeRecursively();
-    //            }
-    //            return 0;
-    //        }
-
-    //        int cnt = 0;
-    //        for (int i = 0; i < listWidget->count(); ++i) {
-    //            auto item = listWidget->item(i);
-    //            auto rem = remaining.at(i);
-    //            if (!allCheckbox->isChecked() && item->checkState() == Qt::Unchecked) {
-    //                QDir(rem.logDir).removeRecursively();
-    //                continue;
-    //            }
-
-    //            if (rem.spec->recover(rem.logDir, rem.file)) {
-    //                cnt++;
-    //            }
-    //        }
-
-    //        return cnt;
-    //    }
-
-    //    QList<IDocumentSettings> DocumentSystem::remainingLogs() {
-    //        if (!ILoader::instance())
-    //            return {};
-
-    //        static QList<IDocumentSettings> _logs = []() {
-    //            QDir baseDir(DocumentSystemPrivate::logBaseDir());
-    //            QFileInfoList fileInfos = baseDir.entryInfoList(QDir::Dirs | QDir::NoSymLinks |
-    //            QDir::NoDotAndDotDot);
-
-    //            QList<IDocumentSettings> remaining;
-    //            for (const auto &info : qAsConst(fileInfos)) {
-    //                if (info.birthTime() >= ILoader::atime()) {
-    //                    continue;
-    //                }
-    //                remaining.append(IDocumentSettings(info.absoluteFilePath()));
-    //            }
-
-    //            return remaining;
-    //        }();
-
-    //        return _logs;
-    //    }
 
     QString DocumentSystem::getSaveAsFileName(const IDocument *document, const QString &pathIn,
                                               QWidget *parent) const {

@@ -23,16 +23,7 @@
 
 namespace Core {
 
-    class ShortcutContext;
-
-    class WindowCloseFilter;
-
     class WindowSystemPrivate;
-
-    class IWindowFactoryPrivate {
-    public:
-        QString id;
-    };
 
     class CKAPPCORE_EXPORT IWindowPrivate : public QObject {
         Q_OBJECT
@@ -50,8 +41,9 @@ namespace Core {
 
         QString id;
         IWindow::State state;
+        bool closeAsExit;
 
-        WindowCloseFilter *closeFilter;
+        QObject *winFilter;
         QMShortcutContext *shortcutCtx;
 
         QMChronoMap<QString, ActionItem *> actionItemMap;
@@ -75,7 +67,7 @@ namespace Core {
         void tryStopDelayedTimer();
         void nextDelayedInitialize();
 
-        void windowClosed(QWidget *w);
+        void windowExit_helper();
 
         friend class WindowSystem;
     };

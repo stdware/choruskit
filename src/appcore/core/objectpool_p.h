@@ -46,18 +46,10 @@ namespace Core {
         void objectAdded(const QString &id, QObject *obj);
         void aboutToRemoveObject(const QString &id, QObject *obj);
 
-        void setGlobalAttribute_helper(const QString &id, const QVariant &var, bool checkUnchanged,
-                                       bool ignoreCheckable);
-
-        void removeCheckable_helper(const QString &id, bool disconnect);
-        void removeCheckable_helper(QObject *obj, bool disconnect);
-
         friend class ObjectPool;
 
     private:
         void _q_objectDestroyed();
-        void _q_checkableToggled(bool checked);
-        void _q_checkableDestroyed();
     };
 
 

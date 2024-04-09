@@ -248,10 +248,10 @@ namespace Core {
         shortcutContextWidgets.remove(w);
     }
 
-    class WindowCloseFilter : public QObject {
+    class WindowEventFilter : public QObject {
     public:
-        explicit WindowCloseFilter(IWindowPrivate *d, QWidget *w);
-        ~WindowCloseFilter();
+        explicit WindowEventFilter(IWindowPrivate *d, QWidget *w);
+        ~WindowEventFilter();
 
         IWindowPrivate *d;
         QWidget *w;
@@ -264,14 +264,14 @@ namespace Core {
         QMetaObject::invokeMethod(obj, member, Qt::DirectConnection, Q_ARG(QString, s));
     }
 
-    WindowCloseFilter::WindowCloseFilter(IWindowPrivate *d, QWidget *w) : QObject(d), d(d), w(w) {
+    WindowEventFilter::WindowEventFilter(IWindowPrivate *d, QWidget *w) : QObject(d), d(d), w(w) {
         w->installEventFilter(this);
     }
 
-    WindowCloseFilter::~WindowCloseFilter() {
+    WindowEventFilter::~WindowEventFilter() {
     }
 
-    bool WindowCloseFilter::eventFilter(QObject *obj, QEvent *event) {
+    bool WindowEventFilter::eventFilter(QObject *obj, QEvent *event) {
         if (obj == w) {
             switch (event->type()) {
                 case QEvent::DragEnter:
@@ -372,11 +372,10 @@ namespace Core {
                 }
 
                 case QEvent::Close:
-                    if (event->isAccepted()) {
-                        d->windowClosed(w);
+                    if (d->closeAsExit && event->isAccepted()) {
+                        d->windowExit_helper();
                     }
                     break;
-
                 default:
                     break;
             }
@@ -396,6 +395,7 @@ namespace Core {
     };
 
     IWindowPrivate::IWindowPrivate() {
+        closeAsExit = true;
     }
 
     IWindowPrivate::~IWindowPrivate() {
@@ -419,7 +419,7 @@ namespace Core {
 
         shortcutCtx = new QMShortcutContext(this);
 
-        closeFilter = new WindowCloseFilter(this, q->window());
+        winFilter = new WindowEventFilter(this, q->window());
 
         // Setup window
         changeLoadState(IWindow::WindowSetup);
@@ -430,9 +430,9 @@ namespace Core {
             const auto &mo = it.key();
             const auto &fac = it.value();
 
-            IWindowAddOn *addOn;
+            IWindowAddOn *addOn = nullptr;
             if (fac) {
-                addOn = fac();
+                addOn = fac(this);
             } else {
                 addOn = qobject_cast<IWindowAddOn *>(mo->newInstance());
             }
@@ -515,19 +515,18 @@ namespace Core {
         }
     }
 
-    void IWindowPrivate::windowClosed(QWidget *w) {
+    void IWindowPrivate::windowExit_helper() {
         Q_Q(IWindow);
-
-        Q_UNUSED(w);
 
         tryStopDelayedTimer();
 
+        auto w = q->window();
         if (!w->isHidden())
             w->hide();
 
-        changeLoadState(IWindow::Closed);
+        changeLoadState(IWindow::Exiting);
 
-        ICoreBase::instance()->windowSystem()->d_func()->windowClosed(q);
+        ICoreBase::instance()->windowSystem()->d_func()->windowExit(q);
 
         delete shortcutCtx;
         shortcutCtx = nullptr;
@@ -566,9 +565,24 @@ namespace Core {
         win->show();
     }
 
+    void IWindow::exit() {
+        Q_D(IWindow);
+        d->windowExit_helper();
+    }
+
     IWindow::State IWindow::state() const {
         Q_D(const IWindow);
         return d->state;
+    }
+
+    bool IWindow::closeAsExit() const {
+        Q_D(const IWindow);
+        return d->closeAsExit;
+    }
+
+    void IWindow::setCloseAsExit(bool on) {
+        Q_D(IWindow);
+        d->closeAsExit = on;
     }
 
     QString IWindow::id() const {

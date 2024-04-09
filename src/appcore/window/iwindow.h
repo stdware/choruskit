@@ -24,14 +24,19 @@ namespace Core {
             WindowSetup,
             Initialized,
             Running,
-            Closed,
+            Exiting,
             Deleted,
         };
         Q_ENUM(State)
 
         void load();
+        void exit();
+        
         State state() const;
         inline bool isEffectivelyClosed() const;
+
+        bool closeAsExit() const;
+        void setCloseAsExit(bool on);
 
     public:
         QString id() const;
@@ -107,7 +112,7 @@ namespace Core {
     };
 
     inline bool IWindow::isEffectivelyClosed() const {
-        return state() >= Closed;
+        return state() >= Exiting;
     }
 
     template <class T>

@@ -106,7 +106,7 @@ namespace Core {
 
             // Check target existence
             if (targetId.startsWith('%')) {
-                if (!topLevelMenus.contains(targetId.mid(1))) {
+                if (!topLevelMenus.contains(targetId)) {
                     continue;
                 }
             } else {
@@ -444,18 +444,21 @@ namespace Core {
             const auto &targetId = it.key();
             const auto &children = it.value();
 
-            QWidget *w;
+            QWidget *w = nullptr;
             if (targetId.startsWith('%')) {
-                if (!d->topLevelMenus.contains(targetId.mid(1)))
+                if (!d->topLevelMenus.contains(targetId))
                     continue;
 
-                w = topLevelMenus.value(targetId.mid(1), nullptr);
+                w = topLevelMenus.value(targetId, nullptr);
             } else {
                 auto it0 = d->actions.find(targetId);
                 if (it0 == d->actions.end() || it0.value() != Menu)
                     continue;
 
-                w = itemMap.value(targetId)->menu();
+                auto item = itemMap.value(targetId);
+                if (item) {
+                    w = item->menu();
+                }
             }
 
             if (!w)

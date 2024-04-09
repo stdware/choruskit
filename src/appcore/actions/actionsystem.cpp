@@ -298,12 +298,12 @@ namespace Core {
         for (const auto &item : qAsConst(root.children)) {
             // Parse action items
             if (item->name == "actions" || item->name == "menus") {
-                for (const auto &action_item : qAsConst(item->children)) {
-                    if (action_item->name != "item") {
+                for (const auto &actionItem : qAsConst(item->children)) {
+                    if (actionItem->name != "item") {
                         continue;
                     }
 
-                    const auto &properties = action_item->properties;
+                    const auto &properties = actionItem->properties;
 
                     // id
                     const auto &id = properties.value("id");
@@ -397,7 +397,7 @@ namespace Core {
 
                         // creation
                         if (id.startsWith('%')) {
-                            domain->addTopLevelMenu(id.mid(1));
+                            domain->addTopLevelMenu(id);
                         } else {
                             domain->addAction(id, parseActionDomainType(topLevelItem->name));
                         }
