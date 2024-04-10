@@ -735,7 +735,7 @@ endfunction()
 Add a resources copying command after building the target.
 
     ck_add_attached_files(<target>
-        [SKIP_BUILD] [SKIP_INSTALL]
+        [SKIP_BUILD] [SKIP_INSTALL] [VERBOSE]
 
         SRC <files1...> DEST <dir1>
         SRC <files2...> DEST <dir2> ...
@@ -745,7 +745,7 @@ Add a resources copying command after building the target.
     DEST: destination directory, can be a generator expression
 ]] #
 function(ck_add_attached_files _target)
-    set(options SKIP_BUILD SKIP_INSTALL)
+    set(options SKIP_BUILD SKIP_INSTALL VERBOSE)
     set(oneValueArgs)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -770,6 +770,10 @@ function(ck_add_attached_files _target)
         list(APPEND _options INSTALL_DIR .)
     endif()
 
+    if (FUNC_VERBOSE)
+        list(APPEND _options VERBOSE)
+    endif()
+
     foreach(_src ${_result})
         list(POP_BACK _src _dest)
 
@@ -785,7 +789,7 @@ endfunction()
 Add a resources copying command for whole project.
 
     ck_add_shared_files(
-        [SKIP_BUILD] [SKIP_INSTALL]
+        [SKIP_BUILD] [SKIP_INSTALL] [VERBOSE]
 
         SRC <files1...> DEST <dir1>
         SRC <files2...> DEST <dir2> ...
@@ -798,7 +802,7 @@ Add a resources copying command for whole project.
         ChorusKit_CopySharedFiles
 ]] #
 function(ck_add_shared_files)
-    set(options TARGET SKIP_BUILD SKIP_INSTALL)
+    set(options TARGET SKIP_BUILD SKIP_INSTALL VERBOSE)
     set(oneValueArgs)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -832,6 +836,10 @@ function(ck_add_shared_files)
         list(APPEND _options SKIP_INSTALL)
     else()
         list(APPEND _options INSTALL_DIR .)
+    endif()
+
+    if (FUNC_VERBOSE)
+        list(APPEND _options VERBOSE)
     endif()
 
     foreach(_src ${_result})
