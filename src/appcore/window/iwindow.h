@@ -10,7 +10,7 @@ namespace Core {
         class CorePlugin;
     }
 
-    class ActionMetaItem;
+    class ActionItem;
 
     class IWindowPrivate;
 
@@ -79,8 +79,8 @@ namespace Core {
         virtual void topLevelMenuAdded(const QString &id, QWidget *w);
         virtual void topLevelMenuRemoved(const QString &id, QWidget *w);
 
-        virtual void actionItemAdded(ActionMetaItem *item);
-        virtual void actionItemRemoved(ActionMetaItem *item);
+        virtual void actionItemAdded(ActionItem *item);
+        virtual void actionItemRemoved(ActionItem *item);
 
     protected:
         IWindow(IWindowPrivate &d, const QString &id, QObject *parent = nullptr);

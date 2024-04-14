@@ -1,1 +1,3 @@
 add_subdirectory(SingleApplication)
+
+add_subdirectory(xmladaptor)

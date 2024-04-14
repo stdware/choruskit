@@ -121,12 +121,12 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         </toolBar>
     </layouts>
     
-    <routines>
-        <routine anchor="after" parent="File" relativeTo="FileSaveGroup">
+    <buildRoutines>
+        <buildRoutine anchor="after" parent="File" relativeTo="FileSaveGroup">
             <separator />
             <action id="CloseFile" />
-        </routine>
-    </routines>
+        </buildRoutine>
+    </buildRoutines>
 </extension>
 ```
 
@@ -158,12 +158,12 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         - 如果`items`中某个菜单元素没有声明`category`，那么`category`将按以下规则确定：
             - 如果它没有出现在`layout`中，或者在`layout`中第一次作为根节点出现，那么使用`parserConfig`中的`defaultCategory`；
             - 如果在`layout`中第一次作为非根节点出现，将以根节点的`category`为基础，依次添加路径节点的`text`（去掉所有加速键）；
-- `routines`：包含构造例程，子节点标签`routine`；
-    - `routine`属性：
+- `buildRoutines`：包含构造例程，子节点标签`buildRoutine`；
+    - `buildRoutine`属性：
         - `anchor`：插入方式，可选值为`last`、`first`、`before`或`after`；
         - `parent`：插入对象 ID；
         - `relativeTo`：插入相对的子节点 ID，在`anchor`为`before`或`after`时需指定；
-    - `routine`的子节点属性与`layouts`中的一致，必须是线性结构；
+    - `buildRoutine`的子节点属性与`layouts`中的一致，必须是线性结构；
 
 
 ## 扩展元数据代码生成器
@@ -203,73 +203,112 @@ Options:
 
 #include <CoreApi/private/actionextension_p.h>
 
-static const Core::ActionExtensionPrivate *ckGetStaticActionExtensionPrivate() {
-    static Core::ActionExtensionPrivate data;
+namespace Core {
+
+static void ckGetStaticActionItemInfosData(ActionItemInfoData *&data, int &count) {
+    static ActionItemInfoData arr[] = {
+        {
+            QStringLiteral("NewFile"),
+            ActionItemInfo::Action,
+            QByteArrayLiteral("&New File"),
+            QByteArrayLiteral("Create"),
+            {
+                QKeySequence("Ctrl+N"),
+            },
+            {
+                QByteArrayLiteral("Main Menu"),
+                QByteArrayLiteral("File"),
+            },
+            false,
+            },
+        {
+            // ...
+        },
+        {
+            // ...
+        },
+    };
+    data = arr;
+    count = sizeof(arr);
+}
+
+static void ckGetStaticActionLayoutsData(ActionLayoutData *&data, int &count) {
+    static ActionLayoutData arr[] = {
+        {
+            {
+                {
+                    QStringLiteral("MainMenu"),
+                    ActionItemInfo::Menu,
+                    false,
+                    {1, 2, 3, 4},
+                },
+                {
+                    // ...
+                }
+            },
+        },
+        {
+            // ...
+        }
+    };
+    data = arr;
+    count = sizeof(arr);
+}
+
+static void ckGetStaticActionBuildRoutinesData(ActionBuildRoutineData *&data, int &count) {
+    static ActionBuildRoutineData arr[] = {
+        {
+            ActionBuildRoutine::After,
+            QStringLiteral("File"),
+            QStringLiteral("FileSaveGroup"),
+            {
+                {
+                    {},
+                    ActionItemInfo::Separator,
+                    false,
+                },
+                {
+                    QStringLiteral("CloseFile"),
+                    ActionItemInfo::Action,
+                    false,
+                },
+            },
+        },
+    };
+    data = arr;
+    count = sizeof(arr);
+}
+
+static ActionExtensionPrivate *ckGetStaticActionExtensionPrivate() {
+    static ActionExtensionPrivate data;
     data.hash = QByteArrayLiteral("00000000000000000000000000000000");
     data.version = QStringLiteral("2.0");
-    data.itemCount = 11;
-    data.itemData = []() -> Core::ActionMetaItemData * {
-        static Core::ActionMetaItemData arr[] = {
-            {
-             QStringLiteral("NewFile"),
-             Core::ActionMetaItem::Action,
-             []() -> QString { return QCoreApplication::translate("ActionText", "&New File"); },
-             []() -> QString { return QCoreApplication::translate("ActionClass", "Create"); },
-             {
-                    QKeySequence("Ctrl+N"),
-                }, []() -> QStringList {
-                    return {
-                        QCoreApplication::translate("ActionCategory", "Main Menu"),
-                        QCoreApplication::translate("ActionCategory", "File"),
-                    };
-                }, false,
-             },
-            {
-
-             },
-            {
-
-             },
-        };
-        return arr;
-    }();
-    data.layoutCount = 2;
-    data.layoutData = []() -> Core::ActionMetaLayoutData * {
-        static Core::ActionMetaLayoutData arr[] = {
-            {[]() -> Core::ActionMetaLayoutData::Entry * {
-                static Core::ActionMetaLayoutData::Entry arr[]{
-                    {
-                     QStringLiteral("MainMenu"),
-                     Core::ActionMetaItem::Menu,
-                     false, 5,
-                     []() -> int * {
-                            static int arr[] = {
-                                1, 2, 3, 4, 5,
-                            };
-                            return arr;
-                        }(),
-                     },
-                };
-                return arr;
-            }()},
-            {
-
-            }};
-        return arr;
-    }();
-    data.routineCount = 1;
-    data.routineData = []() -> Core::ActionMetaRoutineData * {
-        return nullptr; //
-    }();
+    ckGetStaticActionItemInfosData(data.itemData, data.itemCount); 
+    ckGetStaticActionLayoutsData(data.layoutData, data.layoutCount);
+    ckGetStaticActionBuildRoutinesData(data.routineData, data.routineCount);
     return &data;
+}
+
 }
 
 const Core::ActionExtension *QT_MANGLE_NAMESPACE(ckGetStaticActionExtension_core_actions)() {
     static Core::ActionExtension extension{
         {
-         ckGetStaticActionExtensionPrivate(),
-         },
+            Core::ckGetStaticActionExtensionPrivate(),
+        },
     };
     return &extension;
+}
+
+static void ckActionExtension_DeclareTranslation() {
+    // ActionText
+    QCoreApplication::translate("ChorusKit::ActionText", "&New File");
+
+    // ActionClass
+    QCoreApplication::translate("ChorusKit::ActionClass", "Create");
+
+    // ActionCategory
+    QCoreApplication::translate("ChorusKit::ActionCategory", "Main Menu");
+    QCoreApplication::translate("ChorusKit::ActionCategory", "File");
 }
 ```

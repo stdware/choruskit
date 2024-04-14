@@ -1,5 +1,5 @@
-#ifndef QMXMLADAPTOR_P_H
-#define QMXMLADAPTOR_P_H
+#ifndef QMXMLADAPTOR_H
+#define QMXMLADAPTOR_H
 
 //
 //  W A R N I N G !!!
@@ -61,4 +61,4 @@ public:
 
 */
 
-#endif // QMXMLADAPTOR_P_H
+#endif // QMXMLADAPTOR_H

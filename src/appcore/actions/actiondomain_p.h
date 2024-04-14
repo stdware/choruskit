@@ -5,6 +5,14 @@
 
 namespace Core {
 
+    struct ActionCatalogueData {
+        struct Entry {
+            QByteArray name;
+            QVector<int> childIndexes;
+        };
+        QVector<Entry> entryData;
+    };
+
     class ActionDomainPrivate {
         Q_DECLARE_PUBLIC(ActionDomain)
     public:

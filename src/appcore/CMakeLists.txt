@@ -22,6 +22,4 @@ choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
         cxx_std_17
     SYNC_INCLUDE_PREFIX
         CoreApi
-    SYNC_INCLUDE_OPTIONS
-        EXCLUDE "internal/.+"
 )

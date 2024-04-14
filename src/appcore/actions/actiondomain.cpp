@@ -3,6 +3,21 @@
 
 namespace Core {
 
+    QByteArray ActionCatalogue::name() const {
+        return static_cast<const ActionCatalogueData *>(data)->entryData[idx].name;
+    }
+
+    int ActionCatalogue::childCount() const {
+        return static_cast<const ActionCatalogueData *>(data)->entryData[idx].childIndexes.size();
+    }
+
+    ActionCatalogue ActionCatalogue::child(int index) const {
+        ActionCatalogue result = *this;
+        result.idx =
+            static_cast<const ActionCatalogueData *>(data)->entryData[idx].childIndexes[index];
+        return result;
+    }
+
     ActionDomainPrivate::ActionDomainPrivate() {
     }
 
@@ -32,20 +47,20 @@ namespace Core {
         return QStringList();
     }
 
-    ActionMetaItem *ActionDomain::staticItem(const QString &id) const {
+    ActionItemInfo *ActionDomain::itemInfo(const QString &id) const {
         return nullptr;
     }
 
-    ActionMetaLayout ActionDomain::layout() const {
-        return ActionMetaLayout();
+    ActionCatalogue ActionDomain::catalogue() const {
+        return ActionCatalogue();
     }
 
-    ActionMetaLayout ActionDomain::staticLayout() const {
-        return ActionMetaLayout();
+    QList<ActionLayout> ActionDomain::currentLayouts() const {
+        return QList<ActionLayout>();
     }
 
     QList<QKeySequence> ActionDomain::shortcuts(const QString &id) const {
-        return QList<QKeySequence>();
+        return {};
     }
 
     void ActionDomain::setShortcuts(const QString &id, const QList<QKeySequence> &shortcuts) {
@@ -55,11 +70,19 @@ namespace Core {
         return false;
     }
 
-    QJsonObject ActionDomain::saveState() const {
-        return {};
+    QJsonObject ActionDomain::saveLayouts() const {
+        return QJsonObject();
     }
 
-    bool ActionDomain::restoreState(const QJsonObject &obj) {
+    bool ActionDomain::restoreLayouts(const QJsonObject &obj) {
+        return false;
+    }
+
+    QJsonObject ActionDomain::saveKeymap() const {
+        return QJsonObject();
+    }
+
+    bool ActionDomain::restoreKeymap(const QJsonObject &obj) {
         return false;
     }
 

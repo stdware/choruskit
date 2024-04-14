@@ -5,53 +5,46 @@
 
 namespace Core {
 
-    struct ActionMetaItemData {
-        using StringGetter = QString (*)();
-        using StringListGetter = QStringList (*)();
-
+    struct ActionItemInfoData {
         QString id;
-        ActionMetaItem::Type type;
-        StringGetter text;
-        StringGetter commandClass;
+        ActionItemInfo::Type type;
+        QByteArray text;
+        QByteArray commandClass;
         QList<QKeySequence> shortcuts;
-        StringListGetter category;
+        QByteArrayList categories;
         bool topLevel;
     };
 
-    struct ActionMetaLayoutData {
+    struct ActionLayoutData {
         struct Entry {
             QString id;
-            ActionMetaItem::Type type;
+            ActionItemInfo::Type type;
             bool flat;
-            int childCount;
-            int *childrenIndexData;
+            QVector<int> childIndexes;
         };
-
-        Entry *entryData;
+        QVector<Entry> entryData;
     };
 
-    struct ActionMetaRoutineData {
-        ActionMetaRoutine::Anchor anchor;
+    struct ActionBuildRoutineData {
+        ActionBuildRoutine::Anchor anchor;
         QString parent;
         QString relativeTo;
-
-        int itemCount;
-        ActionMetaRoutine::Item *itemData;
+        QVector<ActionBuildRoutine::Item> items;
     };
 
     struct ActionExtensionPrivate {
-        QByteArray hash;
+        QString hash;
         
         QString version;
 
         int itemCount;
-        ActionMetaItemData *itemData;
+        ActionItemInfoData *itemData;
 
         int layoutCount;
-        ActionMetaLayoutData *layoutData;
+        ActionLayoutData *layoutData;
 
-        int routineCount;
-        ActionMetaRoutineData *routineData;
+        int buildRoutineCount;
+        ActionBuildRoutineData *buildRoutineData;
 
         static inline const ActionExtensionPrivate *get(const ActionExtension *q) {
             return static_cast<const ActionExtensionPrivate *>(q->d.data);

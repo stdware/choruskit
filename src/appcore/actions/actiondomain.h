@@ -16,6 +16,22 @@ namespace Core {
 
     class ActionDomainPrivate;
 
+    class CKAPPCORE_EXPORT ActionCatalogue {
+    public:
+        inline ActionCatalogue() : data(nullptr), idx(0){};
+
+        QByteArray name() const;
+
+        int childCount() const;
+        ActionCatalogue child(int index) const;
+
+    private:
+        const void *data;
+        int idx;
+
+        friend class ActionDomain;
+    };
+
     class CKAPPCORE_EXPORT ActionDomain : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(ActionDomain)
@@ -31,18 +47,21 @@ namespace Core {
 
     public:
         QStringList ids() const;
-        ActionMetaItem *staticItem(const QString &id) const;
+        ActionItemInfo *itemInfo(const QString &id) const;
 
-        ActionMetaLayout layout() const;
-        ActionMetaLayout staticLayout() const;
+        ActionCatalogue catalogue() const;
+        QList<ActionLayout> currentLayouts() const;
 
         QList<QKeySequence> shortcuts(const QString &id) const;
         void setShortcuts(const QString &id, const QList<QKeySequence> &shortcuts);
 
         bool build(const QMap<QString, ActionItem *> &items) const;
 
-        QJsonObject saveState() const;
-        bool restoreState(const QJsonObject &obj);
+        QJsonObject saveLayouts() const;
+        bool restoreLayouts(const QJsonObject &obj);
+
+        QJsonObject saveKeymap() const;
+        bool restoreKeymap(const QJsonObject &obj);
 
     protected:
         ActionDomain(ActionDomainPrivate &d, QObject *parent = nullptr);

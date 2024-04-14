@@ -1,9 +1,18 @@
-#include <QtCore/QCoreApplication>
-#include <QtCore/QRegularExpression>
 #include <QtCore/QCommandLineOption>
 #include <QtCore/QCommandLineParser>
+#include <QtCore/QCoreApplication>
+#include <QtCore/QCryptographicHash>
+#include <QtCore/QRegularExpression>
+
+#include <qmxmladaptor.h>
 
 static const char DefaultPattern[] = R"(\$\{(\w+)\})";
+
+static QString calculateContentSha256(const QByteArray &data) {
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    hash.addData(data);
+    return hash.result().toHex();
+}
 
 static QString parseExpression(QString s, const QRegularExpression &reg,
                                const QHash<QString, QString> &vars, bool recursive = true) {
@@ -33,8 +42,6 @@ static QString parseExpression(QString s, const QRegularExpression &reg,
 int main(int argc, char *argv[]) {
     QCoreApplication a(argc, argv);
     QCoreApplication::setApplicationVersion(APP_VERSION);
-
-    QT_VERSION_STR;
 
     QCommandLineParser parser;
     parser.parse(QCoreApplication::arguments());

@@ -3,16 +3,19 @@
 
 #include <QObject>
 #include <QAction>
+#include <QKeySequence>
 
 #include <CoreApi/ckappcoreglobal.h>
 
 namespace Core {
 
-    struct ActionExtension;
+    class ActionDomain;
 
-    class CKAPPCORE_EXPORT ActionMetaItem {
+    class ActionExtension;
+
+    class CKAPPCORE_EXPORT ActionItemInfo {
     public:
-        inline ActionMetaItem() : data(nullptr){};
+        inline ActionItemInfo() : data(nullptr){};
 
         enum Type {
             Action,
@@ -24,11 +27,15 @@ namespace Core {
 
         QString id() const;
         Type type() const;
-        QString text() const;
-        QString commandClass() const;
+        QByteArray text() const;
+        QByteArray commandClass() const;
         QList<QKeySequence> shortcuts() const;
-        QStringList category() const;
+        QByteArrayList categories() const;
         bool topLevel() const;
+
+        static QString translatedText(const QByteArray &text);
+        static QString translatedCommandClass(const QByteArray &commandClass);
+        static QString translatedCategory(const QByteArray &category);
 
     private:
         const void *data;
@@ -36,27 +43,28 @@ namespace Core {
         friend class ActionExtension;
     };
 
-    class CKAPPCORE_EXPORT ActionMetaLayout {
+    class CKAPPCORE_EXPORT ActionLayout {
     public:
-        inline ActionMetaLayout() : data(nullptr), idx(0){};
+        inline ActionLayout() : data(nullptr), idx(0){};
 
         QString id() const;
-        ActionMetaItem::Type type() const;
+        ActionItemInfo::Type type() const;
         bool flat() const;
 
         int childCount() const;
-        ActionMetaLayout child(int index) const;
+        ActionLayout child(int index) const;
 
     private:
         const void *data;
         int idx;
 
         friend class ActionExtension;
+        friend class ActionDomain;
     };
 
-    class CKAPPCORE_EXPORT ActionMetaRoutine {
+    class CKAPPCORE_EXPORT ActionBuildRoutine {
     public:
-        inline ActionMetaRoutine() : data(nullptr){};
+        inline ActionBuildRoutine() : data(nullptr){};
 
         enum Anchor {
             Last,
@@ -71,6 +79,7 @@ namespace Core {
 
         struct Item {
             QString id;
+            ActionItemInfo::Type type;
             bool flat;
         };
         int itemCount() const;
@@ -82,19 +91,20 @@ namespace Core {
         friend class ActionExtension;
     };
 
-    struct CKAPPCORE_EXPORT ActionExtension {
-        QByteArray hash() const;
+    class CKAPPCORE_EXPORT ActionExtension {
+    public:
+        QString hash() const;
 
         QString version() const;
 
         int itemCount() const;
-        ActionMetaItem item(int index) const;
+        ActionItemInfo item(int index) const;
 
         int layoutCount() const;
-        ActionMetaLayout layout(int index) const;
+        ActionLayout layout(int index) const;
 
-        int routineCount() const;
-        ActionMetaRoutine routine(int index) const;
+        int buildRoutineCount() const;
+        ActionBuildRoutine buildRoutine(int index) const;
 
         struct {
             const void *data;

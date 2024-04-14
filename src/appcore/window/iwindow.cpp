@@ -732,11 +732,11 @@ namespace Core {
         // Do nothing
     }
 
-    void IWindow::actionItemAdded(ActionMetaItem *item) {
+    void IWindow::actionItemAdded(ActionItem *item) {
         // Do nothing
     }
 
-    void IWindow::actionItemRemoved(ActionMetaItem *item) {
+    void IWindow::actionItemRemoved(ActionItem *item) {
         // Do nothing
     }
 

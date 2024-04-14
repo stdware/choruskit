@@ -1,81 +1,94 @@
-#include "actionextension_p.h"
 #include "actionextension.h"
+#include "actionextension_p.h"
+
+#include <QtCore/QCoreApplication>
 
 namespace Core {
 
-    QString ActionMetaItem::id() const {
-        return static_cast<const ActionMetaItemData *>(data)->id;
+    QString ActionItemInfo::id() const {
+        return static_cast<const ActionItemInfoData *>(data)->id;
     }
 
-    ActionMetaItem::Type ActionMetaItem::type() const {
-        return static_cast<const ActionMetaItemData *>(data)->type;
+    ActionItemInfo::Type ActionItemInfo::type() const {
+        return static_cast<const ActionItemInfoData *>(data)->type;
     }
 
-    QString ActionMetaItem::text() const {
-        return static_cast<const ActionMetaItemData *>(data)->text();
+    QByteArray ActionItemInfo::text() const {
+        return static_cast<const ActionItemInfoData *>(data)->text;
     }
 
-    QString ActionMetaItem::commandClass() const {
-        return static_cast<const ActionMetaItemData *>(data)->commandClass();
+    QByteArray ActionItemInfo::commandClass() const {
+        return static_cast<const ActionItemInfoData *>(data)->commandClass;
     }
 
-    QList<QKeySequence> ActionMetaItem::shortcuts() const {
-        return static_cast<const ActionMetaItemData *>(data)->shortcuts;
+    QList<QKeySequence> ActionItemInfo::shortcuts() const {
+        return static_cast<const ActionItemInfoData *>(data)->shortcuts;
     }
 
-    QStringList ActionMetaItem::category() const {
-        return static_cast<const ActionMetaItemData *>(data)->category();
+    QByteArrayList ActionItemInfo::categories() const {
+        return static_cast<const ActionItemInfoData *>(data)->categories;
     }
 
-    bool ActionMetaItem::topLevel() const {
-        return static_cast<const ActionMetaItemData *>(data)->topLevel;
+    bool ActionItemInfo::topLevel() const {
+        return static_cast<const ActionItemInfoData *>(data)->topLevel;
     }
 
-    QString ActionMetaLayout::id() const {
-        return static_cast<const ActionMetaLayoutData *>(data)->entryData[idx].id;
+    QString ActionItemInfo::translatedText(const QByteArray &text) {
+        return QCoreApplication::translate("ChorusKit::ActionText", text);
     }
 
-    ActionMetaItem::Type ActionMetaLayout::type() const {
-        return static_cast<const ActionMetaLayoutData *>(data)->entryData[idx].type;
+    QString ActionItemInfo::translatedCommandClass(const QByteArray &commandClass) {
+        return QCoreApplication::translate("ChorusKit::ActionCommandClass", commandClass);
     }
 
-    bool ActionMetaLayout::flat() const {
-        return static_cast<const ActionMetaLayoutData *>(data)->entryData[idx].flat;
+    QString ActionItemInfo::translatedCategory(const QByteArray &category) {
+        return QCoreApplication::translate("ChorusKit::ActionCategory", category);
     }
 
-    int ActionMetaLayout::childCount() const {
-        return static_cast<const ActionMetaLayoutData *>(data)->entryData[idx].childCount;
+    QString ActionLayout::id() const {
+        return static_cast<const ActionLayoutData *>(data)->entryData[idx].id;
     }
 
-    ActionMetaLayout ActionMetaLayout::child(int index) const {
-        ActionMetaLayout result = *this;
-        result.idx = static_cast<const ActionMetaLayoutData *>(data)
-                         ->entryData[idx]
-                         .childrenIndexData[index];
+    ActionItemInfo::Type ActionLayout::type() const {
+        return static_cast<const ActionLayoutData *>(data)->entryData[idx].type;
+    }
+
+    bool ActionLayout::flat() const {
+        return static_cast<const ActionLayoutData *>(data)->entryData[idx].flat;
+    }
+
+    int ActionLayout::childCount() const {
+        return static_cast<const ActionLayoutData *>(data)->entryData[idx].childIndexes.size();
+    }
+
+    ActionLayout ActionLayout::child(int index) const {
+        ActionLayout result = *this;
+        result.idx =
+            static_cast<const ActionLayoutData *>(data)->entryData[idx].childIndexes[index];
         return result;
     }
 
-    ActionMetaRoutine::Anchor ActionMetaRoutine::anchor() const {
-        return static_cast<const ActionMetaRoutineData*>(data)->anchor;
+    ActionBuildRoutine::Anchor ActionBuildRoutine::anchor() const {
+        return static_cast<const ActionBuildRoutineData *>(data)->anchor;
     }
 
-    QString ActionMetaRoutine::parent() const {
-        return static_cast<const ActionMetaRoutineData*>(data)->parent;
+    QString ActionBuildRoutine::parent() const {
+        return static_cast<const ActionBuildRoutineData *>(data)->parent;
     }
 
-    QString ActionMetaRoutine::relativeTo() const {
-        return static_cast<const ActionMetaRoutineData*>(data)->relativeTo;
+    QString ActionBuildRoutine::relativeTo() const {
+        return static_cast<const ActionBuildRoutineData *>(data)->relativeTo;
     }
 
-    int ActionMetaRoutine::itemCount() const {
-        return static_cast<const ActionMetaRoutineData*>(data)->itemCount;
+    int ActionBuildRoutine::itemCount() const {
+        return static_cast<const ActionBuildRoutineData *>(data)->items.size();
     }
 
-    ActionMetaRoutine::Item ActionMetaRoutine::item(int index) const {
-        return static_cast<const ActionMetaRoutineData*>(data)->itemData[index];
+    ActionBuildRoutine::Item ActionBuildRoutine::item(int index) const {
+        return static_cast<const ActionBuildRoutineData *>(data)->items[index];
     }
 
-    QByteArray ActionExtension::hash() const {
+    QString ActionExtension::hash() const {
         return ActionExtensionPrivate::get(this)->hash;
     }
 
@@ -87,8 +100,8 @@ namespace Core {
         return ActionExtensionPrivate::get(this)->itemCount;
     }
 
-    ActionMetaItem ActionExtension::item(int index) const {
-        ActionMetaItem result;
+    ActionItemInfo ActionExtension::item(int index) const {
+        ActionItemInfo result;
         result.data = &ActionExtensionPrivate::get(this)->itemData[index];
         return result;
     }
@@ -97,20 +110,20 @@ namespace Core {
         return ActionExtensionPrivate::get(this)->layoutCount;
     }
 
-    ActionMetaLayout ActionExtension::layout(int index) const {
-        ActionMetaLayout result;
+    ActionLayout ActionExtension::layout(int index) const {
+        ActionLayout result;
         result.data = &ActionExtensionPrivate::get(this)->layoutData[index];
         result.idx = index;
         return result;
     }
 
-    int ActionExtension::routineCount() const {
-        return ActionExtensionPrivate::get(this)->routineCount;
+    int ActionExtension::buildRoutineCount() const {
+        return ActionExtensionPrivate::get(this)->buildRoutineCount;
     }
 
-    ActionMetaRoutine ActionExtension::routine(int index) const {
-        ActionMetaRoutine result;
-        result.data = &ActionExtensionPrivate::get(this)->routineData[index];
+    ActionBuildRoutine ActionExtension::buildRoutine(int index) const {
+        ActionBuildRoutine result;
+        result.data = &ActionExtensionPrivate::get(this)->buildRoutineData[index];
         return result;
     }
 
