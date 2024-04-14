@@ -188,7 +188,6 @@ Options:
     -o       Output file name.
 ```
 
-
 以上述的清单为例，假设清单为`core_actions.xml`，那么生成的文件为：
 
 ```c++
@@ -209,27 +208,68 @@ static const Core::ActionExtensionPrivate *ckGetStaticActionExtensionPrivate() {
     data.hash = QByteArrayLiteral("00000000000000000000000000000000");
     data.version = QStringLiteral("2.0");
     data.itemCount = 11;
-    data.itemData = []() {
-        // ...
+    data.itemData = []() -> Core::ActionMetaItemData * {
+        static Core::ActionMetaItemData arr[] = {
+            {
+             QStringLiteral("NewFile"),
+             Core::ActionMetaItem::Action,
+             []() -> QString { return QCoreApplication::translate("ActionText", "&New File"); },
+             []() -> QString { return QCoreApplication::translate("ActionClass", "Create"); },
+             {
+                    QKeySequence("Ctrl+N"),
+                }, []() -> QStringList {
+                    return {
+                        QCoreApplication::translate("ActionCategory", "Main Menu"),
+                        QCoreApplication::translate("ActionCategory", "File"),
+                    };
+                }, false,
+             },
+            {
+
+             },
+            {
+
+             },
+        };
+        return arr;
     }();
     data.layoutCount = 2;
-    data.layoutData = []() {
-        // ...
+    data.layoutData = []() -> Core::ActionMetaLayoutData * {
+        static Core::ActionMetaLayoutData arr[] = {
+            {[]() -> Core::ActionMetaLayoutData::Entry * {
+                static Core::ActionMetaLayoutData::Entry arr[]{
+                    {
+                     QStringLiteral("MainMenu"),
+                     Core::ActionMetaItem::Menu,
+                     false, 5,
+                     []() -> int * {
+                            static int arr[] = {
+                                1, 2, 3, 4, 5,
+                            };
+                            return arr;
+                        }(),
+                     },
+                };
+                return arr;
+            }()},
+            {
+
+            }};
+        return arr;
     }();
     data.routineCount = 1;
-    data.routineData = []() {
-        // ...
+    data.routineData = []() -> Core::ActionMetaRoutineData * {
+        return nullptr; //
     }();
     return &data;
 }
 
-const Core::ActionExtension *QT_RCC_MANGLE_NAMESPACE(ckGetStaticActionExtension_core_actions)() {
-    static Core::ActionExtension extension {
+const Core::ActionExtension *QT_MANGLE_NAMESPACE(ckGetStaticActionExtension_core_actions)() {
+    static Core::ActionExtension extension{
         {
-            ckGetStaticActionExtensionData(),
-        },
+         ckGetStaticActionExtensionPrivate(),
+         },
     };
     return &extension;
 }
-
 ```
