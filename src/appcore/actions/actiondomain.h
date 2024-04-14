@@ -1,16 +1,10 @@
 #ifndef ACTIONDOMAIN_H
 #define ACTIONDOMAIN_H
 
-#include <QMenu>
-#include <QMenuBar>
 #include <QObject>
-#include <QToolBar>
+#include <QJsonObject>
 
-#include <optional>
-
-#include <QMCore/qmdisplaystring.h>
-
-#include <CoreApi/ckappcoreglobal.h>
+#include <CoreApi/actionextension.h>
 
 namespace Core {
 
@@ -18,86 +12,42 @@ namespace Core {
 
     class ActionDomain;
 
-    using ActionDomainState = QMap<QString, QStringList>;
+    class ActionLayoutPrivate;
 
     class ActionDomainPrivate;
-
-    class ActionInsertRule {
-    public:
-        enum InsertMode {
-            Append,
-            Unshift,
-        };
-
-        InsertMode mode;
-        QString refItem;
-        bool expandMenu;
-
-        inline ActionInsertRule() : ActionInsertRule(Append) {
-        }
-        inline ActionInsertRule(InsertMode mode, bool expandMenu = false) : mode(mode), expandMenu(expandMenu) {
-        }
-        inline ActionInsertRule(InsertMode mode, const QString &refItem, bool expandMenu = false)
-            : mode(mode), refItem(refItem), expandMenu(expandMenu) {
-        }
-    };
 
     class CKAPPCORE_EXPORT ActionDomain : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(ActionDomain)
     public:
-        enum Type {
-            Action,
-            Group,
-            Menu,
-            Separator,
-            Stretch,
-        };
-        Q_ENUM(Type)
-
-        explicit ActionDomain(const QString &id, QObject *parent = nullptr);
-        ActionDomain(const QString &id, const QMDisplayString &title, QObject *parent = nullptr);
+        explicit ActionDomain(QObject *parent = nullptr);
         ~ActionDomain();
 
-        QString id() const;
+    public:
+        void addExtension(const ActionExtension *extension);
+        void removeExtension(const ActionExtension *extension);
+
+        QList<ActionExtension *> extensions() const;
 
     public:
-        QString title() const;
-        void setTitle(const QMDisplayString &title);
+        QStringList ids() const;
+        ActionMetaItem *staticItem(const QString &id) const;
 
-        bool configurable() const;
-        void setConfigurable(bool configurable);
+        ActionMetaLayout layout() const;
+        ActionMetaLayout staticLayout() const;
 
-        bool addTopLevelMenu(const QString &id);
-        bool removeTopLevelMenu(const QString &id);
-        bool containsTopLevelMenu(const QString &id) const;
-        QStringList topLevelMenus() const;
+        QList<QKeySequence> shortcuts(const QString &id) const;
+        void setShortcuts(const QString &id, const QList<QKeySequence> &shortcuts);
 
-        bool addAction(const QString &id, Type type);
-        bool removeAction(const QString &id);
-        bool containsAction(const QString &id) const;
-        std::optional<Type> actionType(const QString &id) const;
-        QStringList actions() const;
+        bool build(const QMap<QString, ActionItem *> &items) const;
 
-        void addInsertRule(const QString &targetId, const QString &id, const ActionInsertRule &rule);
-        void removeInsertRule(const QString &targetId, const QString &id);
-        bool hasActionInsertRule(const QString &targetId, const QString &id) const;
-
-        ActionDomainState state() const;
-        ActionDomainState cachedState() const;
-
-        void buildDomain(const QMap<QString, QWidget *> &topLevelMenus, const QList<ActionItem *> &items,
-                         const ActionDomainState &state) const;
-
-    Q_SIGNALS:
-        void stateChanged();
+        QJsonObject saveState() const;
+        bool restoreState(const QJsonObject &obj);
 
     protected:
-        ActionDomain(ActionDomainPrivate &d, const QString &id, QObject *parent = nullptr);
+        ActionDomain(ActionDomainPrivate &d, QObject *parent = nullptr);
 
         QScopedPointer<ActionDomainPrivate> d_ptr;
-
-        friend class ActionSystem;
     };
 
 }

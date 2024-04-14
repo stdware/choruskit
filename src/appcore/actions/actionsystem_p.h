@@ -16,19 +16,7 @@ namespace Core {
 
         void init();
 
-        void readSettings();
-        void saveSettings() const;
-
         ActionSystem *q_ptr;
-
-        QMSimpleVarExp configVars;
-
-        QMChronoMap<QString, ActionSpec *> actions;
-        QMChronoMap<QString, ActionDomain *> domains;
-
-        QHash<QString, ActionDomainState> stateCaches;
-        QHash<QString, QList<QKeySequence>> shortcutsCaches;
-        QHash<QString, ActionIconSpec> iconCaches;
     };
 }
 

@@ -111,6 +111,8 @@ add_subdirectory(appcore)
 
 add_subdirectory(loader)
 
+add_subdirectory(tools)
+
 # ----------------------------------
 # Install
 # ----------------------------------

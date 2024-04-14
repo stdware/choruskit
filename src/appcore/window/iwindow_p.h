@@ -46,7 +46,7 @@ namespace Core {
         QObject *winFilter;
         QMShortcutContext *shortcutCtx;
 
-        QMChronoMap<QString, ActionItem *> actionItemMap;
+        QMChronoMap<QString, ActionMetaItem *> actionItemMap;
         QMap<QString, QWidget *> topLevelMenuMap;
         std::list<IWindowAddOn *> addOns;
 

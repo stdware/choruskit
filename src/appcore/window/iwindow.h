@@ -1,7 +1,6 @@
 #ifndef IWINDOW_H
 #define IWINDOW_H
 
-#include <CoreApi/actionitem.h>
 #include <CoreApi/objectpool.h>
 #include <CoreApi/windowelementsadaptor.h>
 
@@ -10,6 +9,8 @@ namespace Core {
     namespace Internal {
         class CorePlugin;
     }
+
+    class ActionMetaItem;
 
     class IWindowPrivate;
 
@@ -46,13 +47,6 @@ namespace Core {
         QWidget *widget(const QString &id) const;
         QList<QWidget *> widgets() const;
 
-        void addActionItem(ActionItem *item);
-        void addActionItems(const QList<ActionItem *> &items);
-        void removeActionItem(ActionItem *item);
-        void removeActionItem(const QString &id);
-        ActionItem *actionItem(const QString &id) const;
-        QList<ActionItem *> actionItems() const;
-
         void addTopLevelMenu(const QString &id, QWidget *w);
         void removeTopLevelMenu(const QString &id);
         QWidget *topLevelMenu(const QString &id) const;
@@ -85,8 +79,8 @@ namespace Core {
         virtual void topLevelMenuAdded(const QString &id, QWidget *w);
         virtual void topLevelMenuRemoved(const QString &id, QWidget *w);
 
-        virtual void actionItemAdded(ActionItem *item);
-        virtual void actionItemRemoved(ActionItem *item);
+        virtual void actionItemAdded(ActionMetaItem *item);
+        virtual void actionItemRemoved(ActionMetaItem *item);
 
     protected:
         IWindow(IWindowPrivate &d, const QString &id, QObject *parent = nullptr);

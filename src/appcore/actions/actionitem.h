@@ -6,14 +6,14 @@
 #include <QMenu>
 #include <QWidget>
 #include <QWidgetAction>
-
-#include <CoreApi/actionspec.h>
+#include <QMenuBar>
+#include <QToolBar>
 
 namespace Core {
 
     class ActionItemPrivate;
 
-    class CKAPPCORE_EXPORT ActionItem : public QObject {
+    class ActionItem : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(ActionItem)
     public:
@@ -22,51 +22,32 @@ namespace Core {
             Action = 1,
             Menu = 2,
             Widget = 4,
+            TopLevel = 8,
         };
 
+        using MenuFactory = std::function<QMenu *(QWidget *)>;
+        using WidgetFactory = std::function<QWidget *(QWidget *)>;
+
         ActionItem(const QString &id, QAction *action, QObject *parent = nullptr);
-        ActionItem(const QString &id, const std::function<QWidget *(QWidget *)> &factory, QObject *parent = nullptr);
-        ActionItem(const QString &id, QMenu *menu, QObject *parent = nullptr);
+        ActionItem(const QString &id, const WidgetFactory &fac, QObject *parent = nullptr);
+        ActionItem(const QString &id, const MenuFactory &fac, QObject *parent = nullptr);
+        ActionItem(const QString &id, QWidget *topLevelWidget, QObject *parent = nullptr);
         ~ActionItem();
 
         QString id() const;
         Type type() const;
-        ActionSpec *spec() const;
 
         inline bool isAction() const;
         inline bool isMenu() const;
         inline bool isWidget() const;
+        inline bool isTopLevel() const;
 
         QAction *action() const;
-        QMenu *menu() const;
         QWidgetAction *widgetAction() const;
-        QList<QWidget *> widgets() const;
+        QList<QWidget *> createdWidgets() const;
+        QList<QMenu *> createdMenus() const;
 
-        QIcon icon() const;
-        void setIcon(const QIcon &icon);
-
-        QString text() const;
-        void setText(const QString &text);
-
-        bool enabled() const;
-        void setEnabled(bool enabled);
-
-        bool autoDelete() const;
-        void setAutoDelete(bool autoDelete);
-
-    public:
-        QString commandName() const;
-        QString commandDisplayName() const;
-
-        QString commandSpecificName() const;
-        void setCommandSpecificName(const QString &commandSpecificName);
-
-        QPair<QString, QString> commandCheckedDescription() const;
-        void setCommandCheckedDescription(const QPair<QString, QString> &commandCheckedDescription);
-
-    public:
-        static bool autoDeleteGlobal();
-        static void setAutoDeleteGlobal(bool autoDelete);
+        QMenu *requestMenu(QWidget *parent);
 
     protected:
         ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent = nullptr);
@@ -84,6 +65,10 @@ namespace Core {
 
     inline bool ActionItem::isWidget() const {
         return type() == Widget;
+    }
+
+    inline bool ActionItem::isTopLevel() const {
+        return type() == TopLevel;
     }
 
 }

@@ -1,159 +1,121 @@
-#include "actionitem.h"
-#include "actionitem_p.h"
-
-#include "icorebase.h"
+#include "ActionItem.h"
 
 #include <QDebug>
+#include <utility>
 
 namespace Core {
 
 #define myWarning(func) qWarning() << "Core::ActionItem(): "
 
-    static bool m_autoDelete = false;
+    class ActionItemPrivate : public QObject {
+        Q_DECLARE_PUBLIC(ActionItem)
+    public:
+        ActionItemPrivate();
+        virtual ~ActionItemPrivate();
+
+        void init();
+
+        ActionItem *q_ptr;
+
+        QString id;
+        ActionItem::Type type;
+
+        QAction *action;
+
+        QWidgetAction *widgetAction;
+
+        ActionItem::MenuFactory menuFactory;
+        QSet<QMenu *> createdMenus;
+
+        QWidget *topLevelWidget;
+
+    private:
+        void _q_menuDestroyed(QObject *obj) {
+            createdMenus.remove(static_cast<QMenu *>(obj));
+        }
+    };
 
     ActionItemPrivate::ActionItemPrivate() : q_ptr(nullptr) {
         type = ActionItem::Invalid;
-        spec = nullptr;
-        autoDelete = m_autoDelete;
+        action = nullptr;
+        widgetAction = nullptr;
+        topLevelWidget = nullptr;
     }
 
     ActionItemPrivate::~ActionItemPrivate() {
+        switch (type) {
+            case ActionItem::Widget:
+                delete widgetAction;
+                break;
+            case ActionItem::Menu: {
+                for (const auto &menu : std::as_const(createdMenus)) {
+                    connect(menu, &QObject::destroyed, this, &ActionItemPrivate::_q_menuDestroyed);
+                }
+                auto menusToDelete = createdMenus;
+                createdMenus.clear();
+                qDeleteAll(menusToDelete);
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     void ActionItemPrivate::init() {
     }
 
-    bool ActionItemPrivate::getSpec() {
-        spec = ICoreBase::instance()->actionSystem()->action(id);
-        if (!spec) {
-            myWarning(__func__) << "action is not registered to ActionSystem:" << id;
-            return false;
-        }
-
-        connect(spec, &ActionSpec::shortcutsChanged, this, &ActionItemPrivate::_q_actionShortcutsChanged);
-        connect(spec, &ActionSpec::iconChanged, this, &ActionItemPrivate::_q_actionIconChanged);
-
-        _q_actionShortcutsChanged();
-        _q_actionIconChanged();
-
-        return true;
-    }
-
-    void ActionItemPrivate::_q_actionShortcutsChanged() {
-        if (type != ActionItem::Action) {
-            return;
-        }
-        action->setShortcuts(spec->cachedShortcuts());
-    }
-
-    void ActionItemPrivate::_q_actionIconChanged() {
-        Q_Q(ActionItem);
-        q->setIcon(spec->cachedIcon());
-    }
-
     ActionItem::ActionItem(const QString &id, QAction *action, QObject *parent)
         : ActionItem(*new ActionItemPrivate(), id, parent) {
         Q_D(ActionItem);
-
-        if (!action) {
-            myWarning(__func__) << "trying to wrap null action";
-            return;
-        }
-        if (action->inherits("QWidgetAction")) {
-            myWarning(__func__) << "trying to add widget action which is not supported";
-            return;
-        }
         d->type = Action;
         d->action = action;
-
-        // Search ActionSystem for spec
-        if (!d->getSpec()) {
-            return;
-        }
-
-        action->setProperty("action-id", id);
+        // action->setProperty("action-id", id);
     }
 
-    class WidgetAction : public QWidgetAction {
-    public:
-        explicit WidgetAction(const std::function<QWidget *(QWidget *)> &factory, const QString &id,
-                              QObject *parent = nullptr)
-            : QWidgetAction(parent), fac(factory) {
-        }
-        ~WidgetAction() {
-        }
+    namespace {
 
-    protected:
-        QWidget *createWidget(QWidget *parent) override {
-            auto w = fac(parent);
-            w->setProperty("action-id", id);
-            return w;
-        }
+        class WidgetAction : public QWidgetAction {
+        public:
+            explicit WidgetAction(ActionItem::WidgetFactory factory, const QString &id,
+                                  QObject *parent = nullptr)
+                : QWidgetAction(parent), fac(std::move(factory)) {
+            }
 
-        std::function<QWidget *(QWidget *)> fac;
-        QString id;
+        protected:
+            QWidget *createWidget(QWidget *parent) override {
+                auto w = fac(parent);
+                // w->setProperty("action-id", id);
+                return w;
+            }
 
-        friend class ActionItem;
-    };
+            ActionItem::WidgetFactory fac;
+            QString id;
 
-    ActionItem::ActionItem(const QString &id, const std::function<QWidget *(QWidget *)> &factory, QObject *parent) {
+            friend class Core::ActionItem;
+        };
+
+    }
+
+    ActionItem::ActionItem(const QString &id, const WidgetFactory &fac, QObject *parent) {
         Q_D(ActionItem);
-
-        if (!factory) {
-            myWarning(__func__) << "trying to wrap null widget factory";
-            return;
-        }
-
         d->type = Widget;
-        d->widgetAction = new WidgetAction(factory, id, this);
-
-        if (!d->getSpec()) {
-            return;
-        }
+        d->widgetAction = new WidgetAction(fac, id, this);
     }
 
-    ActionItem::ActionItem(const QString &id, QMenu *menu, QObject *parent)
+    ActionItem::ActionItem(const QString &id, const MenuFactory &fac, QObject *parent)
         : ActionItem(*new ActionItemPrivate(), id, parent) {
         Q_D(ActionItem);
-
-        if (!menu) {
-            myWarning(__func__) << "trying to wrap null menu";
-            return;
-        }
         d->type = Menu;
-        d->menu = menu;
-
-        if (!d->getSpec()) {
-            return;
-        }
-
-        menu->setProperty("action-id", id);
-        menu->menuAction()->setProperty("action-id", id);
+        d->menuFactory = fac;
     }
 
-    ActionItem::~ActionItem() {
+    ActionItem::ActionItem(const QString &id, QWidget *topLevelWidget, QObject *parent) {
         Q_D(ActionItem);
-
-        if (d->autoDelete) {
-            QObject *obj = nullptr;
-            switch (d->type) {
-                case Action:
-                    obj = d->action;
-                    break;
-                case Menu:
-                    obj = d->menu;
-                    break;
-                case Widget:
-                    obj = d->widgetAction;
-                    break;
-                default:
-                    break;
-            }
-            if (obj && !obj->parent()) {
-                obj->deleteLater();
-            }
-        }
+        d->type = TopLevel;
+        d->topLevelWidget = topLevelWidget;
     }
+
+    ActionItem::~ActionItem() = default;
 
     QString ActionItem::id() const {
         Q_D(const ActionItem);
@@ -165,19 +127,9 @@ namespace Core {
         return d->type;
     }
 
-    ActionSpec *ActionItem::spec() const {
-        Q_D(const ActionItem);
-        return d->spec;
-    }
-
     QAction *ActionItem::action() const {
         Q_D(const ActionItem);
         return d->action;
-    }
-
-    QMenu *ActionItem::menu() const {
-        Q_D(const ActionItem);
-        return d->menu;
     }
 
     QWidgetAction *ActionItem::widgetAction() const {
@@ -185,177 +137,27 @@ namespace Core {
         return d->widgetAction;
     }
 
-    QList<QWidget *> ActionItem::widgets() const {
+    QList<QWidget *> ActionItem::createdWidgets() const {
         Q_D(const ActionItem);
-        if (!d->widgetAction)
-            return {};
-        return static_cast<WidgetAction *>(d->widgetAction.data())->createdWidgets();
+        return d->widgetAction ? static_cast<WidgetAction *>(d->widgetAction)->createdWidgets()
+                               : QList<QWidget *>();
     }
 
-    QIcon ActionItem::icon() const {
+    QList<QMenu *> ActionItem::createdMenus() const {
         Q_D(const ActionItem);
-        QIcon res;
-        switch (d->type) {
-            case Action:
-                res = d->action->icon();
-                break;
-            case Menu:
-                res = d->menu->icon();
-                break;
-            case Widget:
-                res = d->widgetAction->icon();
-                break;
-            default:
-                break;
-        }
-        return res;
+        return d->createdMenus.values();
     }
-    
-    void ActionItem::setIcon(const QIcon &icon) {
+
+    QMenu *ActionItem::requestMenu(QWidget *parent) {
         Q_D(ActionItem);
-
-        switch (d->type) {
-            case Action:
-                d->action->setIcon(icon);
-                break;
-            case Menu:
-                d->menu->setIcon(icon);
-                break;
-            case Widget:
-                d->widgetAction->setIcon(icon);
-                break;
-            default:
-                break;
-        }
+        auto menu = d->menuFactory(parent);
+        connect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
+        d->createdMenus.insert(menu);
+        return menu;
     }
 
-    QString ActionItem::text() const {
-        Q_D(const ActionItem);
-
-        QString res;
-        switch (d->type) {
-            case Action:
-                res = d->action->text();
-                break;
-            case Menu:
-                res = d->menu->title();
-                break;
-            case Widget:
-                res = d->widgetAction->text();
-                break;
-            default:
-                break;
-        }
-        return res;
-    }
-
-    void ActionItem::setText(const QString &text) {
-        Q_D(ActionItem);
-        switch (d->type) {
-            case Action:
-                d->action->setText(text);
-                break;
-            case Menu:
-                d->menu->setTitle(text);
-                break;
-            case Widget:
-                d->widgetAction->setText(text);
-                break;
-            default:
-                break;
-        }
-    }
-
-    bool ActionItem::enabled() const {
-        Q_D(const ActionItem);
-
-        bool res = false;
-        switch (d->type) {
-            case Action:
-                res = d->action->isEnabled();
-                break;
-            case Menu:
-                res = d->menu->isEnabled();
-                break;
-            case Widget:
-                res = d->widgetAction->isEnabled();
-                break;
-            default:
-                break;
-        }
-        return res;
-    }
-
-    void ActionItem::setEnabled(bool enabled) {
-        Q_D(ActionItem);
-
-        switch (d->type) {
-            case Action:
-                d->action->setEnabled(enabled);
-                break;
-            case Menu:
-                d->menu->setEnabled(enabled);
-                break;
-            case Widget:
-                d->widgetAction->setEnabled(enabled);
-                break;
-            default:
-                break;
-        }
-    }
-
-    bool ActionItem::autoDelete() const {
-        Q_D(const ActionItem);
-        return d->autoDelete;
-    }
-
-    void ActionItem::setAutoDelete(bool autoDelete) {
-        Q_D(ActionItem);
-        d->autoDelete = autoDelete;
-    }
-
-    QString ActionItem::commandName() const {
-        Q_D(const ActionItem);
-        return d->spec ? d->spec->commandName() : QString();
-    }
-
-    QString ActionItem::commandDisplayName() const {
-        Q_D(const ActionItem);
-        if (!d->specificName.isEmpty())
-            return d->specificName;
-
-        return d->spec ? d->spec->commandDisplayName() : QString();
-    }
-
-    QString ActionItem::commandSpecificName() const {
-        Q_D(const ActionItem);
-        return d->specificName;
-    }
-
-    void ActionItem::setCommandSpecificName(const QString &commandSpecificName) {
-        Q_D(ActionItem);
-        d->specificName = commandSpecificName;
-    }
-
-    QPair<QString, QString> ActionItem::commandCheckedDescription() const {
-        Q_D(const ActionItem);
-        return d->commandCheckedDesc;
-    }
-
-    void ActionItem::setCommandCheckedDescription(const QPair<QString, QString> &commandCheckedDescription) {
-        Q_D(ActionItem);
-        d->commandCheckedDesc = commandCheckedDescription;
-    }
-
-    bool ActionItem::autoDeleteGlobal() {
-        return m_autoDelete;
-    }
-
-    void ActionItem::setAutoDeleteGlobal(bool autoDelete) {
-        m_autoDelete = autoDelete;
-    }
-
-    ActionItem::ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent) : QObject(parent), d_ptr(&d) {
+    ActionItem::ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent)
+        : QObject(parent), d_ptr(&d) {
         d.q_ptr = this;
         d.id = id;
 

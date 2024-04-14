@@ -630,65 +630,6 @@ namespace Core {
         return d->widgetMap.values();
     }
 
-    void IWindow::addActionItem(ActionItem *item) {
-        Q_D(IWindow);
-        if (!item) {
-            myWarning(__func__) << "trying to add null action item";
-            return;
-        }
-
-        if (!item->spec()) {
-            myWarning(__func__) << "trying to add unidentified item" << item->id();
-            return;
-        }
-
-        if (d->actionItemMap.contains(item->id())) {
-            myWarning(__func__) << "trying to add duplicated action item:" << item->id();
-            return;
-        }
-        d->actionItemMap.append(item->id(), item);
-
-        actionItemAdded(item);
-    }
-
-    void IWindow::addActionItems(const QList<Core::ActionItem *> &items) {
-        for (const auto &item : items) {
-            addActionItem(item);
-        }
-    }
-
-    void IWindow::removeActionItem(Core::ActionItem *item) {
-        if (item == nullptr) {
-            myWarning(__func__) << "trying to remove null item";
-            return;
-        }
-        removeActionItem(item->id());
-    }
-
-    void IWindow::removeActionItem(const QString &id) {
-        Q_D(IWindow);
-        auto it = d->actionItemMap.find(id);
-        if (it == d->actionItemMap.end()) {
-            myWarning(__func__) << "action item does not exist:" << id;
-            return;
-        }
-        auto item = it.value();
-        d->actionItemMap.erase(it);
-
-        actionItemRemoved(item);
-    }
-
-    ActionItem *IWindow::actionItem(const QString &id) const {
-        Q_D(const IWindow);
-        return d->actionItemMap.value(id, nullptr);
-    }
-
-    QList<ActionItem *> IWindow::actionItems() const {
-        Q_D(const IWindow);
-        const auto &arr = d->actionItemMap.values();
-        return {arr.begin(), arr.end()};
-    }
-
     void IWindow::addTopLevelMenu(const QString &id, QWidget *w) {
         Q_D(IWindow);
         if (!w) {
@@ -791,11 +732,11 @@ namespace Core {
         // Do nothing
     }
 
-    void IWindow::actionItemAdded(ActionItem *item) {
+    void IWindow::actionItemAdded(ActionMetaItem *item) {
         // Do nothing
     }
 
-    void IWindow::actionItemRemoved(ActionItem *item) {
+    void IWindow::actionItemRemoved(ActionMetaItem *item) {
         // Do nothing
     }
 
