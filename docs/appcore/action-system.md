@@ -148,6 +148,8 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         - `shortcut`/`shortcuts`：仅命令，仅命令可用
         - `category/categories`：静态目录标签
         - `top`：是否为顶级菜单，菜单可用，菜单栏、工具栏默认为`true`
+    - 注意事项：
+        - `shortcut`与`category`可包含一个列表，使用`;`作为分隔符，`\`作为转义符（与 C 语言一致）
 - `layouts`：包含具有组织关系的布局声明；
     - 子节点标签：与`items`的子节点标签一致；
     - 子节点属性：
@@ -225,7 +227,7 @@ static void ckGetStaticActionItemInfosData(ActionItemInfoData *&data, int &count
                 QByteArrayLiteral("File"),
             },
             false,
-            },
+        },
         {
             // ...
         },
@@ -323,7 +325,7 @@ static void ckActionExtension_DeclareTranslation() {
 
 在用户代码中获取该`ActionExtension`实例，使用以下方法获取：
 ```c++
-ActionExtension *ext = CK_CK_GET_ACTION_EXTENSION(core_actions);
+const ActionExtension *ext = CK_GET_ACTION_EXTENSION(core_actions);
 
 // 后续处理
 ```

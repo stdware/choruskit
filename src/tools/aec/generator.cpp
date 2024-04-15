@@ -25,4 +25,5 @@ void Generator::generateCode() {
     fprintf(out, "#include <CoreApi/private/actionextension_p.h>\n");
 
     // Generate
+    // fprintf(out, "    data.hash = QStringLiteral(\"%s\");", msg.hash.toLatin1().data());
 }

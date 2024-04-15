@@ -55,6 +55,14 @@ ActionExtensionMessage Parser::parse(const QByteArray &data) const {
     result.hash = calculateContentSha256(data).toLatin1();
 
     // TODO
-
+    // static QRegularExpression exp(DefaultPattern);
+    // qDebug().noquote() << parseExpression(
+    //     "abc_${PROJECT_NAME}_12_${PROJECT_VERSION}_34_${${VAR}_NAME}", exp,
+    //     QHash<QString, QString>({
+    //         {"PROJECT_NAME",    "myproj" },
+    //         {"PROJECT_VERSION", "0.0.1"  },
+    //         {"VAR",             "PROJECT"}
+    // }),
+    //     true);
     return {};
 }

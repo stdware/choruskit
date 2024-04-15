@@ -23,8 +23,6 @@ int main(int argc, char *argv[]) {
     parser.setApplicationDescription(
         QStringLiteral("ChorusKit Action Extension Compiler version %1 (Qt %2)")
             .arg(QString::fromLatin1(APP_VERSION), QString::fromLatin1(QT_VERSION_STR)));
-    parser.addHelpOption();
-    parser.addVersionOption();
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
 
     QCommandLineOption outputOption(QStringLiteral("o"));
@@ -47,6 +45,9 @@ int main(int argc, char *argv[]) {
 
     parser.addPositionalArgument(QStringLiteral("<file>"),
                                  QStringLiteral("Manifest file to read from."));
+                                 
+    parser.addHelpOption();
+    parser.addVersionOption();
 
     if (argc == 1) {
         parser.showHelp(0);
