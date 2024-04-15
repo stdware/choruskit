@@ -146,7 +146,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         - `text`：文本，默认为`id`按照大写字母分割字符串后用空格组合
         - `class`：命令类别，仅命令可用
         - `shortcut`/`shortcuts`：仅命令，仅命令可用
-        - `category`：静态目录标签
+        - `category/categories`：静态目录标签
         - `top`：是否为顶级菜单，菜单可用，菜单栏、工具栏默认为`true`
 - `layouts`：包含具有组织关系的布局声明；
     - 子节点标签：与`items`的子节点标签一致；
