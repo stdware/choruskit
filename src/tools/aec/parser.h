@@ -50,7 +50,7 @@ class Parser {
 public:
     Parser();
 
-    QByteArray fileName;
+    QString fileName;
     QHash<QString, QString> variables;
 
     ActionExtensionMessage parse(const QByteArray &data) const;

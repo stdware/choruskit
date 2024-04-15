@@ -10,6 +10,12 @@ if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
 endif()
 
+if(TARGET ChorusKit::ckaec)
+    get_target_property(CK_CKAEC_EXECUTABLE ChorusKit::ckaec LOCATION)
+else()
+    set(CK_CKAEC_EXECUTABLE $<TARGET_FILE:ckaec>)
+endif()
+
 #[[
     Initialize ChorusKitApi global configuration.
 
@@ -134,7 +140,7 @@ macro(ck_init_buildsystem)
         # build directory to the install destination, as a result, some build phase files may
         # be mistakenly installed because the release doesn't need them.
         set(CK_BUILD_LIBRARY_DIR ${CK_BUILD_MAIN_DIR}/lib)
-        
+
         set(CK_BUILD_PLUGINS_DIR ${_CK_BUILD_BASE_DIR}/Plugins)
         set(CK_BUILD_SHARE_DIR ${_CK_BUILD_BASE_DIR}/Resources)
         set(CK_BUILD_DATA_DIR ${CK_BUILD_SHARE_DIR})
@@ -770,7 +776,7 @@ function(ck_add_attached_files _target)
         list(APPEND _options INSTALL_DIR .)
     endif()
 
-    if (FUNC_VERBOSE)
+    if(FUNC_VERBOSE)
         list(APPEND _options VERBOSE)
     endif()
 
@@ -838,7 +844,7 @@ function(ck_add_shared_files)
         list(APPEND _options INSTALL_DIR .)
     endif()
 
-    if (FUNC_VERBOSE)
+    if(FUNC_VERBOSE)
         list(APPEND _options VERBOSE)
     endif()
 
@@ -851,6 +857,76 @@ function(ck_add_shared_files)
             ${_options}
         )
     endforeach()
+endfunction()
+
+#[[
+Add an action extension generating target.
+
+    ck_add_action_extension(<OUT> <manifest>
+        [IDENTIFIER <identifier>]
+        [DEFINES    <defines>...]
+        [DEPENDS    <dependencies>...]
+    )
+]] #
+function(ck_add_action_extension _outfiles _manifest)
+    set(options)
+    set(oneValueArgs IDENTIFIER)
+    set(multiValueArgs DEFINES DEPENDS)
+    cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    # helper macro to set up a moc rule
+    function(_create_command _infile _outfile _options _depends)
+        # Pass the parameters in a file.  Set the working directory to
+        # be that containing the parameters file and reference it by
+        # just the file name.  This is necessary because the moc tool on
+        # MinGW builds does not seem to handle spaces in the path to the
+        # file given with the @ syntax.
+        get_filename_component(_outfile_name "${_outfile}" NAME)
+        get_filename_component(_outfile_dir "${_outfile}" PATH)
+
+        if(_outfile_dir)
+            set(_working_dir WORKING_DIRECTORY ${_outfile_dir})
+        endif()
+
+        set(_cmd ${CK_CKAEC_EXECUTABLE} ${_options} -o "${_outfile}" "${_infile}")
+
+        if(WIN32)
+            # Add Qt Core to PATH
+            get_target_property(_loc Qt${QT_VERSION_MAJOR}::Core IMPORTED_LOCATION_RELEASE)
+            get_filename_component(_dir ${_loc} DIRECTORY)
+            set(_cmd COMMAND set "Path=${_dir}\;%Path%\;" COMMAND ${_cmd})
+        else()
+            set(_cmd COMMAND ${_cmd})
+        endif()
+
+        add_custom_command(OUTPUT ${_outfile}
+            ${_cmd}
+            DEPENDS ${_infile} ${_depends}
+            ${_working_dir}
+            VERBATIM
+        )
+    endfunction()
+
+    set(_options)
+
+    if(FUNC_IDENTIFIER)
+        list(APPEND _options -i ${FUNC_IDENTIFIER})
+    endif()
+
+    if(FUNC_DEFINES)
+        foreach(_item IN LISTS FUNC_DEFINES)
+            list(APPEND _options -D${_item})
+        endforeach()
+    endif()
+
+    set(_outfile)
+    get_filename_component(_manifest ${_manifest} ABSOLUTE)
+    _ck_make_output_file(${_manifest} ckaec_ cpp _outfile)
+
+    # Create command
+    _create_command(${_manifest} ${_outfile} "${_options}" "${FUNC_DEPENDS}")
+
+    set(${_outfiles} ${_outfile} PARENT_SCOPE)
 endfunction()
 
 # ----------------------------------
@@ -1064,3 +1140,42 @@ function(_ck_parse_copy_args _args _result _error)
 
     set(${_result} "${_list}" PARENT_SCOPE)
 endfunction()
+
+# macro used to create the names of output files preserving relative dirs
+macro(_ck_make_output_file _infile _prefix _ext _outfile_output)
+    string(LENGTH ${CMAKE_CURRENT_BINARY_DIR} _binlength)
+    string(LENGTH ${_infile} _infileLength)
+    set(_checkinfile ${CMAKE_CURRENT_SOURCE_DIR})
+
+    if(_infileLength GREATER _binlength)
+        string(SUBSTRING "${_infile}" 0 ${_binlength} _checkinfile)
+
+        if(_checkinfile STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
+            file(RELATIVE_PATH _rel ${CMAKE_CURRENT_BINARY_DIR} ${_infile})
+        else()
+            file(RELATIVE_PATH _rel ${CMAKE_CURRENT_SOURCE_DIR} ${_infile})
+        endif()
+    else()
+        file(RELATIVE_PATH _rel ${CMAKE_CURRENT_SOURCE_DIR} ${_infile})
+    endif()
+
+    if(CMAKE_HOST_WIN32 AND _rel MATCHES "^([a-zA-Z]):(.*)$") # absolute path
+        set(_rel "${CMAKE_MATCH_1}_${CMAKE_MATCH_2}")
+    endif()
+
+    set(_outfile "${CMAKE_CURRENT_BINARY_DIR}/${_rel}")
+    string(REPLACE ".." "__" _outfile ${_outfile})
+    get_filename_component(_outpath ${_outfile} PATH)
+
+    if(CMAKE_VERSION VERSION_LESS "3.14")
+        get_filename_component(_outfile_ext ${_outfile} EXT)
+        get_filename_component(_outfile_ext ${_outfile_ext} NAME_WE)
+        get_filename_component(_outfile ${_outfile} NAME_WE)
+        string(APPEND _outfile ${_outfile_ext})
+    else()
+        get_filename_component(_outfile ${_outfile} NAME_WLE)
+    endif()
+
+    file(MAKE_DIRECTORY ${_outpath})
+    set(${_outfile_output} ${_outpath}/${_prefix}${_outfile}.${_ext})
+endmacro()

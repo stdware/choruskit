@@ -107,8 +107,21 @@ bool QMXmlAdaptor::load(const QString &filename) {
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return false;
     }
+    return loadData(file.readAll());
+}
 
-    QXmlStreamReader reader(&file);
+bool QMXmlAdaptor::save(const QString &filename) const {
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        return false;
+    }
+    file.write(saveData());
+    file.close();
+    return true;
+}
+
+bool QMXmlAdaptor::loadData(const QByteArray &data) {
+    QXmlStreamReader reader(data);
     bool success = true;
 
     std::list<QPair<QMXmlAdaptorElement::Ref, int>> stack;
@@ -189,30 +202,19 @@ bool QMXmlAdaptor::load(const QString &filename) {
         }
     }
 
-    file.close();
-
     if (success && stack.size() == 1) {
-        root = std::move(*stack.front().first);
+        root = *stack.front().first;
         return true;
     }
-
     return false;
 }
 
-bool QMXmlAdaptor::save(const QString &filename) const {
-    QFile file(filename);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        return false;
-    }
-
+QByteArray QMXmlAdaptor::saveData() const {
     QByteArray data;
     QXmlStreamWriter writer(&data);
     writer.setAutoFormatting(true);
     writer.writeStartDocument();
     root.writeXml(writer);
     writer.writeEndDocument();
-    file.write(data);
-    file.close();
-
-    return true;
+    return data;
 }

@@ -4,6 +4,8 @@
 #include <QtCore/QCryptographicHash>
 #include <QtCore/QRegularExpression>
 
+#include <qmxmladaptor.h>
+
 void error(const char *msg);
 
 static QString calculateContentSha256(const QByteArray &data) {
@@ -39,10 +41,20 @@ static QString parseExpression(QString s, const QRegularExpression &reg,
     return parseExpression(s, reg, vars);
 }
 
-Parser::Parser() {
-}
+Parser::Parser() = default;
 
 ActionExtensionMessage Parser::parse(const QByteArray &data) const {
+    QMXmlAdaptor xml;
+    if (!xml.loadData(data)) {
+        fprintf(stderr, "%s:%s: Invalid format\n", qPrintable(qApp->applicationName()),
+                qPrintable(fileName));
+        std::exit(1);
+    }
+
+    ActionExtensionMessage result;
+    result.hash = calculateContentSha256(data).toLatin1();
+
     // TODO
-    return ActionExtensionMessage();
+
+    return {};
 }

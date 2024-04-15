@@ -20,6 +20,10 @@ qm_add_win_rc(${PROJECT_NAME}
     COPYRIGHT ${CHORUSKIT_PROJECT_COPYRIGHT}
 )
 
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
 if(CHORUSKIT_INSTALL)
     choruskit_install_tool(${PROJECT_NAME})
 endif()

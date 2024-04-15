@@ -40,6 +40,9 @@ public:
     bool load(const QString &filename);
     bool save(const QString &filename) const;
 
+    bool loadData(const QByteArray &data);
+    QByteArray saveData() const;
+
     QMXmlAdaptorElement root;
 };
 

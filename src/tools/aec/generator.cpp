@@ -8,6 +8,7 @@ Generator::Generator(FILE *out, const QByteArray &inputFileName, const QByteArra
 }
 
 void Generator::generateCode() {
+    // Warning
     fprintf(out,
             "/****************************************************************************\n"
             "** Meta object code from reading XML file '%s'\n**\n",
@@ -17,5 +18,11 @@ void Generator::generateCode() {
     fprintf(out, "** WARNING! All changes made in this file will be lost!\n"
                  "*************************************************************************"
                  "****/\n\n");
-    // TODO
+
+    // Headers
+    fprintf(out, "#include <QtCore/QCoreApplication>\n");
+    fprintf(out, "\n");
+    fprintf(out, "#include <CoreApi/private/actionextension_p.h>\n");
+
+    // Generate
 }

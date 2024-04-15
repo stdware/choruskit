@@ -18,14 +18,11 @@ int main(int argc, char *argv[]) {
     QCoreApplication a(argc, argv);
     QCoreApplication::setApplicationVersion(QString::fromLatin1(APP_VERSION));
 
-    Parser pp;
-
     // Build command line parser
     QCommandLineParser parser;
     parser.setApplicationDescription(
         QStringLiteral("ChorusKit Action Extension Compiler version %1 (Qt %2)")
-            .arg(QString::fromLatin1(APP_VERSION))
-            .arg(QString::fromLatin1(QT_VERSION_STR)));
+            .arg(QString::fromLatin1(APP_VERSION), QString::fromLatin1(QT_VERSION_STR)));
     parser.addHelpOption();
     parser.addVersionOption();
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
@@ -57,6 +54,7 @@ int main(int argc, char *argv[]) {
     parser.process(QCoreApplication::arguments());
 
     // Parse command line arguments
+    Parser pp;
     QString filename;
     if (const QStringList files = parser.positionalArguments(); files.count() > 1) {
         error(qPrintable(QLatin1String("Too many input files specified: '") +
@@ -67,7 +65,7 @@ int main(int argc, char *argv[]) {
         parser.showHelp(1);
     } else {
         filename = files.first();
-        pp.fileName = QFileInfo(filename).fileName().toLocal8Bit();
+        pp.fileName = filename;
     }
 
     for (const QString &arg : parser.values(defineOption)) {
@@ -114,7 +112,7 @@ int main(int argc, char *argv[]) {
         if (!out)
 #endif
         {
-            fprintf(stderr, "%s: Cannot create %s\n", qPrintable(qApp->applicationName()),
+            fprintf(stderr, "%s:Cannot create %s\n", qPrintable(qApp->applicationName()),
                     QFile::encodeName(output).constData());
             return 1;
         }
@@ -122,7 +120,12 @@ int main(int argc, char *argv[]) {
         out = stdout;
     }
 
-    Generator generator(out, pp.fileName, identifier.toLocal8Bit(), extensionMessage);
+    Generator generator(out, QFileInfo(filename).fileName().toLocal8Bit(), identifier.toLocal8Bit(),
+                        extensionMessage);
     generator.generateCode();
+
+    if (!output.isEmpty())
+        fclose(out);
+
     return 0;
 }
