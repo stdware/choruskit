@@ -11,6 +11,13 @@ qm_configure_target(${PROJECT_NAME}
     QT_LINKS Core
     LINKS $<BUILD_INTERFACE:xmladaptor>
     DEFINES APP_VERSION="${PROJECT_VERSION}"
+    FEATURES cxx_std_17
+)
+
+qm_add_win_rc(${PROJECT_NAME}
+    NAME ${CHORUSKIT_INSTALL_NAME}
+    DESCRIPTION "ChorusKit Action Extension Compiler"
+    COPYRIGHT ${CHORUSKIT_PROJECT_COPYRIGHT}
 )
 
 if(CHORUSKIT_INSTALL)
