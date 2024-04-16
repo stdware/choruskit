@@ -10,10 +10,12 @@ if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
 endif()
 
-if(TARGET ChorusKit::ckaec)
-    get_target_property(CK_CKAEC_EXECUTABLE ChorusKit::ckaec LOCATION)
-else()
-    set(CK_CKAEC_EXECUTABLE $<TARGET_FILE:ckaec>)
+if(NOT CK_CKAEC_EXECUTABLE)
+    if(TARGET ChorusKit::ckaec)
+        get_target_property(CK_CKAEC_EXECUTABLE ChorusKit::ckaec LOCATION)
+    else()
+        message(FATAL_ERROR "ChorusKitApi: tool \"ckaec\" not found!")
+    endif()
 endif()
 
 #[[

@@ -175,19 +175,18 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
 命令行参数
 ```sh
 > ckaec --help
-Description:
-    Generate ChorusKit Action Extension Meta Object file.
-
-Usage:
-    ckaec [options] <file>
-
-Arguments:
-    file     The manifest file to be processed.
+Usage: ckaec.exe [options] <file>
+ChorusKit Action Extension Compiler version X.X.X.X (Qt X.X.X)
 
 Options:
-    -D       Define a variable.
-    -i       Override the file name as the identfier.
-    -o       Output file name.
+  -o <file>         Write output to file rather than stdout.
+  -i <identifier>   Override extension identifier rather than the file name.
+  -D <macro[=def]>  Define a variable.
+  -?, -h, --help    Displays help on commandline options.
+  -v, --version     Displays version information.
+
+Arguments:
+  <file>            Manifest file to read from.
 ```
 
 以上述的清单为例，假设清单为`core_actions.xml`，那么生成的文件为：
@@ -205,15 +204,21 @@ Options:
 
 #include <CoreApi/private/actionextension_p.h>
 
-namespace Core {
+namespace ckStaticActionExtension_core_actions {
+
+using namespace Core;
 
 template<typename T, std::size_t N>
 static inline constexpr std::size_t sizeOfArray(T (&)[N]) {
     return N;
 }
 
-static void ckGetStaticActionItemInfosData(ActionItemInfoData *&data, int &count) {
-    static ActionItemInfoData arr[] = {
+static ActionExtensionPrivate *getData() {
+    static ActionExtensionPrivate data;
+    data.hash = QStringLiteral("00000000000000000000000000000000");
+    data.version = QStringLiteral("2.0");
+
+    static ActionItemInfoData itemData[] = {
         {
             QStringLiteral("NewFile"),
             ActionItemInfo::Action,
@@ -235,12 +240,10 @@ static void ckGetStaticActionItemInfosData(ActionItemInfoData *&data, int &count
             // ...
         },
     };
-    data = arr;
-    count = sizeOfArray(arr);
-}
+    data.itemData = itemData;
+    data.itemCount = sizeOfArray(itemData);
 
-static void ckGetStaticActionLayoutsData(ActionLayoutData *&data, int &count) {
-    static ActionLayoutData arr[] = {
+    static ActionLayoutData layoutData[] = {
         {
             {
                 {
@@ -258,12 +261,10 @@ static void ckGetStaticActionLayoutsData(ActionLayoutData *&data, int &count) {
             // ...
         }
     };
-    data = arr;
-    count = sizeOfArray(arr);
-}
+    data.layoutData = layoutData;
+    data.layoutCount = sizeOfArray(layoutData);
 
-static void ckGetStaticActionBuildRoutinesData(ActionBuildRoutineData *&data, int &count) {
-    static ActionBuildRoutineData arr[] = {
+    static ActionBuildRoutineData buildRoutineData[] = {
         {
             ActionBuildRoutine::After,
             QStringLiteral("File"),
@@ -282,17 +283,8 @@ static void ckGetStaticActionBuildRoutinesData(ActionBuildRoutineData *&data, in
             },
         },
     };
-    data = arr;
-    count = sizeOfArray(arr);
-}
-
-static ActionExtensionPrivate *ckGetStaticActionExtensionPrivate() {
-    static ActionExtensionPrivate data;
-    data.hash = QStringLiteral("00000000000000000000000000000000");
-    data.version = QStringLiteral("2.0");
-    ckGetStaticActionItemInfosData(data.itemData, data.itemCount); 
-    ckGetStaticActionLayoutsData(data.layoutData, data.layoutCount);
-    ckGetStaticActionBuildRoutinesData(data.buildRoutineData, data.buildRoutineCount);
+    data.buildRoutineData = buildRoutineData;
+    data.buildRoutineCount= sizeOfArray(buildRoutineData);
     return &data;
 }
 
@@ -301,14 +293,15 @@ static ActionExtensionPrivate *ckGetStaticActionExtensionPrivate() {
 const Core::ActionExtension *QT_MANGLE_NAMESPACE(ckGetStaticActionExtension_core_actions)() {
     static Core::ActionExtension extension{
         {
-            Core::ckGetStaticActionExtensionPrivate(),
+            ckStaticActionExtension_core_actions::getData(),
         },
     };
     return &extension;
 }
 
+#if 0
 // This field is only used to generate translation files for the Qt linguist tool
-static void ckActionExtension_DeclareTranslation() {
+static void ckDeclareStaticActionTranslations_core_actions() {
     // ActionText
     QCoreApplication::translate("ChorusKit::ActionText", "&New File");
 
@@ -319,6 +312,7 @@ static void ckActionExtension_DeclareTranslation() {
     QCoreApplication::translate("ChorusKit::ActionCategory", "Main Menu");
     QCoreApplication::translate("ChorusKit::ActionCategory", "File");
 }
+#endif
 ```
 
 生成的文件为`ckaec_core_actions.cpp`，需要共同参与编译链接，支持 Qt 语言家工具处理生成翻译文件。
