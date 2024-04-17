@@ -13,6 +13,10 @@ namespace Core {
         QVector<Entry> entryData;
     };
 
+    class ActionIconMappingData : public QSharedData {
+    public:
+    };
+
     class ActionDomainPrivate {
         Q_DECLARE_PUBLIC(ActionDomain)
     public:

@@ -365,8 +365,10 @@ endfunction()
         [PLUGIN_JSON    plugin.json.in]
         [COMPAT_VERSION compat_version]
         [NAME           name] 
+        [DISPLAY_NAME   display_name]
         [VERSION        version] 
         [DESCRIPTION    desc]
+        [COPYRIGHT      copyright]
         [VENDOR         vendor]
         [MACRO_PREFIX   prefix]
         [STATIC_MACRO   macro]
@@ -379,7 +381,7 @@ endfunction()
 ]] #
 function(ck_add_plugin _target)
     set(options SKIP_EXPORT)
-    set(oneValueArgs VENDOR PLUGIN_JSON)
+    set(oneValueArgs COPYRIGHT VENDOR PLUGIN_JSON)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -405,10 +407,9 @@ function(ck_add_plugin _target)
     add_dependencies(${CK_APPLICATION_NAME} ${_target})
 
     qm_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
+    qm_set_value(_copyright FUNC_COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${_vendor}")
 
     if(WIN32)
-        set(_copyright "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${_vendor}")
-
         # Add windows rc file
         qm_add_win_rc(${_target}
             COPYRIGHT "${_copyright}"
@@ -418,9 +419,15 @@ function(ck_add_plugin _target)
 
     # Configure plugin json if specified
     if(FUNC_PLUGIN_JSON)
-        ck_configure_plugin_metadata(${_target} ${FUNC_PLUGIN_JSON} ${FUNC_UNPARSED_ARGUMENTS} VENDOR ${_vendor})
+        ck_configure_plugin_metadata(${_target} ${FUNC_PLUGIN_JSON} ${FUNC_UNPARSED_ARGUMENTS}
+            VENDOR ${_vendor}
+            COPYRIGHT ${_copyright}
+        )
     elseif(NOT FUNC_NO_PLUGIN_JSON AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/plugin.json.in)
-        ck_configure_plugin_metadata(${_target} plugin.json.in ${FUNC_UNPARSED_ARGUMENTS} VENDOR ${_vendor})
+        ck_configure_plugin_metadata(${_target} plugin.json.in ${FUNC_UNPARSED_ARGUMENTS}
+            VENDOR ${_vendor}
+            COPYRIGHT ${_copyright}
+        )
     endif()
 
     # Configure plugin desc file
@@ -478,8 +485,10 @@ endfunction()
 
     ck_configure_plugin_metadata(<target>
         [NAME               name            ] 
+        [DISPLAY_NAME       display_name    ]
         [VERSION            version         ] 
         [COMPAT_VERSION     compat_version  ]
+        [COPYRIGHT          copyright       ]
         [VENDOR             vendor          ]
     )
 
@@ -490,12 +499,13 @@ endfunction()
 ]] #
 function(ck_configure_plugin_metadata _target _plugin_json)
     set(options)
-    set(oneValueArgs NAME VERSION COMPAT_VERSION VENDOR)
+    set(oneValueArgs NAME DISPLAY_NAME VERSION COMPAT_VERSION COPYRIGHT VENDOR)
     set(multiValueArgs)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # Set plugin metadata
-    qm_set_value(_name FUNC_NAME ${PROJECT_NAME}) # to be removed
+    qm_set_value(_name FUNC_NAME ${PROJECT_NAME})
+    qm_set_value(_display_name FUNC_DISPLAY_NAME ${_name})
     qm_set_value(_version FUNC_VERSION ${PROJECT_VERSION})
     qm_set_value(_compat_version FUNC_COMPAT_VERSION "0.0.0.0")
     qm_set_value(_vendor FUNC_VENDOR "${CK_APPLICATION_VENDOR}")
@@ -506,10 +516,17 @@ function(ck_configure_plugin_metadata _target _plugin_json)
 
     qm_parse_version(_compat ${_compat_version})
     set(PLUGIN_METADATA_COMPAT_VERSION ${_compat_1}.${_compat_2}.${_compat_3}_${_compat_4})
-    set(PLUGIN_METADATA_VENDOR ${_vendor})
 
     # Get year
     set(PLUGIN_METADATA_YEAR "${CK_CURRENT_YEAR}")
+
+    # Set other variables
+    set(PLUGIN_METADATA_NAME ${_name})
+    set(PLUGIN_METADATA_DISPLAY_NAME ${_display_name})
+    set(PLUGIN_METADATA_VENDOR ${_vendor})
+
+    qm_set_value(_copyright FUNC_COPYRIGHT "Copyright (C) ${PLUGIN_METADATA_YEAR} ${CK_APPLICATION_VENDOR}")
+    set(PLUGIN_METADATA_COPYRIGHT ${_copyright})
 
     configure_file(
         ${_plugin_json}

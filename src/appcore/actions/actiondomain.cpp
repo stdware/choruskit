@@ -18,6 +18,37 @@ namespace Core {
         return result;
     }
 
+    ActionIconMapping::ActionIconMapping() {
+    }
+
+    ActionIconMapping::~ActionIconMapping() {
+    }
+
+    ActionIconMapping::ActionIconMapping(const ActionIconMapping &other) {
+    }
+
+    ActionIconMapping::ActionIconMapping(ActionIconMapping &&other) noexcept {
+    }
+
+    ActionIconMapping &ActionIconMapping::operator=(const ActionIconMapping &other) {
+        return *this;
+    }
+
+    ActionIconMapping &ActionIconMapping::operator=(ActionIconMapping &&other) noexcept {
+        return *this;
+    }
+
+    void ActionIconMapping::addIconExtension(const QString &extensionFileName) {
+    }
+
+    void ActionIconMapping::addIcon(const QString &theme, const QString &id,
+                                    const QString &fileName) {
+    }
+
+    QIcon ActionIconMapping::icon(const QString &theme, const QString &id) const {
+        return QIcon();
+    }
+
     ActionDomainPrivate::ActionDomainPrivate() {
     }
 
@@ -33,14 +64,24 @@ namespace Core {
     ActionDomain::~ActionDomain() {
     }
 
+    QList<const ActionExtension *> ActionDomain::extensions() const {
+        return QList<const ActionExtension *>();
+    }
+
     void ActionDomain::addExtension(const ActionExtension *extension) {
     }
 
     void ActionDomain::removeExtension(const ActionExtension *extension) {
     }
 
-    QList<ActionExtension *> ActionDomain::extensions() const {
-        return QList<ActionExtension *>();
+    QList<const ActionIconMapping *> ActionDomain::iconMappings() const {
+        return QList<const ActionIconMapping *>();
+    }
+
+    void ActionDomain::addIconMapping(const ActionIconMapping *mapping) {
+    }
+
+    void ActionDomain::removeIconMapping(const ActionIconMapping *mapping) {
     }
 
     QStringList ActionDomain::ids() const {
@@ -64,6 +105,13 @@ namespace Core {
     }
 
     void ActionDomain::setShortcuts(const QString &id, const QList<QKeySequence> &shortcuts) {
+    }
+
+    QString ActionDomain::icon(const QString &id) const {
+        return QString();
+    }
+
+    void ActionDomain::setIcon(const QString &id, const QString &fileName) {
     }
 
     bool ActionDomain::build(const QMap<QString, ActionItem *> &items) const {
