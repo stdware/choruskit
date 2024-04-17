@@ -26,7 +26,6 @@ namespace Core {
     class WindowSystemPrivate;
 
     class CKAPPCORE_EXPORT IWindowPrivate : public QObject {
-        Q_OBJECT
         Q_DECLARE_PUBLIC(IWindow)
     public:
         IWindowPrivate();
@@ -44,10 +43,10 @@ namespace Core {
         bool closeAsExit;
 
         QObject *winFilter;
-        QMShortcutContext *shortcutCtx;
 
+        QMShortcutContext *shortcutCtx;
         QMChronoMap<QString, ActionItem *> actionItemMap;
-        QMap<QString, QWidget *> topLevelMenuMap;
+
         std::list<IWindowAddOn *> addOns;
 
         QHash<QString, QWidget *> widgetMap;
@@ -68,6 +67,10 @@ namespace Core {
         void nextDelayedInitialize();
 
         void windowExit_helper();
+
+    private:
+        void _q_menuCreated(QMenu *menu);
+        void _q_menuDestroyed(QMenu *menu);
 
         friend class WindowSystem;
     };

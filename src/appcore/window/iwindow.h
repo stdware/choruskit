@@ -2,6 +2,7 @@
 #define IWINDOW_H
 
 #include <CoreApi/objectpool.h>
+#include <CoreApi/actionitem.h>
 #include <CoreApi/windowelementsadaptor.h>
 
 namespace Core {
@@ -9,8 +10,6 @@ namespace Core {
     namespace Internal {
         class CorePlugin;
     }
-
-    class ActionItem;
 
     class IWindowPrivate;
 
@@ -47,13 +46,15 @@ namespace Core {
         QWidget *widget(const QString &id) const;
         QList<QWidget *> widgets() const;
 
-        void addTopLevelMenu(const QString &id, QWidget *w);
-        void removeTopLevelMenu(const QString &id);
-        QWidget *topLevelMenu(const QString &id) const;
-        QMap<QString, QWidget *> topLevelMenus() const;
+        void addActionItem(ActionItem *item);
+        void addActionItems(const QList<ActionItem *> &items);
+        void removeActionItem(ActionItem *item);
+        void removeActionItem(const QString &id);
+        ActionItem *actionItem(const QString &id) const;
+        QList<ActionItem *> actionItems() const;
 
         enum ShortcutContextPriority {
-            Resident,
+            Stable,
             Mutable,
         };
         void addShortcutContext(QWidget *w, ShortcutContextPriority priority);
@@ -73,14 +74,7 @@ namespace Core {
 
     protected:
         virtual QWidget *createWindow(QWidget *parent) const = 0;
-
         virtual void nextLoadingState(State nextState);
-
-        virtual void topLevelMenuAdded(const QString &id, QWidget *w);
-        virtual void topLevelMenuRemoved(const QString &id, QWidget *w);
-
-        virtual void actionItemAdded(ActionItem *item);
-        virtual void actionItemRemoved(ActionItem *item);
 
     protected:
         IWindow(IWindowPrivate &d, const QString &id, QObject *parent = nullptr);

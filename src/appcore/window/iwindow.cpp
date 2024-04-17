@@ -419,7 +419,10 @@ namespace Core {
 
         shortcutCtx = new QMShortcutContext(this);
 
-        winFilter = new WindowEventFilter(this, q->window());
+        winFilter = new WindowEventFilter(this, w);
+
+        // Default shortcut context
+        q->addShortcutContext(w, IWindow::Stable);
 
         // Setup window
         changeLoadState(IWindow::WindowSetup);
@@ -540,6 +543,16 @@ namespace Core {
         delete q;
     }
 
+    void IWindowPrivate::_q_menuCreated(QMenu *menu) {
+        Q_Q(IWindow);
+        q->addShortcutContext(menu, IWindow::Stable);
+    }
+
+    void IWindowPrivate::_q_menuDestroyed(QMenu *menu) {
+        Q_Q(IWindow);
+        // Auto removed, nothing to do
+    }
+
     void IWindow::load() {
         auto winMgr = ICoreBase::instance()->windowSystem();
         auto d = winMgr->d_func();
@@ -596,7 +609,7 @@ namespace Core {
             myWarning(__func__) << "trying to add null widget";
             return;
         }
-        if (d->actionItemMap.contains(id)) {
+        if (d->widgetMap.contains(id)) {
             myWarning(__func__) << "trying to add duplicated widget:" << id;
             return;
         }
@@ -630,42 +643,96 @@ namespace Core {
         return d->widgetMap.values();
     }
 
-    void IWindow::addTopLevelMenu(const QString &id, QWidget *w) {
+    void IWindow::addActionItem(ActionItem *item) {
         Q_D(IWindow);
-        if (!w) {
-            myWarning(__func__) << "trying to add null widget";
+        if (!item) {
+            myWarning(__func__) << "trying to add null action item";
             return;
         }
 
-        if (d->topLevelMenuMap.contains(id)) {
-            myWarning(__func__) << "trying to add duplicated widget:" << id;
+        if (d->actionItemMap.contains(item->id())) {
+            myWarning(__func__) << "trying to add duplicated action item:" << item->id();
             return;
         }
-        d->topLevelMenuMap.insert(id, w);
-        topLevelMenuAdded(id, w);
+        d->actionItemMap.append(item->id(), item);
+
+        switch (item->type()) {
+            case ActionItem::Action: {
+                window()->addAction(item->action());
+                break;
+            }
+            case ActionItem::Menu: {
+                for (const auto &menu : item->createdMenus()) {
+                    addShortcutContext(menu, Stable);
+                }
+                connect(item, &ActionItem::menuCreated, d, &IWindowPrivate::_q_menuCreated);
+                connect(item, &ActionItem::menuDestroyed, d, &IWindowPrivate::_q_menuDestroyed);
+                break;
+            }
+            case ActionItem::TopLevel: {
+                addShortcutContext(item->topLevel(), Stable);
+                break;
+            }
+            default:
+                break;
+        }
     }
 
-    void IWindow::removeTopLevelMenu(const QString &id) {
+    void IWindow::addActionItems(const QList<Core::ActionItem *> &items) {
+        for (const auto &item : items) {
+            addActionItem(item);
+        }
+    }
+
+    void IWindow::removeActionItem(Core::ActionItem *item) {
+        if (item == nullptr) {
+            myWarning(__func__) << "trying to remove null item";
+            return;
+        }
+        removeActionItem(item->id());
+    }
+
+    void IWindow::removeActionItem(const QString &id) {
         Q_D(IWindow);
-        auto it = d->topLevelMenuMap.find(id);
-        if (it == d->topLevelMenuMap.end()) {
-            myWarning(__func__) << "widget does not exist:" << id;
+        auto it = d->actionItemMap.find(id);
+        if (it == d->actionItemMap.end()) {
+            myWarning(__func__) << "action item does not exist:" << id;
             return;
         }
-        auto w = it.value();
-        d->topLevelMenuMap.erase(it);
+        auto item = it.value();
+        d->actionItemMap.erase(it);
 
-        topLevelMenuAdded(id, w);
+        switch (item->type()) {
+            case ActionItem::Action: {
+                window()->removeAction(item->action());
+                break;
+            }
+            case ActionItem::Menu: {
+                for (const auto &menu : item->createdMenus()) {
+                    removeShortcutContext(menu);
+                }
+                disconnect(item, &ActionItem::menuCreated, d, &IWindowPrivate::_q_menuCreated);
+                disconnect(item, &ActionItem::menuDestroyed, d, &IWindowPrivate::_q_menuDestroyed);
+                break;
+            }
+            case ActionItem::TopLevel: {
+                removeShortcutContext(item->topLevel());
+                break;
+            }
+            default:
+                break;
+        }
     }
 
-    QWidget *IWindow::topLevelMenu(const QString &id) const {
+    ActionItem *IWindow::actionItem(const QString &id) const {
         Q_D(const IWindow);
-        return d->topLevelMenuMap.value(id, nullptr);
+        return d->actionItemMap.value(id, nullptr);
     }
 
-    QMap<QString, QWidget *> IWindow::topLevelMenus() const {
+    QList<ActionItem *> IWindow::actionItems() const {
         Q_D(const IWindow);
-        return d->topLevelMenuMap;
+        const auto &arr = d->actionItemMap.values();
+        return {arr.begin(), arr.end()};
     }
 
     void IWindow::addShortcutContext(QWidget *w, ShortcutContextPriority priority) {
@@ -720,25 +787,7 @@ namespace Core {
     IWindow::~IWindow() {
     }
 
-    void IWindow::nextLoadingState(Core::IWindow::State nextState) {
-        Q_UNUSED(nextState)
-    }
-
-    void IWindow::topLevelMenuAdded(const QString &id, QWidget *w) {
-        // Do nothing
-    }
-
-    void IWindow::topLevelMenuRemoved(const QString &id, QWidget *w) {
-        // Do nothing
-    }
-
-    void IWindow::actionItemAdded(ActionItem *item) {
-        // Do nothing
-    }
-
-    void IWindow::actionItemRemoved(ActionItem *item) {
-        // Do nothing
-    }
+    void IWindow::nextLoadingState(Core::IWindow::State nextState){Q_UNUSED(nextState)}
 
     IWindow::IWindow(IWindowPrivate &d, const QString &id, QObject *parent)
         : ObjectPool(parent), d_ptr(&d) {

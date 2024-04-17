@@ -18,7 +18,6 @@ namespace Core {
         Q_DECLARE_PRIVATE(ActionItem)
     public:
         enum Type {
-            Invalid = 0,
             Action = 1,
             Menu = 2,
             Widget = 4,
@@ -44,10 +43,15 @@ namespace Core {
 
         QAction *action() const;
         QWidgetAction *widgetAction() const;
+        QWidget* topLevel() const;
         QList<QWidget *> createdWidgets() const;
         QList<QMenu *> createdMenus() const;
 
         QMenu *requestMenu(QWidget *parent);
+
+    Q_SIGNALS:
+        void menuCreated(QMenu *menu);
+        void menuDestroyed(QMenu *menu);
 
     protected:
         ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent = nullptr);

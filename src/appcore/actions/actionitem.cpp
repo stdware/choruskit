@@ -31,12 +31,15 @@ namespace Core {
 
     private:
         void _q_menuDestroyed(QObject *obj) {
-            createdMenus.remove(static_cast<QMenu *>(obj));
+            Q_Q(ActionItem);
+            auto menu = static_cast<QMenu *>(obj);
+            Q_EMIT q->menuDestroyed(menu);
+            createdMenus.remove(menu);
         }
     };
 
     ActionItemPrivate::ActionItemPrivate() : q_ptr(nullptr) {
-        type = ActionItem::Invalid;
+        type = ActionItem::Action;
         action = nullptr;
         widgetAction = nullptr;
         topLevelWidget = nullptr;
@@ -137,6 +140,11 @@ namespace Core {
         return d->widgetAction;
     }
 
+    QWidget *ActionItem::topLevel() const {
+        Q_D(const ActionItem);
+        return d->topLevelWidget;
+    }
+
     QList<QWidget *> ActionItem::createdWidgets() const {
         Q_D(const ActionItem);
         return d->widgetAction ? static_cast<WidgetAction *>(d->widgetAction)->createdWidgets()
@@ -150,7 +158,9 @@ namespace Core {
 
     QMenu *ActionItem::requestMenu(QWidget *parent) {
         Q_D(ActionItem);
+        
         auto menu = d->menuFactory(parent);
+        Q_EMIT menuCreated(menu);
         connect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
         d->createdMenus.insert(menu);
         return menu;
