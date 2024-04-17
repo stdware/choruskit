@@ -113,7 +113,7 @@ namespace Core {
 
 }
 
-#define CK_GET_ACTION_EXTENSION(name)                                                              \
+#define CK_STATIC_ACTION_EXTENSION(name)                                                           \
     []() {                                                                                         \
         extern const Core::ActionExtension *QT_MANGLE_NAMESPACE(                                   \
             ckGetStaticActionExtension_##name)();                                                  \

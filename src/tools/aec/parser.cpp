@@ -326,6 +326,7 @@ struct ParserPrivate {
                                     QStringList &objIdSeq, QSet<QString> &objectsWithLayout) {
         ActionLayoutMessage result;
         auto &entries = result.entryData;
+        entries.push_back(ActionLayoutMessage::Entry());
 
         struct Element {
             QStringList category;
@@ -333,11 +334,10 @@ struct ParserPrivate {
             int entryIndex;
         };
         std::list<Element> stack;
-        result.entryData.append(ActionLayoutMessage::Entry{});
         stack.push_back({defaultCategory, &root, 0});
         while (!stack.empty()) {
-            auto top = stack.back();
-            stack.pop_back();
+            auto top = stack.front();
+            stack.pop_front();
 
             const auto &e = *top.e;
             auto id = resolve(e.properties.value(QStringLiteral("id")));
@@ -391,10 +391,6 @@ struct ParserPrivate {
                 }
             }
 
-            ActionLayoutMessage::Entry &entry = entries[top.entryIndex];
-            entry.id = id;
-            entry.typeToken = typeToken;
-            entry.flat = e.properties.value(QStringLiteral("flat")) == QStringLiteral("true");
             if (!e.children.isEmpty() && objectsWithLayout.contains(id)) {
                 fprintf(stderr, "%s:%s: layout element \"%s\" has multiple defined structures\n",
                         qPrintable(qApp->applicationName()), qPrintable(fileName),
@@ -402,6 +398,11 @@ struct ParserPrivate {
                 std::exit(1);
             }
             objectsWithLayout.insert(id);
+
+            ActionLayoutMessage::Entry entry;
+            entry.id = id;
+            entry.typeToken = typeToken;
+            entry.flat = e.properties.value(QStringLiteral("flat")) == QStringLiteral("true");
 
             for (const auto &item : e.children) {
                 ActionLayoutMessage::Entry childEntry;
@@ -414,9 +415,10 @@ struct ParserPrivate {
                     // Deferred resolve
                     stack.push_back({currentCategory, item.data(), currentEntryIndex});
                 }
-                entry.childIndexes.append(currentEntryIndex);
-                entries.append(childEntry);
+                entry.childIndexes.push_back(currentEntryIndex);
+                entries.push_back(childEntry);
             }
+            entries[top.entryIndex] = entry;
         }
         return result;
     }

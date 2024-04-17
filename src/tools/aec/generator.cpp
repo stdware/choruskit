@@ -65,7 +65,7 @@ static void generateLayouts(FILE *out, const QVector<ActionLayoutMessage> &layou
             fprintf(out, "                %s,\n", subItem.flat ? "true" : "false");
             fprintf(out, "                // childIndexes\n");
             fprintf(out, "                {%s},\n",
-                    [](const QVector<int> &arr) {
+                    [](const decltype(subItem.childIndexes) &arr) {
                         QStringList res;
                         res.reserve(arr.size());
                         for (const auto &item : arr) {
@@ -109,7 +109,7 @@ static void generateBuildRoutines(FILE *out, const QVector<ActionBuildRoutineMes
                         subItem.id.toLatin1().data());
             }
             fprintf(out, "                    // type\n");
-            fprintf(out, "                    ActionBuildRoutine::%s,\n",
+            fprintf(out, "                    ActionObjectInfo::%s,\n",
                     subItem.typeToken.toLatin1().data());
             fprintf(out, "                    // flat\n");
             fprintf(out, "                    %s,\n", subItem.flat ? "true" : "false");
@@ -180,15 +180,16 @@ static ActionExtensionPrivate *getData() {
         fprintf(out, "    data.buildRoutineData = nullptr;\n");
         fprintf(out, "    data.buildRoutineCount = 0;\n");
     } else {
-        fprintf(out, "    static ActionBuildRoutineData layoutData[] = {\n");
+        fprintf(out, "    static ActionBuildRoutineData buildRoutineData[] = {\n");
         generateBuildRoutines(out, msg.buildRoutines);
         fprintf(out, "    };\n");
         fprintf(out, "    data.buildRoutineData = buildRoutineData;\n");
-        fprintf(out, "    data.buildRoutineCount = sizeof(buildRoutineData) / sizeof(ActionBuildRoutineData);\n");
+        fprintf(out, "    data.buildRoutineCount = sizeof(buildRoutineData) / "
+                     "sizeof(ActionBuildRoutineData);\n");
     }
     fprintf(out, "\n");
 
-    fprintf(out, R"(return &data;
+    fprintf(out, R"(    return &data;
 }
 
 }

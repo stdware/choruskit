@@ -313,7 +313,20 @@ static void ckDeclareStaticActionTranslations_core_actions() {
 
 在用户代码中获取该`ActionExtension`实例，使用以下方法获取：
 ```c++
-const ActionExtension *ext = CK_GET_ACTION_EXTENSION(core_actions);
+// 在全局命名空间内定义函数
+static inline auto getCoreActionExtension() {
+    return CK_STATIC_ACTION_EXTENSION(core_actions);
+};
+
+namespace Core {
+
+void initialize() {
+
+    const ActionExtension *ext = getCoreActionExtension();
+
+}
+
+}
 
 // 后续处理
 ```
