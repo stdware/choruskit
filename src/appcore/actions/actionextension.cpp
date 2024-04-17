@@ -6,30 +6,37 @@
 namespace Core {
 
     QString ActionItemInfo::id() const {
+        Q_ASSERT(data);
         return static_cast<const ActionItemInfoData *>(data)->id;
     }
 
     ActionItemInfo::Type ActionItemInfo::type() const {
+        Q_ASSERT(data);
         return static_cast<const ActionItemInfoData *>(data)->type;
     }
 
     QByteArray ActionItemInfo::text() const {
+        Q_ASSERT(data);
         return static_cast<const ActionItemInfoData *>(data)->text;
     }
 
     QByteArray ActionItemInfo::commandClass() const {
+        Q_ASSERT(data);
         return static_cast<const ActionItemInfoData *>(data)->commandClass;
     }
 
     QList<QKeySequence> ActionItemInfo::shortcuts() const {
+        Q_ASSERT(data);
         return static_cast<const ActionItemInfoData *>(data)->shortcuts;
     }
 
     QByteArrayList ActionItemInfo::categories() const {
+        Q_ASSERT(data);
         return static_cast<const ActionItemInfoData *>(data)->categories;
     }
 
     bool ActionItemInfo::topLevel() const {
+        Q_ASSERT(data);
         return static_cast<const ActionItemInfoData *>(data)->topLevel;
     }
 
@@ -46,22 +53,27 @@ namespace Core {
     }
 
     QString ActionLayout::id() const {
+        Q_ASSERT(data);
         return static_cast<const ActionLayoutData *>(data)->entryData[idx].id;
     }
 
     ActionItemInfo::Type ActionLayout::type() const {
+        Q_ASSERT(data);
         return static_cast<const ActionLayoutData *>(data)->entryData[idx].type;
     }
 
     bool ActionLayout::flat() const {
+        Q_ASSERT(data);
         return static_cast<const ActionLayoutData *>(data)->entryData[idx].flat;
     }
 
     int ActionLayout::childCount() const {
+        Q_ASSERT(data);
         return static_cast<const ActionLayoutData *>(data)->entryData[idx].childIndexes.size();
     }
 
     ActionLayout ActionLayout::child(int index) const {
+        Q_ASSERT(data);
         ActionLayout result = *this;
         result.idx =
             static_cast<const ActionLayoutData *>(data)->entryData[idx].childIndexes[index];
@@ -69,22 +81,27 @@ namespace Core {
     }
 
     ActionBuildRoutine::Anchor ActionBuildRoutine::anchor() const {
+        Q_ASSERT(data);
         return static_cast<const ActionBuildRoutineData *>(data)->anchor;
     }
 
     QString ActionBuildRoutine::parent() const {
+        Q_ASSERT(data);
         return static_cast<const ActionBuildRoutineData *>(data)->parent;
     }
 
     QString ActionBuildRoutine::relativeTo() const {
+        Q_ASSERT(data);
         return static_cast<const ActionBuildRoutineData *>(data)->relativeTo;
     }
 
     int ActionBuildRoutine::itemCount() const {
+        Q_ASSERT(data);
         return static_cast<const ActionBuildRoutineData *>(data)->items.size();
     }
 
     ActionBuildRoutine::Item ActionBuildRoutine::item(int index) const {
+        Q_ASSERT(data);
         return static_cast<const ActionBuildRoutineData *>(data)->items[index];
     }
 

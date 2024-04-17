@@ -47,6 +47,7 @@ namespace Core {
         ActionBuildRoutineData *buildRoutineData;
 
         static inline const ActionExtensionPrivate *get(const ActionExtension *q) {
+            Q_ASSERT(q->d.data);
             return static_cast<const ActionExtensionPrivate *>(q->d.data);
         }
     };

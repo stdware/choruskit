@@ -7,18 +7,21 @@
 struct ActionItemInfoMessage {
     QString id;
     QString typeToken;
-    QByteArray text;
-    QByteArray commandClass;
+    QString text;
+    QString commandClass;
     QStringList shortcutTokens;
-    QByteArrayList categories;
-    bool topLevel;
+    QStringList categories;
+    bool topLevel = false;
+    
+    // Metadata
+    QString tag;
 };
 
 struct ActionLayoutMessage {
     struct Entry {
         QString id;
         QString typeToken;
-        bool flat;
+        bool flat = false;
         QVector<int> childIndexes;
     };
     QVector<Entry> entryData;
@@ -32,7 +35,7 @@ struct ActionBuildRoutineMessage {
     struct Item {
         QString id;
         QString typeToken;
-        bool flat;
+        bool flat = false;
     };
     QVector<Item> items;
 };

@@ -15,8 +15,7 @@ namespace Core {
     ActionSystemPrivate::ActionSystemPrivate() : q_ptr(nullptr) {
     }
 
-    ActionSystemPrivate::~ActionSystemPrivate() {
-    }
+    ActionSystemPrivate::~ActionSystemPrivate() = default;
 
     void ActionSystemPrivate::init() {
     }
