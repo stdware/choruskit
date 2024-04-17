@@ -923,7 +923,7 @@ function(ck_add_action_extension _outfiles _manifest)
 
     set(_outfile)
     get_filename_component(_manifest ${_manifest} ABSOLUTE)
-    _ck_make_output_file(${_manifest} ckaec_ cpp _outfile)
+    qm_make_output_file(${_manifest} ckaec_ cpp _outfile)
 
     # Create command
     _create_command(${_manifest} ${_outfile} "${_options}" "${FUNC_DEPENDS}")
@@ -1142,42 +1142,3 @@ function(_ck_parse_copy_args _args _result _error)
 
     set(${_result} "${_list}" PARENT_SCOPE)
 endfunction()
-
-# macro used to create the names of output files preserving relative dirs
-macro(_ck_make_output_file _infile _prefix _ext _outfile_output)
-    string(LENGTH ${CMAKE_CURRENT_BINARY_DIR} _binlength)
-    string(LENGTH ${_infile} _infileLength)
-    set(_checkinfile ${CMAKE_CURRENT_SOURCE_DIR})
-
-    if(_infileLength GREATER _binlength)
-        string(SUBSTRING "${_infile}" 0 ${_binlength} _checkinfile)
-
-        if(_checkinfile STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
-            file(RELATIVE_PATH _rel ${CMAKE_CURRENT_BINARY_DIR} ${_infile})
-        else()
-            file(RELATIVE_PATH _rel ${CMAKE_CURRENT_SOURCE_DIR} ${_infile})
-        endif()
-    else()
-        file(RELATIVE_PATH _rel ${CMAKE_CURRENT_SOURCE_DIR} ${_infile})
-    endif()
-
-    if(CMAKE_HOST_WIN32 AND _rel MATCHES "^([a-zA-Z]):(.*)$") # absolute path
-        set(_rel "${CMAKE_MATCH_1}_${CMAKE_MATCH_2}")
-    endif()
-
-    set(_outfile "${CMAKE_CURRENT_BINARY_DIR}/${_rel}")
-    string(REPLACE ".." "__" _outfile ${_outfile})
-    get_filename_component(_outpath ${_outfile} PATH)
-
-    if(CMAKE_VERSION VERSION_LESS "3.14")
-        get_filename_component(_outfile_ext ${_outfile} EXT)
-        get_filename_component(_outfile_ext ${_outfile_ext} NAME_WE)
-        get_filename_component(_outfile ${_outfile} NAME_WE)
-        string(APPEND _outfile ${_outfile_ext})
-    else()
-        get_filename_component(_outfile ${_outfile} NAME_WLE)
-    endif()
-
-    file(MAKE_DIRECTORY ${_outpath})
-    set(${_outfile_output} ${_outpath}/${_prefix}${_outfile}.${_ext})
-endmacro()

@@ -124,7 +124,7 @@ void Generator::generateCode() {
     // Warning
     fprintf(out,
             "/****************************************************************************\n"
-            "** Meta object code from reading XML file '%s'\n**\n",
+            "** Action extension structure code from reading XML file '%s'\n**\n",
             inputFileName.constData());
     fprintf(out, "** Created by: ChorusKit Action Extension Compiler version %s (Qt %s)\n**\n",
             APP_VERSION, QT_VERSION_STR);
