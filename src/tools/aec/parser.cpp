@@ -140,7 +140,7 @@ struct ParserPrivate {
 
         // Check root name
         const auto &root = xml.root;
-        if (const auto &rootname = root.name; rootname != QStringLiteral("extension")) {
+        if (const auto &rootname = root.name; rootname != QStringLiteral("actionExtension")) {
             fprintf(stderr, "%s:%s: unknown root element tag %s\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     rootname.toLatin1().data());
@@ -239,12 +239,23 @@ struct ParserPrivate {
         return result;
     }
 
-    ParserConfig parseParserConfig(const QMXmlAdaptorElement &e) const {
+    ParserConfig parseParserConfig(const QMXmlAdaptorElement &e) {
         ParserConfig result;
+
         for (const auto &item : e.children) {
             if (item->name == QStringLiteral("defaultCategory")) {
                 result.defaultCategory = parseStringList(resolve(item->value));
                 continue;
+            }
+
+            if (item->name == QStringLiteral("vars")) {
+                for (const auto &subItem : item->children) {
+                    auto key = resolve(subItem->properties.value(QStringLiteral("key")));
+                    auto value = resolve(subItem->properties.value(QStringLiteral("value")));
+                    if (!key.isEmpty()) {
+                        variables.insert(key, value);
+                    }
+                }
             }
         }
         return result;
@@ -283,7 +294,8 @@ struct ParserPrivate {
         result.id = id;
 
         // type
-        result.topLevel = e.properties.value("top") == QStringLiteral("true");
+        result.topLevel =
+            resolve(e.properties.value(QStringLiteral("top"))) == QStringLiteral("true");
         determineObjectType(e, result, "object");
 
         // text
@@ -315,6 +327,13 @@ struct ParserPrivate {
         } else if (categories = resolve(e.properties.value(QStringLiteral("category")));
                    !categories.isEmpty()) {
             result.categories = parseStringList(categories);
+        }
+
+        if (!e.children.isEmpty()) {
+            fprintf(stderr, "%s:%s: object declaration element \"%s\" shouldn't have children\n",
+                    qPrintable(qApp->applicationName()), qPrintable(fileName),
+                    e.name.toLatin1().data());
+            std::exit(1);
         }
 
         return result;
@@ -402,7 +421,8 @@ struct ParserPrivate {
             ActionLayoutMessage::Entry entry;
             entry.id = id;
             entry.typeToken = typeToken;
-            entry.flat = e.properties.value(QStringLiteral("flat")) == QStringLiteral("true");
+            entry.flat =
+                resolve(e.properties.value(QStringLiteral("flat"))) == QStringLiteral("true");
 
             for (const auto &item : e.children) {
                 ActionLayoutMessage::Entry childEntry;
@@ -444,15 +464,15 @@ struct ParserPrivate {
         auto anchor = root.properties.value(QStringLiteral("anchor"));
         QString anchorToken;
         bool needRelative = false;
-        if (anchor == "last" || anchor == "back") {
-            anchorToken = "Last";
-        } else if (anchor == "first" || anchor == "front") {
-            anchorToken = "First";
-        } else if (anchor == "before") {
-            anchorToken = "Before";
+        if (anchor == QStringLiteral("last") || anchor == QStringLiteral("back")) {
+            anchorToken = QStringLiteral("Last");
+        } else if (anchor == QStringLiteral("first") || anchor == QStringLiteral("front")) {
+            anchorToken = QStringLiteral("First");
+        } else if (anchor == QStringLiteral("before")) {
+            anchorToken = QStringLiteral("Before");
             needRelative = true;
-        } else if (anchor.isEmpty() || anchor == "after") {
-            anchorToken = "After";
+        } else if (anchor.isEmpty() || anchor == QStringLiteral("after")) {
+            anchorToken = QStringLiteral("After");
             needRelative = true;
         } else {
             fprintf(stderr, "%s:%s: unknown build routine anchor %s\n",
@@ -537,7 +557,7 @@ struct ParserPrivate {
 
                 routineItem.id = id;
                 routineItem.flat =
-                    e.properties.value(QStringLiteral("flat")) == QStringLiteral("true");
+                    resolve(e.properties.value(QStringLiteral("flat"))) == QStringLiteral("true");
             }
             result.items.append(routineItem);
         }

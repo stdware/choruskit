@@ -82,20 +82,23 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<extension>
+<actionExtension>
     <version>2.0</version>
 
     <parserConfig>
         <defaultCategory>Plugins;MyPlugin</defaultCategory>
+        <vars>
+            <var key="NewFileClass" value="Create" />
+        </vars>
     </parserConfig>
 
     <objects>
-        <action id="NewFile" class="Create" shortcut="Ctrl+N" />
+        <menu id="File" text="&amp;File">
+        <action id="NewFile" class="${NewFileClass}" shortcut="Ctrl+N" />
         <action id="OpenFile" class="File" shortcut="Ctrl+O" />
         <action id="SaveFile" class="File" shortcut="Ctrl+S" />
         <action id="SaveAsFile" class="File" shortcut="Ctrl+Shift+S" />
         <action id="CloseFile" class="File" />
-        <menu id="File" text="&amp;File">
     </objects>
 
     <layouts>
@@ -127,13 +130,14 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
             <action id="CloseFile" />
         </buildRoutine>
     </buildRoutines>
-</extension>
+</actionExtension>
 ```
 
 - `version`：必选字段，固定值`2.0`
 - `parserConfig`：包含解析阶段的提示，不包含任何实际数据，其存在的意义是简化该清单编写的工作量；
     - 子节点：
         - `defaultCategory`：缺省目录标签，默认为空；
+        - `vars`：解析前期定义的变量，子节点满足`<var key="xx" value="yy" />`的格式
 - `objects`：包含所有菜单元素的属性声明；
     - 子节点标签：
         - `action`：命令
@@ -167,6 +171,8 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         - `parent`：插入对象 ID；
         - `relativeTo`：插入相对的子节点 ID，在`anchor`为`before`或`after`时需指定；
     - `buildRoutine`的子节点属性与`layouts`中的一致，必须是线性结构；
+
+所有节点属性与节点值都会展开所有使用`${XXX}`引用的变量。
 
 
 ## 扩展元数据代码生成器

@@ -17,7 +17,7 @@ namespace Core {
         ~ActionSystem();
 
     public:
-        // TODO
+        // bool addIcons(const QString &fileName);
 
     protected:
         QScopedPointer<ActionSystemPrivate> d_ptr;
