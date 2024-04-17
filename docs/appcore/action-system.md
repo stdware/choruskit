@@ -219,10 +219,10 @@ static ActionExtensionPrivate *getData() {
     data.hash = QStringLiteral("00000000000000000000000000000000");
     data.version = QStringLiteral("2.0");
 
-    static ActionItemInfoData itemData[] = {
+    static ActionObjectInfoData itemData[] = {
         {
             QStringLiteral("NewFile"),
-            ActionItemInfo::Action,
+            ActionObjectInfo::Action,
             QByteArrayLiteral("&New File"),
             QByteArrayLiteral("Create"),
             {
@@ -249,7 +249,7 @@ static ActionExtensionPrivate *getData() {
             {
                 {
                     QStringLiteral("MainMenu"),
-                    ActionItemInfo::Menu,
+                    ActionObjectInfo::Menu,
                     false,
                     {1, 2, 3, 4},
                 },
@@ -273,12 +273,12 @@ static ActionExtensionPrivate *getData() {
             {
                 {
                     {},
-                    ActionItemInfo::Separator,
+                    ActionObjectInfo::Separator,
                     false,
                 },
                 {
                     QStringLiteral("CloseFile"),
-                    ActionItemInfo::Action,
+                    ActionObjectInfo::Action,
                     false,
                 },
             },

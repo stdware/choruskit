@@ -5,50 +5,50 @@
 
 namespace Core {
 
-    QString ActionItemInfo::id() const {
+    QString ActionObjectInfo::id() const {
         Q_ASSERT(data);
-        return static_cast<const ActionItemInfoData *>(data)->id;
+        return static_cast<const ActionObjectInfoData *>(data)->id;
     }
 
-    ActionItemInfo::Type ActionItemInfo::type() const {
+    ActionObjectInfo::Type ActionObjectInfo::type() const {
         Q_ASSERT(data);
-        return static_cast<const ActionItemInfoData *>(data)->type;
+        return static_cast<const ActionObjectInfoData *>(data)->type;
     }
 
-    QByteArray ActionItemInfo::text() const {
+    QByteArray ActionObjectInfo::text() const {
         Q_ASSERT(data);
-        return static_cast<const ActionItemInfoData *>(data)->text;
+        return static_cast<const ActionObjectInfoData *>(data)->text;
     }
 
-    QByteArray ActionItemInfo::commandClass() const {
+    QByteArray ActionObjectInfo::commandClass() const {
         Q_ASSERT(data);
-        return static_cast<const ActionItemInfoData *>(data)->commandClass;
+        return static_cast<const ActionObjectInfoData *>(data)->commandClass;
     }
 
-    QList<QKeySequence> ActionItemInfo::shortcuts() const {
+    QList<QKeySequence> ActionObjectInfo::shortcuts() const {
         Q_ASSERT(data);
-        return static_cast<const ActionItemInfoData *>(data)->shortcuts;
+        return static_cast<const ActionObjectInfoData *>(data)->shortcuts;
     }
 
-    QByteArrayList ActionItemInfo::categories() const {
+    QByteArrayList ActionObjectInfo::categories() const {
         Q_ASSERT(data);
-        return static_cast<const ActionItemInfoData *>(data)->categories;
+        return static_cast<const ActionObjectInfoData *>(data)->categories;
     }
 
-    bool ActionItemInfo::topLevel() const {
+    bool ActionObjectInfo::topLevel() const {
         Q_ASSERT(data);
-        return static_cast<const ActionItemInfoData *>(data)->topLevel;
+        return static_cast<const ActionObjectInfoData *>(data)->topLevel;
     }
 
-    QString ActionItemInfo::translatedText(const QByteArray &text) {
+    QString ActionObjectInfo::translatedText(const QByteArray &text) {
         return QCoreApplication::translate("ChorusKit::ActionText", text);
     }
 
-    QString ActionItemInfo::translatedCommandClass(const QByteArray &commandClass) {
+    QString ActionObjectInfo::translatedCommandClass(const QByteArray &commandClass) {
         return QCoreApplication::translate("ChorusKit::ActionCommandClass", commandClass);
     }
 
-    QString ActionItemInfo::translatedCategory(const QByteArray &category) {
+    QString ActionObjectInfo::translatedCategory(const QByteArray &category) {
         return QCoreApplication::translate("ChorusKit::ActionCategory", category);
     }
 
@@ -57,7 +57,7 @@ namespace Core {
         return static_cast<const ActionLayoutData *>(data)->entryData[idx].id;
     }
 
-    ActionItemInfo::Type ActionLayout::type() const {
+    ActionObjectInfo::Type ActionLayout::type() const {
         Q_ASSERT(data);
         return static_cast<const ActionLayoutData *>(data)->entryData[idx].type;
     }
@@ -113,13 +113,13 @@ namespace Core {
         return ActionExtensionPrivate::get(this)->version;
     }
 
-    int ActionExtension::itemCount() const {
-        return ActionExtensionPrivate::get(this)->itemCount;
+    int ActionExtension::objectCount() const {
+        return ActionExtensionPrivate::get(this)->objectCount;
     }
 
-    ActionItemInfo ActionExtension::item(int index) const {
-        ActionItemInfo result;
-        result.data = &ActionExtensionPrivate::get(this)->itemData[index];
+    ActionObjectInfo ActionExtension::object(int index) const {
+        ActionObjectInfo result;
+        result.data = &ActionExtensionPrivate::get(this)->objectData[index];
         return result;
     }
 

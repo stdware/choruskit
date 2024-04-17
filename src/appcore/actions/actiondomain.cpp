@@ -1,5 +1,5 @@
-#include "ActionDomain.h"
-#include "ActionDomain_p.h"
+#include "actiondomain.h"
+#include "actiondomain_p.h"
 
 namespace Core {
 
@@ -47,7 +47,7 @@ namespace Core {
         return QStringList();
     }
 
-    ActionItemInfo *ActionDomain::itemInfo(const QString &id) const {
+    ActionObjectInfo *ActionDomain::objectInfo(const QString &id) const {
         return nullptr;
     }
 

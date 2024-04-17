@@ -13,9 +13,9 @@ namespace Core {
 
     class ActionExtension;
 
-    class CKAPPCORE_EXPORT ActionItemInfo {
+    class CKAPPCORE_EXPORT ActionObjectInfo {
     public:
-        inline ActionItemInfo() : data(nullptr){};
+        inline ActionObjectInfo() : data(nullptr){};
 
         enum Type {
             Action,
@@ -48,7 +48,7 @@ namespace Core {
         inline ActionLayout() : data(nullptr), idx(0){};
 
         QString id() const;
-        ActionItemInfo::Type type() const;
+        ActionObjectInfo::Type type() const;
         bool flat() const;
 
         int childCount() const;
@@ -79,7 +79,7 @@ namespace Core {
 
         struct Item {
             QString id;
-            ActionItemInfo::Type type;
+            ActionObjectInfo::Type type;
             bool flat;
         };
         int itemCount() const;
@@ -97,8 +97,8 @@ namespace Core {
 
         QString version() const;
 
-        int itemCount() const;
-        ActionItemInfo item(int index) const;
+        int objectCount() const;
+        ActionObjectInfo object(int index) const;
 
         int layoutCount() const;
         ActionLayout layout(int index) const;

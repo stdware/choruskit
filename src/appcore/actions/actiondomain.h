@@ -47,7 +47,7 @@ namespace Core {
 
     public:
         QStringList ids() const;
-        ActionItemInfo *itemInfo(const QString &id) const;
+        ActionObjectInfo *objectInfo(const QString &id) const;
 
         ActionCatalogue catalogue() const;
         QList<ActionLayout> currentLayouts() const;

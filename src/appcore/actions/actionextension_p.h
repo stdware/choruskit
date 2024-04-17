@@ -5,9 +5,9 @@
 
 namespace Core {
 
-    struct ActionItemInfoData {
+    struct ActionObjectInfoData {
         QString id;
-        ActionItemInfo::Type type;
+        ActionObjectInfo::Type type;
         QByteArray text;
         QByteArray commandClass;
         QList<QKeySequence> shortcuts;
@@ -18,7 +18,7 @@ namespace Core {
     struct ActionLayoutData {
         struct Entry {
             QString id;
-            ActionItemInfo::Type type;
+            ActionObjectInfo::Type type;
             bool flat;
             QVector<int> childIndexes;
         };
@@ -37,8 +37,8 @@ namespace Core {
         
         QString version;
 
-        int itemCount;
-        ActionItemInfoData *itemData;
+        int objectCount;
+        ActionObjectInfoData *objectData;
 
         int layoutCount;
         ActionLayoutData *layoutData;

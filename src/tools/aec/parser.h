@@ -4,7 +4,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QHash>
 
-struct ActionItemInfoMessage {
+struct ActionObjectInfoMessage {
     QString id;
     QString typeToken;
     QString text;
@@ -44,7 +44,7 @@ struct ActionExtensionMessage {
     QString hash;
     QString version;
 
-    QVector<ActionItemInfoMessage> items;
+    QVector<ActionObjectInfoMessage> objects;
     QVector<ActionLayoutMessage> layouts;
     QVector<ActionBuildRoutineMessage> buildRoutines;
 };
