@@ -89,14 +89,14 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         <defaultCategory>Plugins;MyPlugin</defaultCategory>
     </parserConfig>
 
-    <items>
+    <objects>
         <action id="NewFile" class="Create" shortcut="Ctrl+N" />
         <action id="OpenFile" class="File" shortcut="Ctrl+O" />
         <action id="SaveFile" class="File" shortcut="Ctrl+S" />
         <action id="SaveAsFile" class="File" shortcut="Ctrl+Shift+S" />
         <action id="CloseFile" class="File" />
         <menu id="File" text="&amp;File">
-    </items>
+    </objects>
 
     <layouts>
         <menuBar id="MainMenu">
@@ -134,7 +134,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
 - `parserConfig`：包含解析阶段的提示，不包含任何实际数据，其存在的意义是简化该清单编写的工作量；
     - 子节点：
         - `defaultCategory`：缺省目录标签，默认为空；
-- `items`：包含所有菜单元素的属性声明；
+- `objects`：包含所有菜单元素的属性声明；
     - 子节点标签：
         - `action`：命令
         - `group`：组
@@ -151,13 +151,13 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
     - 注意事项：
         - `shortcut`与`category`可包含一个列表，使用`;`作为分隔符，`\`作为转义符（与 C 语言一致）
 - `layouts`：包含具有组织关系的布局声明；
-    - 子节点标签：与`items`的子节点标签一致；
+    - 子节点标签：与`objects`的子节点标签一致；
     - 子节点属性：
         - `id`：标识符
         - `flat`：是否平铺，菜单、菜单栏、工具栏可用，属于顶级菜单但不处于顶级的必须设为`true`
     - 注意事项：
-        - 如果`id`为`items`中没有出现的，则将解析为新的菜单元素，除 ID 外其他属性为空，否则，其类型必须与`items`中声明的类型一致；
-        - 如果`items`中某个菜单元素没有声明`category`，那么`category`将按以下规则确定：
+        - 如果`id`为`objects`中没有出现的，则将解析为新的菜单元素，除 ID 外其他属性为空，否则，其类型必须与`objects`中声明的类型一致；
+        - 如果`objects`中某个菜单元素没有声明`category`，那么`category`将按以下规则确定：
             - 如果它没有出现在`layout`中，或者在`layout`中第一次作为根节点出现，那么使用`parserConfig`中的`defaultCategory`；
             - 如果在`layout`中第一次作为非根节点出现，将以根节点的`category`为基础，依次添加路径节点的`text`（去掉所有加速键）；
         - 菜单元素作为非叶子节点最多只允许出现一次（即只允许声明一次其下级结构），类型为`action`的菜单元素不允许作为非叶子节点出现；
@@ -209,17 +209,12 @@ namespace ckStaticActionExtension_core_actions {
 
 using namespace Core;
 
-template<typename T, std::size_t N>
-static inline constexpr std::size_t sizeOfArray(T (&)[N]) {
-    return N;
-}
-
 static ActionExtensionPrivate *getData() {
     static ActionExtensionPrivate data;
     data.hash = QStringLiteral("00000000000000000000000000000000");
     data.version = QStringLiteral("2.0");
 
-    static ActionObjectInfoData itemData[] = {
+    static ActionObjectInfoData objectData[] = {
         {
             QStringLiteral("NewFile"),
             ActionObjectInfo::Action,
@@ -241,23 +236,21 @@ static ActionExtensionPrivate *getData() {
             // ...
         },
     };
-    data.itemData = itemData;
-    data.itemCount = sizeOfArray(itemData);
+    data.objectData = objectData;
+    data.objectCount = sizeOfArray(objectData);
 
     static ActionLayoutData layoutData[] = {
-        {
+        {{
             {
-                {
-                    QStringLiteral("MainMenu"),
-                    ActionObjectInfo::Menu,
-                    false,
-                    {1, 2, 3, 4},
-                },
-                {
-                    // ...
-                }
+                QStringLiteral("MainMenu"),
+                ActionObjectInfo::Menu,
+                false,
+                {1, 2, 3, 4},
             },
-        },
+            {
+                // ...
+            }
+        }},
         {
             // ...
         }

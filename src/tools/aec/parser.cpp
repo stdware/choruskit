@@ -57,6 +57,21 @@ static QString objIdToText(const QString &id) {
     if (!currentPart.isEmpty()) {
         parts.append(currentPart);
     }
+
+    // Lower case special words
+    static QSet<QString> specialWords{
+        QStringLiteral("and"), QStringLiteral("but"),  QStringLiteral("or"), QStringLiteral("nor"),
+        QStringLiteral("for"), QStringLiteral("yet"),  QStringLiteral("so"), QStringLiteral("as"),
+        QStringLiteral("at"),  QStringLiteral("by"),   QStringLiteral("in"), QStringLiteral("of"),
+        QStringLiteral("on"),  QStringLiteral("to"),   QStringLiteral("up"), QStringLiteral("a"),
+        QStringLiteral("an"),  QStringLiteral("the "),
+    };
+    for (auto &part : parts) {
+        if (auto lower = part.toLower(); specialWords.contains(lower)) {
+            part = lower;
+        }
+    }
+
     return parts.join(QChar(' '));
 }
 
@@ -109,6 +124,10 @@ struct ParserPrivate {
     QString fileName;
     QHash<QString, QString> variables;
 
+    inline QString resolve(const QString &s) const {
+        return parseExpression(s, variables);
+    }
+
     ActionExtensionMessage parse(const QByteArray &data) {
         QMXmlAdaptor xml;
 
@@ -132,7 +151,7 @@ struct ParserPrivate {
         QList<QMXmlAdaptorElement *> layoutElements;
         QList<QMXmlAdaptorElement *> routineElements;
 
-        // Parse root elements and collect attributes
+        // Collect elements and attributes
         QString version;
         bool hasParserConfig = false;
         ParserConfig parserConfig;
@@ -199,10 +218,10 @@ struct ParserPrivate {
         }
 
         // Parse layouts
-        QSet<QString> organizedObjects;
+        QSet<QString> objectsWithLayout;
         for (const auto &item : std::as_const(layoutElements)) {
             auto entity = parseLayout(*item, parserConfig.defaultCategory, objMap, objIdSeq,
-                                      organizedObjects);
+                                      objectsWithLayout);
             result.layouts.append(entity);
         }
 
@@ -224,15 +243,15 @@ struct ParserPrivate {
         ParserConfig result;
         for (const auto &item : e.children) {
             if (item->name == QStringLiteral("defaultCategory")) {
-                result.defaultCategory = parseStringList(item->value);
+                result.defaultCategory = parseStringList(resolve(item->value));
                 continue;
             }
         }
         return result;
     }
 
-    void determineElementActionType(const QMXmlAdaptorElement &e, ActionObjectInfoMessage &result,
-                                    const char *field) const {
+    void determineObjectType(const QMXmlAdaptorElement &e, ActionObjectInfoMessage &result,
+                             const char *field) const {
         auto name = e.name;
         if (name == QStringLiteral("action")) {
             result.typeToken = QStringLiteral("Action");
@@ -254,44 +273,46 @@ struct ParserPrivate {
 
     ActionObjectInfoMessage parseObject(const QMXmlAdaptorElement &e) {
         ActionObjectInfoMessage result;
-        if (auto id = e.properties.value(QStringLiteral("id")); id.isEmpty()) {
+        auto id = resolve(e.properties.value(QStringLiteral("id")));
+        if (id.isEmpty()) {
             fprintf(stderr, "%s:%s: object element \"%s\" doesn't have an \"id\" field\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     e.name.toLatin1().data());
             std::exit(1);
-        } else {
-            result.id = id;
         }
+        result.id = id;
 
         // type
         result.topLevel = e.properties.value("top") == QStringLiteral("true");
-        determineElementActionType(e, result, "object");
+        determineObjectType(e, result, "object");
 
         // text
-        if (auto text = e.properties.value(QStringLiteral("text")); text.isEmpty()) {
+        if (auto text = resolve(e.properties.value(QStringLiteral("text"))); !text.isEmpty()) {
+            result.text = text;
+        } else {
             result.text = objIdToText(result.id);
         }
 
         // class
-        if (auto commandClass = e.properties.value(QStringLiteral("class"));
+        if (auto commandClass = resolve(e.properties.value(QStringLiteral("class")));
             !commandClass.isEmpty()) {
             result.commandClass = commandClass;
         }
 
         // shortcuts
-        if (auto shortcuts = e.properties.value(QStringLiteral("shortcuts"));
+        if (auto shortcuts = resolve(e.properties.value(QStringLiteral("shortcuts")));
             !shortcuts.isEmpty()) {
             result.shortcutTokens = parseStringList(shortcuts);
-        } else if (shortcuts = e.properties.value(QStringLiteral("shortcut"));
+        } else if (shortcuts = resolve(e.properties.value(QStringLiteral("shortcut")));
                    !shortcuts.isEmpty()) {
             result.shortcutTokens = parseStringList(shortcuts);
         }
 
         // categories
-        if (auto categories = e.properties.value(QStringLiteral("categories"));
+        if (auto categories = resolve(e.properties.value(QStringLiteral("categories")));
             !categories.isEmpty()) {
             result.categories = parseStringList(categories);
-        } else if (categories = e.properties.value(QStringLiteral("category"));
+        } else if (categories = resolve(e.properties.value(QStringLiteral("category")));
                    !categories.isEmpty()) {
             result.categories = parseStringList(categories);
         }
@@ -302,7 +323,7 @@ struct ParserPrivate {
     ActionLayoutMessage parseLayout(const QMXmlAdaptorElement &root,
                                     const QStringList &defaultCategory,
                                     QHash<QString, ActionObjectInfoMessage> &objMap,
-                                    QStringList &objIdSeq, QSet<QString> &organizedObjects) {
+                                    QStringList &objIdSeq, QSet<QString> &objectsWithLayout) {
         ActionLayoutMessage result;
         auto &entries = result.entryData;
 
@@ -319,7 +340,7 @@ struct ParserPrivate {
             stack.pop_back();
 
             const auto &e = *top.e;
-            auto id = e.properties.value(QStringLiteral("id"));
+            auto id = resolve(e.properties.value(QStringLiteral("id")));
             if (id.isEmpty()) {
                 fprintf(stderr, "%s:%s: layout element \"%s\" doesn't have an \"id\" field\n",
                         qPrintable(qApp->applicationName()), qPrintable(fileName),
@@ -337,7 +358,7 @@ struct ParserPrivate {
                     auto &info = it.value();
 
                     // Check if the tag matches
-                    if (info.tag != e.name) {
+                    if (info.tag != e.name && info.tag != QStringLiteral("object")) {
                         fprintf(
                             stderr,
                             "%s:%s: layout element of \"%s\" has inconsistent tag \"%s\" with the "
@@ -360,7 +381,7 @@ struct ParserPrivate {
                     // Create one
                     ActionObjectInfoMessage info;
                     info.id = id;
-                    determineElementActionType(e, info, "layout");
+                    determineObjectType(e, info, "layout");
                     info.text = objIdToText(id);
                     info.categories = top.category;
                     objMap.insert(id, info);
@@ -374,13 +395,13 @@ struct ParserPrivate {
             entry.id = id;
             entry.typeToken = typeToken;
             entry.flat = e.properties.value(QStringLiteral("flat")) == QStringLiteral("true");
-            if (e.children.isEmpty() && organizedObjects.contains(id)) {
+            if (!e.children.isEmpty() && objectsWithLayout.contains(id)) {
                 fprintf(stderr, "%s:%s: layout element \"%s\" has multiple defined structures\n",
                         qPrintable(qApp->applicationName()), qPrintable(fileName),
                         id.toLatin1().data());
                 std::exit(1);
             }
-            organizedObjects.insert(id);
+            objectsWithLayout.insert(id);
 
             for (const auto &item : e.children) {
                 ActionLayoutMessage::Entry childEntry;
@@ -411,7 +432,7 @@ struct ParserPrivate {
             std::exit(1);
         }
 
-        auto parent = root.properties.value(QStringLiteral("parent"));
+        auto parent = resolve(root.properties.value(QStringLiteral("parent")));
         if (parent.isEmpty()) {
             fprintf(stderr, "%s:%s: build routine doesn't have a parent\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName));
@@ -438,7 +459,7 @@ struct ParserPrivate {
             std::exit(1);
         }
 
-        auto relative = root.properties.value(QStringLiteral("relativeTo"));
+        auto relative = resolve(root.properties.value(QStringLiteral("relativeTo")));
         if (needRelative && relative.isEmpty()) {
             fprintf(stderr,
                     "%s:%s: build routine with anchor \"%s\" must have a relative sibling\n",
@@ -459,6 +480,64 @@ struct ParserPrivate {
         }
 
         for (const auto &item : root.children) {
+            ActionBuildRoutineMessage::Item routineItem;
+
+            auto &e = *item;
+
+            if (e.name == QStringLiteral("separator")) {
+                routineItem.typeToken = QStringLiteral("Separator");
+            } else if (e.name == QStringLiteral("stretch")) {
+                routineItem.typeToken = QStringLiteral("Stretch");
+            } else {
+                auto id = resolve(e.properties.value(QStringLiteral("id")));
+                if (id.isEmpty()) {
+                    fprintf(stderr, "%s:%s: routine element \"%s\" doesn't have an \"id\" field\n",
+                            qPrintable(qApp->applicationName()), qPrintable(fileName),
+                            e.name.toLatin1().data());
+                    std::exit(1);
+                }
+
+                auto it = objMap.find(id);
+                if (it != objMap.end()) {
+                    // This layout object has been declared in the objects field
+                    auto &info = it.value();
+
+                    // Check if the tag matches
+                    if (info.tag != e.name && info.tag != QStringLiteral("object")) {
+                        fprintf(
+                            stderr,
+                            "%s:%s: routine element of \"%s\" has inconsistent tag \"%s\" with the "
+                            "object element \"%s\"\n",
+                            qPrintable(qApp->applicationName()), qPrintable(fileName),
+                            id.toLatin1().data(), e.name.toLatin1().data(),
+                            info.tag.toLatin1().data());
+                        std::exit(1);
+                    }
+                    routineItem.typeToken = info.typeToken;
+                } else {
+                    // Create one
+                    ActionObjectInfoMessage info;
+                    info.id = id;
+                    determineObjectType(e, info, "routine");
+                    info.text = objIdToText(id);
+                    objMap.insert(id, info);
+                    objIdSeq.append(id);
+
+                    routineItem.typeToken = info.typeToken;
+                }
+
+                if (!e.children.isEmpty()) {
+                    fprintf(stderr, "%s:%s: routine element \"%s\" shouldn't have children\n",
+                            qPrintable(qApp->applicationName()), qPrintable(fileName),
+                            e.name.toLatin1().data());
+                    std::exit(1);
+                }
+
+                routineItem.id = id;
+                routineItem.flat =
+                    e.properties.value(QStringLiteral("flat")) == QStringLiteral("true");
+            }
+            result.items.append(routineItem);
         }
         return result;
     }
