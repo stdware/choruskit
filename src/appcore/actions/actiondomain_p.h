@@ -5,12 +5,19 @@
 
 namespace Core {
 
-    struct ActionCatalogueData {
-        struct Entry {
-            QByteArray name;
-            QVector<int> childIndexes;
-        };
-        QVector<Entry> entryData;
+    class ActionCatalogueData : public QSharedData {
+    public:
+        QByteArray name;
+        QList<ActionCatalogue> children;
+    };
+
+    class ActionLayoutData : public QSharedData {
+    public:
+        QString id;
+        ActionObjectInfo::Type type = ActionObjectInfo::Action;
+        bool flat = false;
+        ActionLayout::IconReference icon;
+        QList<ActionLayout> children;
     };
 
     class ActionIconMappingData : public QSharedData {

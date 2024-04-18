@@ -339,13 +339,13 @@ struct ParserPrivate {
         return result;
     }
 
-    ActionLayoutMessage parseLayout(const QMXmlAdaptorElement &root,
-                                    const QStringList &defaultCategory,
-                                    QHash<QString, ActionObjectInfoMessage> &objMap,
-                                    QStringList &objIdSeq, QSet<QString> &objectsWithLayout) {
-        ActionLayoutMessage result;
+    ActionLayoutInfoMessage parseLayout(const QMXmlAdaptorElement &root,
+                                        const QStringList &defaultCategory,
+                                        QHash<QString, ActionObjectInfoMessage> &objMap,
+                                        QStringList &objIdSeq, QSet<QString> &objectsWithLayout) {
+        ActionLayoutInfoMessage result;
         auto &entries = result.entryData;
-        entries.push_back(ActionLayoutMessage::Entry());
+        entries.push_back(ActionLayoutInfoMessage::Entry());
 
         struct Element {
             QStringList category;
@@ -418,14 +418,14 @@ struct ParserPrivate {
             }
             objectsWithLayout.insert(id);
 
-            ActionLayoutMessage::Entry entry;
+            ActionLayoutInfoMessage::Entry entry;
             entry.id = id;
             entry.typeToken = typeToken;
             entry.flat =
                 resolve(e.properties.value(QStringLiteral("flat"))) == QStringLiteral("true");
 
             for (const auto &item : e.children) {
-                ActionLayoutMessage::Entry childEntry;
+                ActionLayoutInfoMessage::Entry childEntry;
                 int currentEntryIndex = entries.size();
                 if (item->name == QStringLiteral("separator")) {
                     childEntry.typeToken = QStringLiteral("Separator");

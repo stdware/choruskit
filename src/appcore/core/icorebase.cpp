@@ -16,7 +16,6 @@ namespace Core {
     void ICoreBasePrivate::init() {
         Q_Q(ICoreBase);
 
-        actionSystem = new ActionSystem(q);
         windowSystem = new WindowSystem(q);
         documentSystem = new DocumentSystem(q);
         settingCatalog = new SettingCatalog(q);
@@ -33,11 +32,6 @@ namespace Core {
 
     ICoreBase *ICoreBase::instance() {
         return m_instance;
-    }
-
-    ActionSystem *ICoreBase::actionSystem() const {
-        Q_D(const ICoreBase);
-        return d->actionSystem;
     }
 
     WindowSystem *ICoreBase::windowSystem() const {

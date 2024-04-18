@@ -69,9 +69,6 @@ namespace Core {
         void windowExit_helper();
 
     private:
-        void _q_menuCreated(QMenu *menu);
-        void _q_menuDestroyed(QMenu *menu);
-
         friend class WindowSystem;
     };
 }

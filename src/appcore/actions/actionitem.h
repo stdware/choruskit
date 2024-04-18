@@ -9,11 +9,13 @@
 #include <QMenuBar>
 #include <QToolBar>
 
+#include <CoreApi/ckappcoreglobal.h>
+
 namespace Core {
 
     class ActionItemPrivate;
 
-    class ActionItem : public QObject {
+    class CKAPPCORE_EXPORT ActionItem : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(ActionItem)
     public:
@@ -48,10 +50,6 @@ namespace Core {
         QList<QMenu *> createdMenus() const;
 
         QMenu *requestMenu(QWidget *parent);
-
-    Q_SIGNALS:
-        void menuCreated(QMenu *menu);
-        void menuDestroyed(QMenu *menu);
 
     protected:
         ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent = nullptr);

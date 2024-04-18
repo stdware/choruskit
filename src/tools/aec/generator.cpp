@@ -44,7 +44,7 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
     }
 }
 
-static void generateLayouts(FILE *out, const QVector<ActionLayoutMessage> &layouts) {
+static void generateLayouts(FILE *out, const QVector<ActionLayoutInfoMessage> &layouts) {
     for (const auto &item : std::as_const(layouts)) {
         fprintf(out, "        {{\n");
         int i = 0;
@@ -164,15 +164,15 @@ static ActionExtensionPrivate *getData() {
     }
     fprintf(out, "\n");
 
-    if (msg.objects.isEmpty()) {
+    if (msg.layouts.isEmpty()) {
         fprintf(out, "    data.layoutData = nullptr;\n");
         fprintf(out, "    data.layoutCount = 0;\n");
     } else {
-        fprintf(out, "    static ActionLayoutData layoutData[] = {\n");
+        fprintf(out, "    static ActionLayoutInfoData layoutData[] = {\n");
         generateLayouts(out, msg.layouts);
         fprintf(out, "    };\n");
         fprintf(out, "    data.layoutData = layoutData;\n");
-        fprintf(out, "    data.layoutCount = sizeof(layoutData) / sizeof(ActionLayoutData);\n");
+        fprintf(out, "    data.layoutCount = sizeof(layoutData) / sizeof(ActionLayoutInfoData);\n");
     }
     fprintf(out, "\n");
 

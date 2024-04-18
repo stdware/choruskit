@@ -16,6 +16,9 @@ namespace Core {
     class CKAPPCORE_EXPORT ActionObjectInfo {
     public:
         inline ActionObjectInfo() : data(nullptr){};
+        inline bool isValid() const {
+            return data != nullptr;
+        };
 
         enum Type {
             Action,
@@ -37,34 +40,39 @@ namespace Core {
         static QString translatedCommandClass(const QByteArray &commandClass);
         static QString translatedCategory(const QByteArray &category);
 
-    private:
+    protected:
         const void *data;
 
         friend class ActionExtension;
     };
 
-    class CKAPPCORE_EXPORT ActionLayout {
+    class CKAPPCORE_EXPORT ActionLayoutInfo {
     public:
-        inline ActionLayout() : data(nullptr), idx(0){};
+        inline ActionLayoutInfo() : data(nullptr), idx(0){};
+        inline bool isValid() const {
+            return data != nullptr;
+        };
 
         QString id() const;
         ActionObjectInfo::Type type() const;
         bool flat() const;
 
         int childCount() const;
-        ActionLayout child(int index) const;
+        ActionLayoutInfo child(int index) const;
 
-    private:
+    protected:
         const void *data;
         int idx;
 
         friend class ActionExtension;
-        friend class ActionDomain;
     };
 
     class CKAPPCORE_EXPORT ActionBuildRoutine {
     public:
         inline ActionBuildRoutine() : data(nullptr){};
+        inline bool isValid() const {
+            return data != nullptr;
+        };
 
         enum Anchor {
             Last,
@@ -85,7 +93,7 @@ namespace Core {
         int itemCount() const;
         Item item(int index) const;
 
-    private:
+    protected:
         const void *data;
 
         friend class ActionExtension;
@@ -93,6 +101,10 @@ namespace Core {
 
     class CKAPPCORE_EXPORT ActionExtension {
     public:
+        inline bool isValid() const {
+            return d.data != nullptr;
+        };
+
         QString hash() const;
 
         QString version() const;
@@ -101,7 +113,7 @@ namespace Core {
         ActionObjectInfo object(int index) const;
 
         int layoutCount() const;
-        ActionLayout layout(int index) const;
+        ActionLayoutInfo layout(int index) const;
 
         int buildRoutineCount() const;
         ActionBuildRoutine buildRoutine(int index) const;
@@ -119,5 +131,10 @@ namespace Core {
             ckGetStaticActionExtension_##name)();                                                  \
         return QT_MANGLE_NAMESPACE(ckGetStaticActionExtension_##name)();                           \
     }()
+
+#define CK_STATIC_ACTION_EXTENSION_GETTER(name, func)                                              \
+    static inline const Core::ActionExtension *func() {                                            \
+        return CK_STATIC_ACTION_EXTENSION(name);                                                   \
+    }
 
 #endif // ACTIONEXTENSION_H

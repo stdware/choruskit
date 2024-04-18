@@ -22,7 +22,6 @@ namespace Core{
 
         void init();
 
-        ActionSystem *actionSystem;
         WindowSystem *windowSystem;
         DocumentSystem *documentSystem;
         SettingCatalog *settingCatalog;

@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QSettings>
 
-#include <CoreApi/actionsystem.h>
 #include <CoreApi/documentsystem.h>
 #include <CoreApi/settingcatalog.h>
 #include <CoreApi/windowsystem.h>
@@ -23,7 +22,6 @@ namespace Core {
         static ICoreBase *instance();
 
     public:
-        ActionSystem *actionSystem() const;
         WindowSystem *windowSystem() const;
         DocumentSystem *documentSystem() const;
         SettingCatalog *settingCatalog() const;

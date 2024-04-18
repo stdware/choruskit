@@ -17,7 +17,7 @@ struct ActionObjectInfoMessage {
     QString tag;
 };
 
-struct ActionLayoutMessage {
+struct ActionLayoutInfoMessage {
     struct Entry {
         QString id;
         QString typeToken;
@@ -45,7 +45,7 @@ struct ActionExtensionMessage {
     QString version;
 
     QVector<ActionObjectInfoMessage> objects;
-    QVector<ActionLayoutMessage> layouts;
+    QVector<ActionLayoutInfoMessage> layouts;
     QVector<ActionBuildRoutineMessage> buildRoutines;
 };
 

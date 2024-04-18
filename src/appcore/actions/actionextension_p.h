@@ -15,7 +15,7 @@ namespace Core {
         bool topLevel;
     };
 
-    struct ActionLayoutData {
+    struct ActionLayoutInfoData {
         struct Entry {
             QString id;
             ActionObjectInfo::Type type;
@@ -41,7 +41,7 @@ namespace Core {
         ActionObjectInfoData *objectData;
 
         int layoutCount;
-        ActionLayoutData *layoutData;
+        ActionLayoutInfoData *layoutData;
 
         int buildRoutineCount;
         ActionBuildRoutineData *buildRoutineData;

@@ -245,7 +245,7 @@ static ActionExtensionPrivate *getData() {
     data.objectData = objectData;
     data.objectCount = sizeOfArray(objectData);
 
-    static ActionLayoutData layoutData[] = {
+    static ActionLayoutInfoData layoutData[] = {
         {{
             {
                 QStringLiteral("MainMenu"),
@@ -319,20 +319,12 @@ static void ckDeclareStaticActionTranslations_core_actions() {
 
 在用户代码中获取该`ActionExtension`实例，使用以下方法获取：
 ```c++
-// 在全局命名空间内定义函数
-static inline auto getCoreActionExtension() {
-    return CK_STATIC_ACTION_EXTENSION(core_actions);
-};
+CK_STATIC_ACTION_EXTENSION_GETTER(core_actions, getMyActionExtension)
 
 namespace Core {
-
-void initialize() {
-
-    const ActionExtension *ext = getCoreActionExtension();
-
+    void initialize() {
+        const ActionExtension *ext = getMyActionExtension();
+        // 后续处理
+    }
 }
-
-}
-
-// 后续处理
 ```

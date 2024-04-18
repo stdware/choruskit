@@ -543,16 +543,6 @@ namespace Core {
         delete q;
     }
 
-    void IWindowPrivate::_q_menuCreated(QMenu *menu) {
-        Q_Q(IWindow);
-        q->addShortcutContext(menu, IWindow::Stable);
-    }
-
-    void IWindowPrivate::_q_menuDestroyed(QMenu *menu) {
-        Q_Q(IWindow);
-        // Auto removed, nothing to do
-    }
-
     void IWindow::load() {
         auto winMgr = ICoreBase::instance()->windowSystem();
         auto d = winMgr->d_func();
@@ -661,14 +651,6 @@ namespace Core {
                 window()->addAction(item->action());
                 break;
             }
-            case ActionItem::Menu: {
-                for (const auto &menu : item->createdMenus()) {
-                    addShortcutContext(menu, Stable);
-                }
-                connect(item, &ActionItem::menuCreated, d, &IWindowPrivate::_q_menuCreated);
-                connect(item, &ActionItem::menuDestroyed, d, &IWindowPrivate::_q_menuDestroyed);
-                break;
-            }
             case ActionItem::TopLevel: {
                 addShortcutContext(item->topLevel(), Stable);
                 break;
@@ -705,14 +687,6 @@ namespace Core {
         switch (item->type()) {
             case ActionItem::Action: {
                 window()->removeAction(item->action());
-                break;
-            }
-            case ActionItem::Menu: {
-                for (const auto &menu : item->createdMenus()) {
-                    removeShortcutContext(menu);
-                }
-                disconnect(item, &ActionItem::menuCreated, d, &IWindowPrivate::_q_menuCreated);
-                disconnect(item, &ActionItem::menuDestroyed, d, &IWindowPrivate::_q_menuDestroyed);
                 break;
             }
             case ActionItem::TopLevel: {

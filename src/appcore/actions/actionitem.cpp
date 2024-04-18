@@ -31,9 +31,9 @@ namespace Core {
 
     private:
         void _q_menuDestroyed(QObject *obj) {
-            Q_Q(ActionItem);
+            // Q_Q(ActionItem);
             auto menu = static_cast<QMenu *>(obj);
-            Q_EMIT q->menuDestroyed(menu);
+            // Q_EMIT q->menuDestroyed(menu);
             createdMenus.remove(menu);
         }
     };
@@ -160,7 +160,7 @@ namespace Core {
         Q_D(ActionItem);
         
         auto menu = d->menuFactory(parent);
-        Q_EMIT menuCreated(menu);
+        // Q_EMIT menuCreated(menu);
         connect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
         d->createdMenus.insert(menu);
         return menu;

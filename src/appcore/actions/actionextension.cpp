@@ -52,31 +52,31 @@ namespace Core {
         return QCoreApplication::translate("ChorusKit::ActionCategory", category);
     }
 
-    QString ActionLayout::id() const {
+    QString ActionLayoutInfo::id() const {
         Q_ASSERT(data);
-        return static_cast<const ActionLayoutData *>(data)->entryData[idx].id;
+        return static_cast<const ActionLayoutInfoData *>(data)->entryData[idx].id;
     }
 
-    ActionObjectInfo::Type ActionLayout::type() const {
+    ActionObjectInfo::Type ActionLayoutInfo::type() const {
         Q_ASSERT(data);
-        return static_cast<const ActionLayoutData *>(data)->entryData[idx].type;
+        return static_cast<const ActionLayoutInfoData *>(data)->entryData[idx].type;
     }
 
-    bool ActionLayout::flat() const {
+    bool ActionLayoutInfo::flat() const {
         Q_ASSERT(data);
-        return static_cast<const ActionLayoutData *>(data)->entryData[idx].flat;
+        return static_cast<const ActionLayoutInfoData *>(data)->entryData[idx].flat;
     }
 
-    int ActionLayout::childCount() const {
+    int ActionLayoutInfo::childCount() const {
         Q_ASSERT(data);
-        return static_cast<const ActionLayoutData *>(data)->entryData[idx].childIndexes.size();
+        return static_cast<const ActionLayoutInfoData *>(data)->entryData[idx].childIndexes.size();
     }
 
-    ActionLayout ActionLayout::child(int index) const {
+    ActionLayoutInfo ActionLayoutInfo::child(int index) const {
         Q_ASSERT(data);
-        ActionLayout result = *this;
+        ActionLayoutInfo result = *this;
         result.idx =
-            static_cast<const ActionLayoutData *>(data)->entryData[idx].childIndexes[index];
+            static_cast<const ActionLayoutInfoData *>(data)->entryData[idx].childIndexes[index];
         return result;
     }
 
@@ -127,8 +127,8 @@ namespace Core {
         return ActionExtensionPrivate::get(this)->layoutCount;
     }
 
-    ActionLayout ActionExtension::layout(int index) const {
-        ActionLayout result;
+    ActionLayoutInfo ActionExtension::layout(int index) const {
+        ActionLayoutInfo result;
         result.data = &ActionExtensionPrivate::get(this)->layoutData[index];
         result.idx = index;
         return result;
