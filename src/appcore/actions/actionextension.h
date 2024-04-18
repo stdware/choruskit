@@ -85,10 +85,25 @@ namespace Core {
         QString parent() const;
         QString relativeTo() const;
 
-        struct Item {
-            QString id;
-            ActionObjectInfo::Type type;
-            bool flat;
+        class Item {
+        public:
+            Item(const QString &id = {}, ActionObjectInfo::Type type = ActionObjectInfo::Action,
+                 bool flat = false)
+                : m_id(id), m_type(type), m_flat(flat) {
+            }
+            inline QString id() const {
+                return m_id;
+            }
+            Q_CONSTEXPR ActionObjectInfo::Type type() const {
+                return m_type;
+            }
+            Q_CONSTEXPR bool flat() const {
+                return m_flat;
+            }
+        private:
+            QString m_id;
+            ActionObjectInfo::Type m_type;
+            bool m_flat;
         };
         int itemCount() const;
         Item item(int index) const;

@@ -122,7 +122,7 @@ namespace Core {
     QIcon ActionDomain::icon(const QString &id) const {
         return QIcon();
     }
-    bool ActionDomain::build(const QList<ActionItem *> &items) const {
+    bool ActionDomain::build(const QString &theme, const QList<ActionItem *> &items) const {
         return false;
     }
     QList<ActionLayout> ActionDomain::currentLayouts() const {

@@ -56,7 +56,6 @@ namespace Core {
             inline QString data() const {
                 return m_data;
             }
-
         private:
             bool m_fromFile;
             QString m_data;
@@ -141,7 +140,7 @@ namespace Core {
         QIcon icon(const ActionLayout::IconReference &icon) const;
         QIcon icon(const QString &id) const;
 
-        bool build(const QList<ActionItem *> &items) const;
+        bool build(const QString &theme, const QList<ActionItem *> &items) const;
 
         QList<ActionLayout> currentLayouts() const;
         void setCurrentLayouts(const QList<ActionLayout> &layouts);
