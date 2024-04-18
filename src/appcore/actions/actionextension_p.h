@@ -34,7 +34,7 @@ namespace Core {
 
     struct ActionExtensionPrivate {
         QString hash;
-        
+
         QString version;
 
         int objectCount;

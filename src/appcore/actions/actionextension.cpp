@@ -52,6 +52,11 @@ namespace Core {
         return QCoreApplication::translate("ChorusKit::ActionCategory", category);
     }
 
+    const void *ActionObjectInfo::sharedNullData() {
+        static ActionObjectInfoData data{{}, {}, {}, {}, {}, {}, {}};
+        return &data;
+    }
+
     QString ActionLayoutInfo::id() const {
         Q_ASSERT(data);
         return static_cast<const ActionLayoutInfoData *>(data)->entryData[idx].id;
@@ -80,6 +85,11 @@ namespace Core {
         return result;
     }
 
+    const void *ActionLayoutInfo::sharedNullData() {
+        static ActionLayoutInfoData data{{{{}, {}, {}, {}}}};
+        return &data;
+    }
+
     ActionBuildRoutine::Anchor ActionBuildRoutine::anchor() const {
         Q_ASSERT(data);
         return static_cast<const ActionBuildRoutineData *>(data)->anchor;
@@ -103,6 +113,11 @@ namespace Core {
     ActionBuildRoutine::Item ActionBuildRoutine::item(int index) const {
         Q_ASSERT(data);
         return static_cast<const ActionBuildRoutineData *>(data)->items[index];
+    }
+
+    const void *ActionBuildRoutine::sharedNullData() {
+        static ActionBuildRoutineData data{{}, {}, {}, {}};
+        return &data;
     }
 
     QString ActionExtension::hash() const {

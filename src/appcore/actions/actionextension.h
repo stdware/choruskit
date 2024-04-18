@@ -15,9 +15,9 @@ namespace Core {
 
     class CKAPPCORE_EXPORT ActionObjectInfo {
     public:
-        inline ActionObjectInfo() : data(nullptr){};
-        inline bool isValid() const {
-            return data != nullptr;
+        inline ActionObjectInfo() : data(sharedNullData()){};
+        inline bool isNull() const {
+            return data != sharedNullData();
         };
 
         enum Type {
@@ -43,14 +43,16 @@ namespace Core {
     protected:
         const void *data;
 
+        static const void *sharedNullData();
+
         friend class ActionExtension;
     };
 
     class CKAPPCORE_EXPORT ActionLayoutInfo {
     public:
-        inline ActionLayoutInfo() : data(nullptr), idx(0){};
-        inline bool isValid() const {
-            return data != nullptr;
+        inline ActionLayoutInfo() : data(sharedNullData()), idx(0){};
+        inline bool isNull() const {
+            return data != sharedNullData();
         };
 
         QString id() const;
@@ -64,14 +66,16 @@ namespace Core {
         const void *data;
         int idx;
 
+        static const void *sharedNullData();
+
         friend class ActionExtension;
     };
 
     class CKAPPCORE_EXPORT ActionBuildRoutine {
     public:
-        inline ActionBuildRoutine() : data(nullptr){};
-        inline bool isValid() const {
-            return data != nullptr;
+        inline ActionBuildRoutine() : data(sharedNullData()){};
+        inline bool isNull() const {
+            return data != sharedNullData();
         };
 
         enum Anchor {
@@ -111,15 +115,13 @@ namespace Core {
     protected:
         const void *data;
 
+        static const void *sharedNullData();
+
         friend class ActionExtension;
     };
 
     class CKAPPCORE_EXPORT ActionExtension {
     public:
-        inline bool isValid() const {
-            return d.data != nullptr;
-        };
-
         QString hash() const;
 
         QString version() const;

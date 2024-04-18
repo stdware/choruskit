@@ -107,44 +107,52 @@ namespace Core {
     }
     void ActionDomain::removeIconMapping(const ActionIconMapping *mapping) {
     }
-    QStringList ActionDomain::ids() const {
+    QStringList ActionDomain::objectIds() const {
         return {};
     }
-    ActionObjectInfo ActionDomain::objectInfo(const QString &id) const {
+    ActionObjectInfo ActionDomain::objectInfo(const QString &objId) const {
         return {};
     }
     ActionCatalogue ActionDomain::catalogue() const {
         return {};
     }
-    QIcon ActionDomain::icon(const ActionLayout::IconReference &icon) const {
-        return QIcon();
+    QStringList ActionDomain::iconIds() const {
+        return {};
     }
-    QIcon ActionDomain::icon(const QString &id) const {
-        return QIcon();
-    }
-    bool ActionDomain::build(const QString &theme, const QList<ActionItem *> &items) const {
-        return false;
+    QIcon ActionDomain::icon(const QString &iconId) const {
+        return {};
     }
     QList<ActionLayout> ActionDomain::currentLayouts() const {
         return {};
     }
     void ActionDomain::setCurrentLayouts(const QList<ActionLayout> &layouts) {
     }
-    QList<QKeySequence> ActionDomain::shortcuts(const QString &id) const {
+    std::optional<QList<QKeySequence>>
+        ActionDomain::overriddenShortcuts(const QString &objId) const {
         return {};
     }
-    void ActionDomain::setShortcuts(const QString &id, const QList<QKeySequence> &shortcuts) {
+    void ActionDomain::setOverriddenShortcuts(const QString &objId,
+                                              const std::optional<QList<QKeySequence>> &shortcuts) {
     }
-    QJsonObject ActionDomain::saveLayouts() const {
+    std::optional<QString> ActionDomain::overriddenIconFile(const QString &objId) const {
         return {};
     }
-    bool ActionDomain::restoreLayouts(const QJsonObject &obj) {
+    void ActionDomain::setOverriddenIconFile(const QString &objId,
+                                             const std::optional<QString> &fileName) {
+    }
+    QJsonObject ActionDomain::saveCurrentLayouts() const {
+        return {};
+    }
+    bool ActionDomain::restoreCurrentLayouts(const QJsonObject &obj) {
         return false;
     }
-    QJsonObject ActionDomain::saveKeymap() const {
-        return {};
+    QJsonObject ActionDomain::saveOverriddenAttributes() const {
+        return QJsonObject();
     }
-    bool ActionDomain::restoreKeymap(const QJsonObject &obj) {
+    bool ActionDomain::restoreOverriddenAttributes(const QJsonObject &obj) {
+        return false;
+    }
+    bool ActionDomain::buildLayouts(const QString &theme, const QList<ActionItem *> &items) const {
         return false;
     }
 

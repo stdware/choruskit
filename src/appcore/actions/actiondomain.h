@@ -1,6 +1,8 @@
 #ifndef ACTIONDOMAIN_H
 #define ACTIONDOMAIN_H
 
+#include <optional>
+
 #include <QObject>
 #include <QJsonObject>
 #include <QIcon>
@@ -56,6 +58,7 @@ namespace Core {
             inline QString data() const {
                 return m_data;
             }
+
         private:
             bool m_fromFile;
             QString m_data;
@@ -133,32 +136,53 @@ namespace Core {
         void removeIconMapping(const ActionIconMapping *mapping);
 
     public:
-        QStringList ids() const;
-        ActionObjectInfo objectInfo(const QString &id) const;
+        QStringList objectIds() const;
+        ActionObjectInfo objectInfo(const QString &objId) const;
         ActionCatalogue catalogue() const;
 
-        QIcon icon(const ActionLayout::IconReference &icon) const;
-        QIcon icon(const QString &id) const;
-
-        bool build(const QString &theme, const QList<ActionItem *> &items) const;
+        QStringList iconIds() const;
+        QIcon icon(const QString &iconId) const;
 
         QList<ActionLayout> currentLayouts() const;
         void setCurrentLayouts(const QList<ActionLayout> &layouts);
 
-        QList<QKeySequence> shortcuts(const QString &id) const;
-        void setShortcuts(const QString &id, const QList<QKeySequence> &shortcuts);
+        std::optional<QList<QKeySequence>> overriddenShortcuts(const QString &objId) const;
+        void setOverriddenShortcuts(const QString &objId,
+                                    const std::optional<QList<QKeySequence>> &shortcuts);
 
-        QJsonObject saveLayouts() const;
-        bool restoreLayouts(const QJsonObject &obj);
+        std::optional<QString> overriddenIconFile(const QString &objId) const;
+        void setOverriddenIconFile(const QString &objId, const std::optional<QString> &fileName);
 
-        QJsonObject saveKeymap() const;
-        bool restoreKeymap(const QJsonObject &obj);
+        QJsonObject saveCurrentLayouts() const;
+        bool restoreCurrentLayouts(const QJsonObject &obj);
+
+        QJsonObject saveOverriddenAttributes() const;
+        bool restoreOverriddenAttributes(const QJsonObject &obj);
+
+        inline QIcon objectIcon(const QString &objId) const;
+        inline QList<QKeySequence> objectShortcuts(const QString &objId) const;
+
+        bool buildLayouts(const QString &theme, const QList<ActionItem *> &items) const;
 
     protected:
         ActionDomain(ActionDomainPrivate &d, QObject *parent = nullptr);
 
         QScopedPointer<ActionDomainPrivate> d_ptr;
     };
+
+    inline QIcon ActionDomain::objectIcon(const QString &objId) const {
+        if (auto o = overriddenIconFile(objId); o) {
+            return QIcon(o.value());
+        }
+        return icon(objId);
+    }
+
+    inline QList<QKeySequence> ActionDomain::objectShortcuts(const QString &objId) const {
+        if (auto o = overriddenShortcuts(objId); o) {
+            return o.value();
+        }
+        return objectInfo(objId).shortcuts();
+    }
 
 }
 
