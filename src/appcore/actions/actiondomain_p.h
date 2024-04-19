@@ -1,6 +1,9 @@
 #ifndef ACTIONDOMAINPRIVATE_H
 #define ACTIONDOMAINPRIVATE_H
 
+#include <list>
+#include <variant>
+
 #include <CoreApi/actiondomain.h>
 
 namespace Core {
@@ -29,6 +32,31 @@ namespace Core {
         void init();
 
         ActionDomain *q_ptr;
+
+        // Icons
+        struct IconChange {
+            struct Single {
+                QString theme;
+                QString id;
+                QString fileName;
+                bool remove;
+            };
+            struct Config {
+                QString fileName;
+                bool remove;
+            };
+            std::list<std::variant<Single, Config>> icons;
+            QHash<QStringList, decltype(icons)::iterator> indexes;
+        };
+        struct IconStorage {
+             QHash<QString, QHash<QString, QString>> map;
+             QHash<QString, QHash<QString, QHash<QString, QString>>> configFiles;
+
+        };
+        mutable IconChange iconChange;
+        mutable IconStorage iconStorage;
+
+        void flushIcons() const;
     };
 
 }

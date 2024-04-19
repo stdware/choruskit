@@ -95,27 +95,6 @@ namespace Core {
         setIconReference({id, false});
     }
 
-    class ActionIconMappingData;
-
-    class CKAPPCORE_EXPORT ActionIconMapping {
-    public:
-        ActionIconMapping();
-        ActionIconMapping(const ActionIconMapping &other);
-        ActionIconMapping &operator=(const ActionIconMapping &other);
-        ~ActionIconMapping();
-
-    public:
-        void addIconExtension(const QString &extensionFileName);
-        void addIcon(const QString &theme, const QString &id, const QString &fileName);
-
-        QIcon icon(const QString &theme, const QString &id) const;
-
-    private:
-        QSharedDataPointer<ActionIconMappingData> d;
-
-        friend class ActionDomain;
-    };
-
     class ActionDomainPrivate;
 
     class CKAPPCORE_EXPORT ActionDomain : public QObject {
@@ -126,13 +105,13 @@ namespace Core {
         ~ActionDomain();
 
     public:
-        QList<const ActionExtension *> extensions() const;
         void addExtension(const ActionExtension *extension);
         void removeExtension(const ActionExtension *extension);
 
-        QList<const ActionIconMapping *> iconMappings() const;
-        void addIconMapping(const ActionIconMapping *mapping);
-        void removeIconMapping(const ActionIconMapping *mapping);
+        void addIcon(const QString &theme, const QString &id, const QString &fileName);
+        void addIconConfiguration(const QString &fileName);
+        void removeIcon(const QString &theme, const QString &id);
+        void removeIconConfiguration(const QString &fileName);
 
     public:
         QByteArray saveCurrentLayouts() const;
