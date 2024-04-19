@@ -76,32 +76,74 @@ namespace Core {
     void ActionDomainPrivate::init() {
     }
 
-    static bool applyIconConfig(const QString &fileName,
-                                QHash<QString, QHash<QString, QString>> &out) {
-        return false;
+    static QHash<QString, QHash<QString, QString>> parseIconConfig(const QString &fileName) {
+        return {};
+    }
+
+    void ActionDomainPrivate::flushActionStructure() const {
     }
 
     void ActionDomainPrivate::flushIcons() const {
-        auto &cachedIcons = iconChange.icons;
-        if (cachedIcons.empty())
+        auto &changes = iconChange.items;
+        if (changes.isEmpty())
             return;
 
-        for (const auto &c : std::as_const(cachedIcons)) {
+        for (const auto &c : std::as_const(changes)) {
             if (c.index() == 0) {
+                auto &map = iconStorage.singles;
+                auto &indexes = iconStorage.items;
                 auto itemToBeChanged = std::get<0>(c);
                 if (itemToBeChanged.remove) {
-                    auto it = iconMap.find(itemToBeChanged.theme);
-                    if (it != iconMap.end()) {
-                        auto &map = it.value();
-                        map.remove(itemToBeChanged.id);
-                        if (map.isEmpty()) {
-                            iconMap.erase(it);
+                    auto it = map.find({itemToBeChanged.theme});
+                    if (it != map.end()) {
+                        auto &map0 = it.value();
+                        if (map0.remove(itemToBeChanged.id)) {
+                            if (map0.isEmpty()) {
+                                map.erase(it);
+                            }
+                            indexes.remove({itemToBeChanged.theme, itemToBeChanged.id});
                         }
                     }
-                } else {
-                    iconMap[itemToBeChanged.theme][itemToBeChanged.id] = itemToBeChanged.fileName;
+                } else if (auto info = QFileInfo(itemToBeChanged.fileName); info.isFile()) {
+                    QStringList keys = {itemToBeChanged.theme, itemToBeChanged.id};
+                    map[itemToBeChanged.theme][itemToBeChanged.id] = info.canonicalFilePath();
+                    indexes.remove(keys);
+                    indexes.append(keys);
                 }
             } else {
+                auto &map = iconStorage.configFiles;
+                auto &indexes = iconStorage.items;
+                auto itemToBeChanged = std::get<1>(c);
+                if (itemToBeChanged.remove) {
+                    if (map.remove(itemToBeChanged.fileName)) {
+                        indexes.remove({itemToBeChanged.fileName});
+                    }
+                } else if (auto iconsFromFile = parseIconConfig(itemToBeChanged.fileName);
+                           !iconsFromFile.isEmpty()) {
+                    QStringList keys = {itemToBeChanged.fileName};
+                    map[itemToBeChanged.fileName] = {};
+                    indexes.remove(keys);
+                    indexes.append(keys);
+                }
+            }
+        }
+        changes.clear();
+
+        // Build map
+        auto &map = iconStorage.storage;
+        map.clear();
+        for (const auto &keys : std::as_const(iconStorage.items)) {
+            if (keys.size() == 1) {
+                auto configMap = iconStorage.configFiles.value(keys[0]);
+                for (auto it = configMap.begin(); it != configMap.end(); ++it) {
+                    auto &from = it.value();
+                    auto &to = map[it.key()];
+                    for (auto it2 = from.begin(); it2 != from.end(); ++it2) {
+                        to.insert(it2.key(), it2.value());
+                    }
+                }
+            } else {
+                map[keys[0]][keys[1]] = iconStorage.singles.value(keys[0]).value(keys[1]);
             }
         }
     }
@@ -123,8 +165,14 @@ namespace Core {
         return false;
     }
     void ActionDomain::addExtension(const ActionExtension *extension) {
+        Q_D(ActionDomain);
+        d->extensions.append(extension);
+        d->actionStructure.dirty = true;
     }
     void ActionDomain::removeExtension(const ActionExtension *extension) {
+        Q_D(ActionDomain);
+        d->extensions.remove(extension);
+        d->actionStructure.dirty = true;
     }
     void ActionDomain::addIcon(const QString &theme, const QString &id, const QString &fileName) {
         Q_D(ActionDomain);
@@ -138,16 +186,10 @@ namespace Core {
             fileName,
             false,
         };
-        auto &icons = d->iconChange.icons;
-        auto &indexes = d->iconChange.indexes;
-        if (!icons.empty()) {
-            auto it = indexes.find({theme, id});
-            if (it != indexes.end()) {
-                **it = itemToBeAdded;
-                return;
-            }
-        }
-        indexes.insert({theme, id}, icons.insert(icons.end(), itemToBeAdded));
+        auto &items = d->iconChange.items;
+        QStringList keys = {theme, id};
+        items.remove(keys);
+        items.append(keys, {itemToBeAdded});
     }
     void ActionDomain::addIconConfiguration(const QString &fileName) {
         Q_D(ActionDomain);
@@ -159,54 +201,34 @@ namespace Core {
             fileName,
             false,
         };
-        auto &icons = d->iconChange.icons;
-        auto &indexes = d->iconChange.indexes;
-        if (!icons.empty()) {
-            auto it = indexes.find({fileName});
-            if (it != indexes.end()) {
-                **it = itemToBeAdded;
-                return;
-            }
-        }
-        indexes.insert({fileName}, icons.insert(icons.end(), itemToBeAdded));
+        auto &items = d->iconChange.items;
+        QStringList keys = {fileName};
+        items.remove(keys);
+        items.append({fileName}, {itemToBeAdded});
     }
     void ActionDomain::removeIcon(const QString &theme, const QString &id) {
         Q_D(ActionDomain);
-        auto &icons = d->iconChange.icons;
-        auto &indexes = d->iconChange.indexes;
-
+        auto &items = d->iconChange.items;
         ActionDomainPrivate::IconChange::Single itemToBeRemoved{
             theme,
             id,
             {},
             true,
         };
-        if (!icons.empty()) {
-            auto it = indexes.find({theme, id});
-            if (it != indexes.end()) {
-                **it = itemToBeRemoved;
-                return;
-            }
-        }
-        indexes.insert({theme, id}, icons.insert(icons.end(), itemToBeRemoved));
+        QStringList keys = {theme, id};
+        items.remove(keys);
+        items.append(keys, itemToBeRemoved);
     }
     void ActionDomain::removeIconConfiguration(const QString &fileName) {
         Q_D(ActionDomain);
-        auto &icons = d->iconChange.icons;
-        auto &indexes = d->iconChange.indexes;
-
+        auto &items = d->iconChange.items;
         ActionDomainPrivate::IconChange::Config itemToBeRemoved{
             fileName,
             true,
         };
-        if (!icons.empty()) {
-            auto it = indexes.find({fileName});
-            if (it != indexes.end()) {
-                **it = itemToBeRemoved;
-                return;
-            }
-        }
-        indexes.insert({fileName}, icons.insert(icons.end(), itemToBeRemoved));
+        QStringList keys = {fileName};
+        items.remove(keys);
+        items.append({fileName}, itemToBeRemoved);
     }
     QStringList ActionDomain::objectIds() const {
         return QStringList();
@@ -215,13 +237,28 @@ namespace Core {
         return ActionObjectInfo();
     }
     ActionCatalogue ActionDomain::catalogue() const {
-        return ActionCatalogue();
+        Q_D(const ActionDomain);
+        d->flushActionStructure();
+        return d->actionStructure.catalogue;
     }
-    QStringList ActionDomain::iconIds() const {
-        return QStringList();
+    QStringList ActionDomain::iconThemes() const {
+        Q_D(const ActionDomain);
+        d->flushIcons();
+        return d->iconStorage.storage.keys();
     }
-    QIcon ActionDomain::icon(const QString &iconId) const {
-        return QIcon();
+    QStringList ActionDomain::iconIds(const QString &theme) {
+        Q_D(const ActionDomain);
+        d->flushIcons();
+        return d->iconStorage.storage.value(theme).keys();
+    }
+    QIcon ActionDomain::icon(const QString &theme, const QString &iconId) const {
+        Q_D(const ActionDomain);
+        d->flushIcons();
+
+        auto icon = QIcon(d->iconStorage.storage.value(theme).value(iconId));
+        if (!icon.isNull())
+            return {};
+        return QIcon(d->iconStorage.storage.value({}).value(iconId)); // fallback
     }
     QList<ActionLayout> ActionDomain::currentLayouts() const {
         return QList<ActionLayout>();
@@ -230,16 +267,27 @@ namespace Core {
     }
     std::optional<QList<QKeySequence>>
         ActionDomain::overriddenShortcuts(const QString &objId) const {
-        return std::optional<QList<QKeySequence>>();
+        Q_D(const ActionDomain);
+        return d->overridedShortcuts.value(objId);
     }
     void ActionDomain::setOverriddenShortcuts(const QString &objId,
                                               const std::optional<QList<QKeySequence>> &shortcuts) {
+        Q_D(ActionDomain);
+        d->overridedShortcuts.insert(objId, shortcuts);
     }
     std::optional<QString> ActionDomain::overriddenIconFile(const QString &objId) const {
-        return std::optional<QString>();
+        Q_D(const ActionDomain);
+        return d->overridedIcons.value(objId);
     }
     void ActionDomain::setOverriddenIconFile(const QString &objId,
                                              const std::optional<QString> &fileName) {
+        Q_D(ActionDomain);
+        if (fileName) {
+            QFileInfo info(fileName.value());
+            if (!info.isFile())
+                return;
+        }
+        d->overridedIcons.insert(objId, fileName);
     }
 
     bool ActionDomain::buildLayouts(const QString &theme, const QList<ActionItem *> &items) const {

@@ -125,8 +125,9 @@ namespace Core {
         ActionObjectInfo objectInfo(const QString &objId) const;
         ActionCatalogue catalogue() const;
 
-        QStringList iconIds() const;
-        QIcon icon(const QString &iconId) const;
+        QStringList iconThemes() const;
+        QStringList iconIds(const QString &theme);
+        QIcon icon(const QString &theme, const QString &iconId) const;
 
         QList<ActionLayout> currentLayouts() const;
         void setCurrentLayouts(const QList<ActionLayout> &layouts);
@@ -138,7 +139,7 @@ namespace Core {
         std::optional<QString> overriddenIconFile(const QString &objId) const;
         void setOverriddenIconFile(const QString &objId, const std::optional<QString> &fileName);
 
-        inline QIcon objectIcon(const QString &objId) const;
+        inline QIcon objectIcon(const QString &theme, const QString &objId) const;
         inline QList<QKeySequence> objectShortcuts(const QString &objId) const;
 
         bool buildLayouts(const QString &theme, const QList<ActionItem *> &items) const;
@@ -149,11 +150,11 @@ namespace Core {
         QScopedPointer<ActionDomainPrivate> d_ptr;
     };
 
-    inline QIcon ActionDomain::objectIcon(const QString &objId) const {
+    inline QIcon ActionDomain::objectIcon(const QString &theme, const QString &objId) const {
         if (auto o = overriddenIconFile(objId); o) {
             return QIcon(o.value());
         }
-        return icon(objId);
+        return icon(theme, objId);
     }
 
     inline QList<QKeySequence> ActionDomain::objectShortcuts(const QString &objId) const {
