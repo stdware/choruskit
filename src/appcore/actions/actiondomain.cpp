@@ -170,7 +170,8 @@ namespace Core {
             const auto &item = children.at(i);
             if (indexes.contains(item.name())) {
                 qWarning().noquote().nospace()
-                    << "Core::ActionCatalogue::setChildren(): duplicated child name " << item.name();
+                    << "Core::ActionCatalogue::setChildren(): duplicated child name "
+                    << item.name();
                 return;
             }
             indexes.insert(item.name(), i);
@@ -297,8 +298,6 @@ namespace Core {
     void ActionDomainPrivate::flushLayouts() const {
         if (layouts)
             return;
-
-
     }
     void ActionDomainPrivate::flushIcons() const {
         auto &changes = iconChange.items;
@@ -483,8 +482,7 @@ namespace Core {
     }
     QStringList ActionDomain::objectIds() const {
         Q_D(const ActionDomain);
-        auto arr = d->objectInfoMap.keys();
-        return {arr.begin(), arr.end()};
+        return d->objectInfoMap.keys_qlist();
     }
     ActionObjectInfo ActionDomain::objectInfo(const QString &objId) const {
         Q_D(const ActionDomain);

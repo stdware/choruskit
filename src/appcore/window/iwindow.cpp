@@ -238,7 +238,7 @@ namespace Core {
 
         if (!duplicatedKeys.isEmpty()) {
             myWarning(__func__) << "duplicated shortcuts detected" << action
-                                << duplicatedKeys.values();
+                                << duplicatedKeys.values_qlist();
         }
     }
 
@@ -705,8 +705,7 @@ namespace Core {
 
     QList<ActionItem *> IWindow::actionItems() const {
         Q_D(const IWindow);
-        const auto &arr = d->actionItemMap.values();
-        return {arr.begin(), arr.end()};
+        return d->actionItemMap.values_qlist();
     }
 
     void IWindow::addShortcutContext(QWidget *w, ShortcutContextPriority priority) {

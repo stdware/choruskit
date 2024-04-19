@@ -136,7 +136,8 @@ namespace Core {
         // {
         //     bool lastWindowClosed = true;
         //     for (const auto &w : QApplication::topLevelWidgets()) {
-        //         if (!w->isVisible() || w->parentWidget() || !w->testAttribute(Qt::WA_QuitOnClose) ||
+        //         if (!w->isVisible() || w->parentWidget() || !w->testAttribute(Qt::WA_QuitOnClose)
+        //         ||
         //             w->property("choruskit_managed_window").toBool())
         //             continue;
 
@@ -218,8 +219,7 @@ namespace Core {
 
     QList<IWindow *> WindowSystem::windows() const {
         Q_D(const WindowSystem);
-        const auto &arr = d->iWindows.values();
-        return {arr.begin(), arr.end()};
+        return d->iWindows.values_qlist();
     }
 
     IWindow *WindowSystem::firstWindow() const {

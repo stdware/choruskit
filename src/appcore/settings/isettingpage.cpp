@@ -102,8 +102,7 @@ namespace Core {
 
     QList<ISettingPage *> ISettingPage::pages() const {
         Q_D(const ISettingPage);
-        const auto &arr = d->pages.values();
-        return {arr.begin(), arr.end()};
+        return d->pages.values_qlist();
     }
 
     QList<ISettingPage *> ISettingPage::allPages() const {

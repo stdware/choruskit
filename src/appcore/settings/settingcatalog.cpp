@@ -140,8 +140,7 @@ namespace Core {
 
     QList<ISettingPage *> SettingCatalog::pages() const {
         Q_D(const SettingCatalog);
-        const auto &arr = d->pages.values();
-        return {arr.begin(), arr.end()};
+        return d->pages.values_qlist();
     }
 
     QList<ISettingPage *> SettingCatalog::pages(const QString &id) const {

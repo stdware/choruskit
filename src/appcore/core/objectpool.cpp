@@ -123,14 +123,14 @@ namespace Core {
     }
 
     void ObjectPool::removeObjects(const QString &id) {
-        std::vector<QObject *> objs;
+        QList<QObject *> objs;
         {
             QReadLocker locker(&d->objectListLock);
             auto it = d->objectMap.find(id);
             if (it == d->objectMap.end()) {
                 return;
             }
-            objs = it->values();
+            objs = it->values_qlist();
         }
 
         for (const auto &obj : qAsConst(objs)) {
@@ -159,8 +159,7 @@ namespace Core {
         QReadLocker locker(&d->objectListLock);
         auto it2 = d->objectMap.find(id);
         if (it2 != d->objectMap.end()) {
-            const auto &objs = it2->values();
-            return {objs.begin(), objs.end()};
+            return it2->values_qlist();
         }
         return {};
     }
