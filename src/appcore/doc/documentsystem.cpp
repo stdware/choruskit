@@ -202,14 +202,12 @@ namespace Core {
 
     QList<DocumentSpec *> DocumentSystem::docTypes() const {
         Q_D(const DocumentSystem);
-        const auto &arr = d->docSpecs.values();
-        return {arr.begin(), arr.end()};
+        return d->docSpecs.values_qlist();
     }
 
     QStringList DocumentSystem::docTypeIds() const {
         Q_D(const DocumentSystem);
-        const auto &arr = d->docSpecs.keys();
-        return {arr.begin(), arr.end()};
+        return d->docSpecs.keys_qlist();
     }
 
     DocumentSpec *DocumentSystem::supportedDocType(const QString &suffix) const {
@@ -224,8 +222,7 @@ namespace Core {
 
     QList<DocumentSpec *> DocumentSystem::supportedDocTypes(const QString &suffix) const {
         Q_D(const DocumentSystem);
-        const auto &arr = d->extensionsMap.value(suffix, {}).values();
-        return {arr.begin(), arr.end()};
+        return d->extensionsMap.value(suffix, {}).values_qlist();
     }
 
     QStringList DocumentSystem::supportedExtensions() const {

@@ -11,6 +11,8 @@ namespace Core {
 
     class ActionDomain;
 
+    class ActionDomainPrivate;
+
     class ActionExtension;
 
     class CKAPPCORE_EXPORT ActionObjectInfo {
@@ -46,6 +48,8 @@ namespace Core {
         static const void *sharedNullData();
 
         friend class ActionExtension;
+        friend class ActionDomain;
+        friend class ActionDomainPrivate;
     };
 
     class CKAPPCORE_EXPORT ActionLayoutInfo {
@@ -69,6 +73,8 @@ namespace Core {
         static const void *sharedNullData();
 
         friend class ActionExtension;
+        friend class ActionDomain;
+        friend class ActionDomainPrivate;
     };
 
     class CKAPPCORE_EXPORT ActionBuildRoutine {
@@ -118,6 +124,8 @@ namespace Core {
         static const void *sharedNullData();
 
         friend class ActionExtension;
+        friend class ActionDomain;
+        friend class ActionDomainPrivate;
     };
 
     class CKAPPCORE_EXPORT ActionExtension {

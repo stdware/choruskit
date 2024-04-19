@@ -27,8 +27,13 @@ namespace Core {
         QByteArray name() const;
         void setName(const QByteArray &name);
 
+        QString id() const;
+        void setId(const QString &id);
+
         QList<ActionCatalogue> children() const;
         void setChildren(const QList<ActionCatalogue> &children);
+
+        int indexOfChild(const QByteArray &name) const;
 
     protected:
         QSharedDataPointer<ActionCatalogueData> d;
@@ -81,6 +86,8 @@ namespace Core {
         QList<ActionLayout> children() const;
         void setChildren(const QList<ActionLayout> &children);
 
+        int indexOfChild(const QString &id) const;
+
     protected:
         QSharedDataPointer<ActionLayoutData> d;
 
@@ -95,27 +102,6 @@ namespace Core {
         setIconReference({id, false});
     }
 
-    class ActionIconMappingData;
-
-    class CKAPPCORE_EXPORT ActionIconMapping {
-    public:
-        ActionIconMapping();
-        ActionIconMapping(const ActionIconMapping &other);
-        ActionIconMapping &operator=(const ActionIconMapping &other);
-        ~ActionIconMapping();
-
-    public:
-        void addIconExtension(const QString &extensionFileName);
-        void addIcon(const QString &theme, const QString &id, const QString &fileName);
-
-        QIcon icon(const QString &theme, const QString &id) const;
-
-    private:
-        QSharedDataPointer<ActionIconMappingData> d;
-
-        friend class ActionDomain;
-    };
-
     class ActionDomainPrivate;
 
     class CKAPPCORE_EXPORT ActionDomain : public QObject {
@@ -126,17 +112,17 @@ namespace Core {
         ~ActionDomain();
 
     public:
-        QList<const ActionExtension *> extensions() const;
         void addExtension(const ActionExtension *extension);
         void removeExtension(const ActionExtension *extension);
 
-        QList<const ActionIconMapping *> iconMappings() const;
-        void addIconMapping(const ActionIconMapping *mapping);
-        void removeIconMapping(const ActionIconMapping *mapping);
+        void addIcon(const QString &theme, const QString &id, const QString &fileName);
+        void addIconConfiguration(const QString &fileName);
+        void removeIcon(const QString &theme, const QString &id);
+        void removeIconConfiguration(const QString &fileName);
 
     public:
-        QByteArray saveCurrentLayouts() const;
-        bool restoreCurrentLayouts(const QByteArray &obj);
+        QByteArray saveLayouts() const;
+        bool restoreLayouts(const QByteArray &obj);
 
         QByteArray saveOverriddenAttributes() const;
         bool restoreOverriddenAttributes(const QByteArray &obj);
@@ -146,20 +132,24 @@ namespace Core {
         ActionObjectInfo objectInfo(const QString &objId) const;
         ActionCatalogue catalogue() const;
 
-        QStringList iconIds() const;
-        QIcon icon(const QString &iconId) const;
+        QStringList iconThemes() const;
+        QStringList iconIds(const QString &theme);
+        QIcon icon(const QString &theme, const QString &iconId) const;
 
-        QList<ActionLayout> currentLayouts() const;
-        void setCurrentLayouts(const QList<ActionLayout> &layouts);
+        QList<ActionLayout> layouts() const;
+        void setLayouts(const QList<ActionLayout> &layouts);
+        void resetLayouts();
 
         std::optional<QList<QKeySequence>> overriddenShortcuts(const QString &objId) const;
         void setOverriddenShortcuts(const QString &objId,
                                     const std::optional<QList<QKeySequence>> &shortcuts);
+        void resetShortcuts();
 
         std::optional<QString> overriddenIconFile(const QString &objId) const;
         void setOverriddenIconFile(const QString &objId, const std::optional<QString> &fileName);
+        void resetIconFiles();
 
-        inline QIcon objectIcon(const QString &objId) const;
+        inline QIcon objectIcon(const QString &theme, const QString &objId) const;
         inline QList<QKeySequence> objectShortcuts(const QString &objId) const;
 
         bool buildLayouts(const QString &theme, const QList<ActionItem *> &items) const;
@@ -170,11 +160,11 @@ namespace Core {
         QScopedPointer<ActionDomainPrivate> d_ptr;
     };
 
-    inline QIcon ActionDomain::objectIcon(const QString &objId) const {
+    inline QIcon ActionDomain::objectIcon(const QString &theme, const QString &objId) const {
         if (auto o = overriddenIconFile(objId); o) {
             return QIcon(o.value());
         }
-        return icon(objId);
+        return icon(theme, objId);
     }
 
     inline QList<QKeySequence> ActionDomain::objectShortcuts(const QString &objId) const {
