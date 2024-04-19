@@ -54,6 +54,11 @@ namespace Core {
         return true;
     }
 
+    void *&ILoaderPrivate::quickData(int index) {
+        static void *dataList[512] = {};
+        return dataList[index];
+    }
+
     ILoader *m_instance = nullptr;
 
     Q_GLOBAL_STATIC_WITH_ARGS(QDateTime, m_atime, (QDateTime::currentDateTime()));
@@ -93,11 +98,6 @@ namespace Core {
 
     QJsonObject *ILoader::tempSettings() {
         return m_tempSettings;
-    }
-
-    void *&ILoader::quickData(int index) {
-        static void *dataList[512] = {};
-        return dataList[index];
     }
 
     QString ILoader::settingsPath(QSettings::Scope scope) const {

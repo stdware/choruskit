@@ -4,7 +4,6 @@
 #include <optional>
 
 #include <QObject>
-#include <QJsonObject>
 #include <QIcon>
 
 #include <CoreApi/actionitem.h>
@@ -136,6 +135,13 @@ namespace Core {
         void removeIconMapping(const ActionIconMapping *mapping);
 
     public:
+        QByteArray saveCurrentLayouts() const;
+        bool restoreCurrentLayouts(const QByteArray &obj);
+
+        QByteArray saveOverriddenAttributes() const;
+        bool restoreOverriddenAttributes(const QByteArray &obj);
+
+    public:
         QStringList objectIds() const;
         ActionObjectInfo objectInfo(const QString &objId) const;
         ActionCatalogue catalogue() const;
@@ -152,12 +158,6 @@ namespace Core {
 
         std::optional<QString> overriddenIconFile(const QString &objId) const;
         void setOverriddenIconFile(const QString &objId, const std::optional<QString> &fileName);
-
-        QJsonObject saveCurrentLayouts() const;
-        bool restoreCurrentLayouts(const QJsonObject &obj);
-
-        QJsonObject saveOverriddenAttributes() const;
-        bool restoreOverriddenAttributes(const QJsonObject &obj);
 
         inline QIcon objectIcon(const QString &objId) const;
         inline QList<QKeySequence> objectShortcuts(const QString &objId) const;

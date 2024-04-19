@@ -26,6 +26,8 @@ namespace Core {
 
         QJsonObject globalSettings;
         QJsonObject userSettings;
+
+        CKAPPCORE_EXPORT static void *&quickData(int index); // index <= 512
     };
 
 }

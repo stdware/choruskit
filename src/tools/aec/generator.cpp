@@ -9,16 +9,32 @@ Generator::Generator(FILE *out, const QByteArray &inputFileName, const QByteArra
     : out(out), inputFileName(inputFileName), identifier(identifier), msg(message) {
 }
 
-static QByteArray escapeBytes(const QByteArray &bytes) {
+static QByteArray escapeString(const QByteArray &bytes) {
     QByteArray res;
-    res.reserve(bytes.size() * 4);
+    res.reserve(bytes.size());
     for (const auto &ch : bytes) {
-        res += "\\x";
-
+        if (ch >= 32 && ch <= 126) {
+            res += ch;
+            continue;
+        }
+        switch (ch) {
+            case '\\':
+                res += R"(\\)";
+                continue;
+            case '\'':
+                res += R"(\')";
+                continue;
+            case '\"':
+                res += R"(\")";
+                continue;
+            default:
+                break;
+        }
         QString hexStr = QString::number(static_cast<unsigned char>(ch), 16).toUpper();
         if (hexStr.length() < 2) {
             hexStr.prepend(QChar('0'));
         }
+        res += "\\x";
         res += hexStr.toLatin1();
     }
     return res;
@@ -28,20 +44,19 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
     for (const auto &item : std::as_const(objects)) {
         fprintf(out, "        {\n");
         fprintf(out, "            // id\n");
-        fprintf(out, "            QStringLiteral(\"%s\"), // %s\n",
-                escapeBytes(item.id.toLocal8Bit()).data(), item.id.toLocal8Bit().data());
+        fprintf(out, "            QStringLiteral(\"%s\"),\n",
+                escapeString(item.id.toLocal8Bit()).data());
         fprintf(out, "            // type\n");
         fprintf(out, "            ActionObjectInfo::%s,\n", item.typeToken.toLocal8Bit().data());
         fprintf(out, "            // text\n");
-        fprintf(out, "            QByteArrayLiteral(\"%s\"), // %s\n",
-                escapeBytes(item.text.toLocal8Bit()).data(), item.text.toLocal8Bit().data());
+        fprintf(out, "            QByteArrayLiteral(\"%s\"),\n",
+                escapeString(item.text.toLocal8Bit()).data());
         fprintf(out, "            // commandClass\n");
         if (item.commandClass.isEmpty()) {
             fprintf(out, "            QByteArray(),\n");
         } else {
-            fprintf(out, "            QByteArrayLiteral(\"%s\"), // %s\n",
-                    escapeBytes(item.commandClass.toLocal8Bit()).data(),
-                    item.commandClass.toLocal8Bit().data());
+            fprintf(out, "            QByteArrayLiteral(\"%s\"),\n",
+                    escapeString(item.commandClass.toLocal8Bit()).data());
         }
         fprintf(out, "            // shortcuts\n");
         fprintf(out, "            {\n");
@@ -53,8 +68,8 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
         fprintf(out, "            // categories\n");
         fprintf(out, "            {\n");
         for (const auto &subItem : std::as_const(item.categories)) {
-            fprintf(out, "                QByteArrayLiteral(\"%s\"), // %s\n",
-                    escapeBytes(subItem.toLocal8Bit()).data(), subItem.toLocal8Bit().data());
+            fprintf(out, "                QByteArrayLiteral(\"%s\"),\n",
+                    escapeString(subItem.toLocal8Bit()).data());
         }
         fprintf(out, "            },\n");
         fprintf(out, "            // topLevel\n");
@@ -74,9 +89,8 @@ static void generateLayouts(FILE *out, const QVector<ActionLayoutInfoMessage> &l
             if (subItem.id.isEmpty()) {
                 fprintf(out, "                QString(),\n");
             } else {
-                fprintf(out, "                QStringLiteral(\"%s\"), // %s\n",
-                        escapeBytes(subItem.id.toLocal8Bit()).data(),
-                        subItem.id.toLocal8Bit().data());
+                fprintf(out, "                QStringLiteral(\"%s\"),\n",
+                        escapeString(subItem.id.toLocal8Bit()).data());
             }
             fprintf(out, "                // type\n");
             fprintf(out, "                ActionObjectInfo::%s,\n",
@@ -109,15 +123,14 @@ static void generateBuildRoutines(FILE *out, const QVector<ActionBuildRoutineMes
         fprintf(out, "            ActionBuildRoutine::%s,\n",
                 item.anchorToken.toLocal8Bit().data());
         fprintf(out, "            // parent\n");
-        fprintf(out, "            QStringLiteral(\"%s\"), // %s\n",
-                escapeBytes(item.parent.toLocal8Bit()).data(), item.parent.toLocal8Bit().data());
+        fprintf(out, "            QStringLiteral(\"%s\"),\n",
+                escapeString(item.parent.toLocal8Bit()).data());
         fprintf(out, "            // relativeTo\n");
         if (item.relativeTo.isEmpty()) {
             fprintf(out, "            QString(),\n");
         } else {
-            fprintf(out, "            QStringLiteral(\"%s\"), // %s\n",
-                    escapeBytes(item.relativeTo.toLocal8Bit()).data(),
-                    item.relativeTo.toLocal8Bit().data());
+            fprintf(out, "            QStringLiteral(\"%s\"),\n",
+                    escapeString(item.relativeTo.toLocal8Bit()).data());
         }
 
         fprintf(out, "            // items\n");
@@ -128,9 +141,8 @@ static void generateBuildRoutines(FILE *out, const QVector<ActionBuildRoutineMes
             if (subItem.id.isEmpty()) {
                 fprintf(out, "                    QString(),\n");
             } else {
-                fprintf(out, "                    QStringLiteral(\"%s\"), // %s\n",
-                        escapeBytes(subItem.id.toLocal8Bit()).data(),
-                        subItem.id.toLocal8Bit().data());
+                fprintf(out, "                    QStringLiteral(\"%s\"),\n",
+                        escapeString(subItem.id.toLocal8Bit()).data());
             }
             fprintf(out, "                    // type\n");
             fprintf(out, "                    ActionObjectInfo::%s,\n",
@@ -173,8 +185,8 @@ static ActionExtensionPrivate *getData() {
 )");
 
     fprintf(out, "    data.hash = QStringLiteral(\"%s\");\n", msg.hash.toLocal8Bit().data());
-    fprintf(out, "    data.version = QStringLiteral(\"%s\"); // %s\n",
-            escapeBytes(msg.version.toLocal8Bit()).data(), msg.version.toLocal8Bit().data());
+    fprintf(out, "    data.version = QStringLiteral(\"%s\");\n",
+            escapeString(msg.version.toLocal8Bit()).data());
     fprintf(out, "\n");
 
     if (msg.objects.isEmpty()) {
@@ -246,7 +258,7 @@ static ActionExtensionPrivate *getData() {
             continue;
         texts.insert(item.commandClass);
         fprintf(out, "    QCoreApplication::translate(\"ChorusKit::ActionText\", \"%s\");\n",
-                item.text.toLocal8Bit().data());
+                escapeString(item.text.toLocal8Bit()).data());
     }
     fprintf(out, "\n");
 
@@ -257,7 +269,7 @@ static ActionExtensionPrivate *getData() {
             continue;
         commandClasses.insert(item.commandClass);
         fprintf(out, "    QCoreApplication::translate(\"ChorusKit::ActionClass\", \"%s\");\n",
-                item.commandClass.toLocal8Bit().data());
+                escapeString(item.commandClass.toLocal8Bit()).data());
     }
     fprintf(out, "\n");
 
@@ -270,7 +282,7 @@ static ActionExtensionPrivate *getData() {
             categories.insert(subItem);
             fprintf(out,
                     "    QCoreApplication::translate(\"ChorusKit::ActionCategory\", \"%s\");\n",
-                    subItem.toLocal8Bit().data());
+                    escapeString(item.commandClass.toLocal8Bit()).data());
         }
     }
     fprintf(out, "\n");

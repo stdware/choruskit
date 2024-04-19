@@ -25,8 +25,6 @@ namespace Core {
 
         static QJsonObject *tempSettings();
 
-        static void *&quickData(int index); // index <= 512
-
     public:
         QString settingsPath(QSettings::Scope scope) const;
         void setSettingsPath(QSettings::Scope scope, const QString &path);

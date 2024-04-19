@@ -20,10 +20,6 @@ namespace Core {
         QList<ActionLayout> children;
     };
 
-    class ActionIconMappingData : public QSharedData {
-    public:
-    };
-
     class ActionDomainPrivate {
         Q_DECLARE_PUBLIC(ActionDomain)
     public:

@@ -3,9 +3,9 @@
 
 namespace Core {
 
-    ActionCatalogue::ActionCatalogue() {
+    ActionCatalogue::ActionCatalogue() : d(new ActionCatalogueData()) {
     }
-    ActionCatalogue::ActionCatalogue(const QByteArray &name) : d(new ActionCatalogueData()) {
+    ActionCatalogue::ActionCatalogue(const QByteArray &name) : ActionCatalogue() {
         d->name = name;
     }
     ActionCatalogue::ActionCatalogue(const ActionCatalogue &other) = default;
@@ -28,7 +28,7 @@ namespace Core {
 
     ActionLayout::ActionLayout() : d(new ActionLayoutData()) {
     }
-    ActionLayout::ActionLayout(const QString &id) : d(new ActionLayoutData()) {
+    ActionLayout::ActionLayout(const QString &id) : ActionLayout() {
         d->id = id;
     }
     ActionLayout::ActionLayout(const ActionLayout &other) = default;
@@ -66,97 +66,82 @@ namespace Core {
     }
 
 
-
-    ActionIconMapping::ActionIconMapping() : d(new ActionIconMappingData()) {
-    }
-    ActionIconMapping::ActionIconMapping(const ActionIconMapping &other) = default;
-    ActionIconMapping &ActionIconMapping::operator=(const ActionIconMapping &other) = default;
-    ActionIconMapping::~ActionIconMapping() = default;
-    void ActionIconMapping::addIconExtension(const QString &extensionFileName) {
-    }
-    void ActionIconMapping::addIcon(const QString &theme, const QString &id,
-                                    const QString &fileName) {
-    }
-    QIcon ActionIconMapping::icon(const QString &theme, const QString &id) const {
-        return {};
-    }
-
-
-
     ActionDomainPrivate::ActionDomainPrivate() {
     }
+
     ActionDomainPrivate::~ActionDomainPrivate() {
     }
+
     void ActionDomainPrivate::init() {
     }
-    ActionDomain::ActionDomain(QObject *parent) : ActionDomain(*new ActionDomainPrivate(), parent) {
+
+    ActionDomain::ActionDomain(QObject *parent) : QObject(parent) {
     }
     ActionDomain::~ActionDomain() {
     }
-    QList<const ActionExtension *> ActionDomain::extensions() const {
+    QByteArray ActionDomain::saveCurrentLayouts() const {
         return {};
+    }
+    bool ActionDomain::restoreCurrentLayouts(const QByteArray &obj) {
+        return false;
+    }
+    QByteArray ActionDomain::saveOverriddenAttributes() const {
+        return {};
+    }
+    bool ActionDomain::restoreOverriddenAttributes(const QByteArray &obj) {
+        return false;
+    }
+    QList<const ActionExtension *> ActionDomain::extensions() const {
+        return QList<const ActionExtension *>();
     }
     void ActionDomain::addExtension(const ActionExtension *extension) {
     }
     void ActionDomain::removeExtension(const ActionExtension *extension) {
     }
     QList<const ActionIconMapping *> ActionDomain::iconMappings() const {
-        return {};
+        return QList<const ActionIconMapping *>();
     }
     void ActionDomain::addIconMapping(const ActionIconMapping *mapping) {
     }
     void ActionDomain::removeIconMapping(const ActionIconMapping *mapping) {
     }
     QStringList ActionDomain::objectIds() const {
-        return {};
+        return QStringList();
     }
     ActionObjectInfo ActionDomain::objectInfo(const QString &objId) const {
-        return {};
+        return ActionObjectInfo();
     }
     ActionCatalogue ActionDomain::catalogue() const {
-        return {};
+        return ActionCatalogue();
     }
     QStringList ActionDomain::iconIds() const {
-        return {};
+        return QStringList();
     }
     QIcon ActionDomain::icon(const QString &iconId) const {
-        return {};
+        return QIcon();
     }
     QList<ActionLayout> ActionDomain::currentLayouts() const {
-        return {};
+        return QList<ActionLayout>();
     }
     void ActionDomain::setCurrentLayouts(const QList<ActionLayout> &layouts) {
     }
     std::optional<QList<QKeySequence>>
         ActionDomain::overriddenShortcuts(const QString &objId) const {
-        return {};
+        return std::optional<QList<QKeySequence>>();
     }
     void ActionDomain::setOverriddenShortcuts(const QString &objId,
                                               const std::optional<QList<QKeySequence>> &shortcuts) {
     }
     std::optional<QString> ActionDomain::overriddenIconFile(const QString &objId) const {
-        return {};
+        return std::optional<QString>();
     }
     void ActionDomain::setOverriddenIconFile(const QString &objId,
                                              const std::optional<QString> &fileName) {
     }
-    QJsonObject ActionDomain::saveCurrentLayouts() const {
-        return {};
-    }
-    bool ActionDomain::restoreCurrentLayouts(const QJsonObject &obj) {
-        return false;
-    }
-    QJsonObject ActionDomain::saveOverriddenAttributes() const {
-        return QJsonObject();
-    }
-    bool ActionDomain::restoreOverriddenAttributes(const QJsonObject &obj) {
-        return false;
-    }
+
     bool ActionDomain::buildLayouts(const QString &theme, const QList<ActionItem *> &items) const {
         return false;
     }
-
-
 
     ActionDomain::ActionDomain(ActionDomainPrivate &d, QObject *parent)
         : QObject(parent), d_ptr(&d) {
