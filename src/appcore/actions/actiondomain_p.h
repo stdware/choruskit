@@ -9,12 +9,16 @@
 
 #include <CoreApi/actiondomain.h>
 
+#include <CoreApi/private/actionextension_p.h>
+
 namespace Core {
 
     class ActionCatalogueData : public QSharedData {
     public:
         QByteArray name;
+        QString id;
         QList<ActionCatalogue> children;
+        QHash<QByteArray, int> indexes;
     };
 
     class ActionLayoutData : public QSharedData {
@@ -24,6 +28,7 @@ namespace Core {
         bool flat = false;
         ActionLayout::IconReference icon;
         QList<ActionLayout> children;
+        QHash<QString, int> indexes;
     };
 
     class ActionDomainPrivate {
@@ -37,14 +42,13 @@ namespace Core {
         ActionDomain *q_ptr;
 
         // Actions
-        struct ActionStructure {
-            bool dirty = false;
-            ActionCatalogue catalogue;
-        };
-        QMChronoSet<const ActionExtension *> extensions;
-        mutable ActionStructure actionStructure;
+        QMChronoMap<QString, const ActionExtension *> extensions;         // hash -> ext
+        QMChronoMap<QString, const ActionObjectInfoData *> objectInfoMap; // id -> obj
+        mutable std::optional<ActionCatalogue> catalogue;
+        mutable std::optional<QList<ActionLayout>> layouts;
 
-        void flushActionStructure() const;
+        void flushCatalogue() const;
+        void flushLayouts() const;
 
         struct StringListHash {
             size_t operator()(const QStringList &s) const noexcept {
@@ -75,8 +79,8 @@ namespace Core {
         mutable IconChange iconChange;
         mutable IconStorage iconStorage;
 
-        QHash<QString, std::optional<QList<QKeySequence>>> overridedShortcuts;
-        QHash<QString, std::optional<QString>> overridedIcons;
+        QHash<QString, std::optional<QList<QKeySequence>>> overriddenShortcuts;
+        QHash<QString, std::optional<QString>> overriddenIcons;
 
         void flushIcons() const;
     };

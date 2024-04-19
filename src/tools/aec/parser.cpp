@@ -140,10 +140,10 @@ struct ParserPrivate {
 
         // Check root name
         const auto &root = xml.root;
-        if (const auto &rootname = root.name; rootname != QStringLiteral("actionExtension")) {
+        if (const auto &rootName = root.name; rootName != QStringLiteral("actionExtension")) {
             fprintf(stderr, "%s:%s: unknown root element tag %s\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
-                    rootname.toLatin1().data());
+                    rootName.toLatin1().data());
             std::exit(1);
         }
 
@@ -324,9 +324,15 @@ struct ParserPrivate {
         if (auto categories = resolve(e.properties.value(QStringLiteral("categories")));
             !categories.isEmpty()) {
             result.categories = parseStringList(categories);
+            if (auto &last = result.categories.back(); last.isEmpty()) {
+                last = removeAccelerateKeys(result.text);
+            }
         } else if (categories = resolve(e.properties.value(QStringLiteral("category")));
                    !categories.isEmpty()) {
             result.categories = parseStringList(categories);
+            if (auto &last = result.categories.back(); last.isEmpty()) {
+                last = removeAccelerateKeys(result.text);
+            }
         }
 
         if (!e.children.isEmpty()) {
@@ -368,7 +374,7 @@ struct ParserPrivate {
             }
 
             // Calculate current category
-            QStringList currentCategory = top.category;
+            QStringList currentCategory;
             QString typeToken;
             {
                 auto it = objMap.find(id);
@@ -390,11 +396,10 @@ struct ParserPrivate {
 
                     if (info.categories.isEmpty()) {
                         // The object doesn't have a specified category, use the current one
-                        info.categories = top.category;
-                    } else {
-                        currentCategory = info.categories;
+                        info.categories = QStringList(top.category)
+                                          << removeAccelerateKeys(info.text);
                     }
-                    currentCategory += removeAccelerateKeys(info.text);
+                    currentCategory = info.categories;
                     typeToken = info.typeToken;
                 } else {
                     // Create one
@@ -402,10 +407,10 @@ struct ParserPrivate {
                     info.id = id;
                     determineObjectType(e, info, "layout");
                     info.text = objIdToText(id);
-                    info.categories = top.category;
+                    info.categories = QStringList(top.category) << info.text;
                     objMap.insert(id, info);
                     objIdSeq.append(id);
-                    currentCategory += info.text;
+                    currentCategory = info.categories;
                     typeToken = info.typeToken;
                 }
             }
@@ -447,10 +452,10 @@ struct ParserPrivate {
                                            const QStringList &defaultCategory,
                                            QHash<QString, ActionObjectInfoMessage> &objMap,
                                            QStringList &objIdSeq) {
-        if (const auto &rootname = root.name; rootname != QStringLiteral("buildRoutine")) {
+        if (const auto &rootName = root.name; rootName != QStringLiteral("buildRoutine")) {
             fprintf(stderr, "%s:%s: unknown build routine element tag %s\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
-                    rootname.toLatin1().data());
+                    rootName.toLatin1().data());
             std::exit(1);
         }
 

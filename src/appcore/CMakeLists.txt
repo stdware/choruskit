@@ -12,6 +12,7 @@ choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
     LINKS
         qtmediate::Widgets
         ExtensionSystem::ExtensionSystem
+        xmladaptor
     QT_LINKS
         Core Widgets Network
     QT_INCLUDE_PRIVATE

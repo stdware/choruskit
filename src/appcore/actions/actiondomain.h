@@ -27,8 +27,13 @@ namespace Core {
         QByteArray name() const;
         void setName(const QByteArray &name);
 
+        QString id() const;
+        void setId(const QString &id);
+
         QList<ActionCatalogue> children() const;
         void setChildren(const QList<ActionCatalogue> &children);
+
+        int indexOfChild(const QByteArray &name) const;
 
     protected:
         QSharedDataPointer<ActionCatalogueData> d;
@@ -81,6 +86,8 @@ namespace Core {
         QList<ActionLayout> children() const;
         void setChildren(const QList<ActionLayout> &children);
 
+        int indexOfChild(const QString &id) const;
+
     protected:
         QSharedDataPointer<ActionLayoutData> d;
 
@@ -114,8 +121,8 @@ namespace Core {
         void removeIconConfiguration(const QString &fileName);
 
     public:
-        QByteArray saveCurrentLayouts() const;
-        bool restoreCurrentLayouts(const QByteArray &obj);
+        QByteArray saveLayouts() const;
+        bool restoreLayouts(const QByteArray &obj);
 
         QByteArray saveOverriddenAttributes() const;
         bool restoreOverriddenAttributes(const QByteArray &obj);
@@ -129,15 +136,18 @@ namespace Core {
         QStringList iconIds(const QString &theme);
         QIcon icon(const QString &theme, const QString &iconId) const;
 
-        QList<ActionLayout> currentLayouts() const;
-        void setCurrentLayouts(const QList<ActionLayout> &layouts);
+        QList<ActionLayout> layouts() const;
+        void setLayouts(const QList<ActionLayout> &layouts);
+        void resetLayouts();
 
         std::optional<QList<QKeySequence>> overriddenShortcuts(const QString &objId) const;
         void setOverriddenShortcuts(const QString &objId,
                                     const std::optional<QList<QKeySequence>> &shortcuts);
+        void resetShortcuts();
 
         std::optional<QString> overriddenIconFile(const QString &objId) const;
         void setOverriddenIconFile(const QString &objId, const std::optional<QString> &fileName);
+        void resetIconFiles();
 
         inline QIcon objectIcon(const QString &theme, const QString &objId) const;
         inline QList<QKeySequence> objectShortcuts(const QString &objId) const;
