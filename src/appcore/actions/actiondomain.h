@@ -51,6 +51,35 @@ namespace Core {
         ActionLayout &operator=(const ActionLayout &other);
         ~ActionLayout();
 
+    public:
+        QString id() const;
+        void setId(const QString &id);
+
+        ActionObjectInfo::Type type() const;
+        void setType(ActionObjectInfo::Type type);
+
+        bool flat() const;
+        void setFlat(bool flat);
+
+        QList<ActionLayout> children() const;
+        void addChild(const ActionLayout &child);
+        void setChildren(const QList<ActionLayout> &children);
+
+    protected:
+        QSharedDataPointer<ActionLayoutData> d;
+
+        friend class ActionDomain;
+    };
+
+    class ActionDomainPrivate;
+
+    class CKAPPCORE_EXPORT ActionDomain : public QObject {
+        Q_OBJECT
+        Q_DECLARE_PRIVATE(ActionDomain)
+    public:
+        explicit ActionDomain(QObject *parent = nullptr);
+        ~ActionDomain();
+
         class IconReference {
         public:
             inline IconReference(const QString &data = {}, bool fromFile = false)
@@ -67,49 +96,6 @@ namespace Core {
             bool m_fromFile;
             QString m_data;
         };
-
-    public:
-        QString id() const;
-        void setId(const QString &id);
-
-        ActionObjectInfo::Type type() const;
-        void setType(ActionObjectInfo::Type type);
-
-        bool flat() const;
-        void setFlat(bool flat);
-
-        IconReference iconReference() const;
-        void setIconReference(const IconReference &icon);
-        inline void setIconFile(const QString &fileName);
-        inline void setIconId(const QString &id);
-
-        QList<ActionLayout> children() const;
-        void setChildren(const QList<ActionLayout> &children);
-
-        int indexOfChild(const QString &id) const;
-
-    protected:
-        QSharedDataPointer<ActionLayoutData> d;
-
-        friend class ActionDomain;
-    };
-
-    inline void ActionLayout::setIconFile(const QString &fileName) {
-        setIconReference({fileName, true});
-    }
-
-    inline void ActionLayout::setIconId(const QString &id) {
-        setIconReference({id, false});
-    }
-
-    class ActionDomainPrivate;
-
-    class CKAPPCORE_EXPORT ActionDomain : public QObject {
-        Q_OBJECT
-        Q_DECLARE_PRIVATE(ActionDomain)
-    public:
-        explicit ActionDomain(QObject *parent = nullptr);
-        ~ActionDomain();
 
     public:
         void addExtension(const ActionExtension *extension);
@@ -145,8 +131,10 @@ namespace Core {
                                     const std::optional<QList<QKeySequence>> &shortcuts);
         void resetShortcuts();
 
-        std::optional<QString> overriddenIconFile(const QString &objId) const;
-        void setOverriddenIconFile(const QString &objId, const std::optional<QString> &fileName);
+        std::optional<IconReference> overriddenIcon(const QString &objId) const;
+        void setOverriddenIcon(const QString &objId, const std::optional<IconReference> &iconRef);
+        inline void setOverriddenIconFile(const QString &objId, const QString &fileName);
+        inline void setOverriddenIconId(const QString &objId, const QString &iconId);
         void resetIconFiles();
 
         inline QIcon objectIcon(const QString &theme, const QString &objId) const;
@@ -160,9 +148,17 @@ namespace Core {
         QScopedPointer<ActionDomainPrivate> d_ptr;
     };
 
+    inline void ActionDomain::setOverriddenIconFile(const QString &objId, const QString &fileName) {
+        setOverriddenIcon(objId, IconReference{fileName, true});
+    }
+
+    inline void ActionDomain::setOverriddenIconId(const QString &objId, const QString &iconId) {
+        setOverriddenIcon(objId, IconReference{iconId, false});
+    }
+
     inline QIcon ActionDomain::objectIcon(const QString &theme, const QString &objId) const {
-        if (auto o = overriddenIconFile(objId); o) {
-            return QIcon(o.value());
+        if (auto o = overriddenIcon(objId); o) {
+            return o->fromFile() ? QIcon(o->data()) : icon(theme, o->data());
         }
         return icon(theme, objId);
     }

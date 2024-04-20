@@ -15,21 +15,18 @@ namespace Core {
         bool topLevel;
     };
 
-    struct ActionLayoutInfoData {
-        struct Entry {
-            QString id;
-            ActionObjectInfo::Type type;
-            bool flat;
-            QVector<int> childIndexes;
-        };
-        QVector<Entry> entryData;
+    struct ActionLayoutInfoEntry {
+        QString id;
+        ActionObjectInfo::Type type;
+        bool flat;
+        QVector<int> childIndexes;
     };
 
     struct ActionBuildRoutineData {
         ActionBuildRoutine::Anchor anchor;
         QString parent;
         QString relativeTo;
-        QVector<ActionBuildRoutine::Item> items;
+        QVector<int> entryIndexes;
     };
 
     struct ActionExtensionPrivate {
@@ -40,8 +37,11 @@ namespace Core {
         int objectCount;
         ActionObjectInfoData *objectData;
 
-        int layoutCount;
-        ActionLayoutInfoData *layoutData;
+        int layoutEntryCount; // Not used
+        ActionLayoutInfoEntry *layoutEntryData;
+
+        int layoutRootCount;
+        int *layoutRootData;
 
         int buildRoutineCount;
         ActionBuildRoutineData *buildRoutineData;

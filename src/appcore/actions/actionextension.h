@@ -15,11 +15,13 @@ namespace Core {
 
     class ActionExtension;
 
+    class ActionBuildRoutine;
+
     class CKAPPCORE_EXPORT ActionObjectInfo {
     public:
-        inline ActionObjectInfo() : data(sharedNullData()){};
+        inline ActionObjectInfo() : ext(nullptr), idx(0){};
         inline bool isNull() const {
-            return data != sharedNullData();
+            return ext != nullptr;
         };
 
         enum Type {
@@ -43,9 +45,8 @@ namespace Core {
         static QString translatedCategory(const QByteArray &category);
 
     protected:
-        const void *data;
-
-        static const void *sharedNullData();
+        const ActionExtension *ext;
+        int idx;
 
         friend class ActionExtension;
         friend class ActionDomain;
@@ -54,9 +55,9 @@ namespace Core {
 
     class CKAPPCORE_EXPORT ActionLayoutInfo {
     public:
-        inline ActionLayoutInfo() : data(sharedNullData()), idx(0){};
+        inline ActionLayoutInfo() : ext(nullptr), idx(0){};
         inline bool isNull() const {
-            return data != sharedNullData();
+            return ext != nullptr;
         };
 
         QString id() const;
@@ -67,21 +68,20 @@ namespace Core {
         ActionLayoutInfo child(int index) const;
 
     protected:
-        const void *data;
+        const ActionExtension *ext;
         int idx;
 
-        static const void *sharedNullData();
-
         friend class ActionExtension;
+        friend class ActionBuildRoutine;
         friend class ActionDomain;
         friend class ActionDomainPrivate;
     };
 
     class CKAPPCORE_EXPORT ActionBuildRoutine {
     public:
-        inline ActionBuildRoutine() : data(sharedNullData()){};
+        inline ActionBuildRoutine() : ext(nullptr), idx(0){};
         inline bool isNull() const {
-            return data != sharedNullData();
+            return ext != nullptr;
         };
 
         enum Anchor {
@@ -95,33 +95,12 @@ namespace Core {
         QString parent() const;
         QString relativeTo() const;
 
-        class Item {
-        public:
-            Item(const QString &id = {}, ActionObjectInfo::Type type = ActionObjectInfo::Action,
-                 bool flat = false)
-                : m_id(id), m_type(type), m_flat(flat) {
-            }
-            inline QString id() const {
-                return m_id;
-            }
-            Q_CONSTEXPR ActionObjectInfo::Type type() const {
-                return m_type;
-            }
-            Q_CONSTEXPR bool flat() const {
-                return m_flat;
-            }
-        private:
-            QString m_id;
-            ActionObjectInfo::Type m_type;
-            bool m_flat;
-        };
         int itemCount() const;
-        Item item(int index) const;
+        ActionLayoutInfo item(int index) const;
 
     protected:
-        const void *data;
-
-        static const void *sharedNullData();
+        const ActionExtension *ext;
+        int idx;
 
         friend class ActionExtension;
         friend class ActionDomain;

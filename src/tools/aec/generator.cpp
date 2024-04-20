@@ -4,6 +4,16 @@
 
 void error(const char *msg);
 
+template <template <class> class Array, class T>
+static QString joinNumbers(const Array<T> &arr, const QString &glue) {
+    QStringList list;
+    list.reserve(arr.size());
+    for (const auto &item : arr) {
+        list.append(QString::number(item));
+    }
+    return list.join(glue);
+}
+
 Generator::Generator(FILE *out, const QByteArray &inputFileName, const QByteArray &identifier,
                      const ActionExtensionMessage &message)
     : out(out), inputFileName(inputFileName), identifier(identifier), msg(message) {
@@ -41,8 +51,10 @@ static QByteArray escapeString(const QByteArray &bytes) {
 }
 
 static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &objects) {
+    int i = 0;
     for (const auto &item : std::as_const(objects)) {
         fprintf(out, "        {\n");
+        fprintf(out, "            // index %d\n", i++);
         fprintf(out, "            // id\n");
         fprintf(out, "            QStringLiteral(\"%s\"),\n",
                 escapeString(item.id.toLocal8Bit()).data());
@@ -78,47 +90,34 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
     }
 }
 
-static void generateLayouts(FILE *out, const QVector<ActionLayoutInfoMessage> &layouts) {
-    for (const auto &item : std::as_const(layouts)) {
-        fprintf(out, "        {{\n");
-        int i = 0;
-        for (const auto &subItem : std::as_const(item.entryData)) {
-            fprintf(out, "            {\n");
-            fprintf(out, "                // index %d\n", i++);
-            fprintf(out, "                // id\n");
-            if (subItem.id.isEmpty()) {
-                fprintf(out, "                QString(),\n");
-            } else {
-                fprintf(out, "                QStringLiteral(\"%s\"),\n",
-                        escapeString(subItem.id.toLocal8Bit()).data());
-            }
-            fprintf(out, "                // type\n");
-            fprintf(out, "                ActionObjectInfo::%s,\n",
-                    subItem.typeToken.toLocal8Bit().data());
-            fprintf(out, "                // flat\n");
-            fprintf(out, "                %s,\n", subItem.flat ? "true" : "false");
-            fprintf(out, "                // childIndexes\n");
-            fprintf(out, "                {%s},\n",
-                    [](const decltype(subItem.childIndexes) &arr) {
-                        QStringList res;
-                        res.reserve(arr.size());
-                        for (const auto &item : arr) {
-                            res.append(QString::number(item));
-                        }
-                        return res;
-                    }(subItem.childIndexes)
-                        .join(QStringLiteral(", "))
-                        .toLocal8Bit()
-                        .data());
-            fprintf(out, "            },\n");
+static void generateLayouts(FILE *out, const QVector<ActionLayoutEntryMessage> &layouts) {
+    int i = 0;
+    for (const auto &subItem : std::as_const(layouts)) {
+        fprintf(out, "        {\n");
+        fprintf(out, "            // index %d\n", i++);
+        fprintf(out, "            // id\n");
+        if (subItem.id.isEmpty()) {
+            fprintf(out, "            QString(),\n");
+        } else {
+            fprintf(out, "            QStringLiteral(\"%s\"),\n",
+                    escapeString(subItem.id.toLocal8Bit()).data());
         }
-        fprintf(out, "        }},\n");
+        fprintf(out, "            // type\n");
+        fprintf(out, "            ActionObjectInfo::%s,\n", subItem.typeToken.toLocal8Bit().data());
+        fprintf(out, "            // flat\n");
+        fprintf(out, "            %s,\n", subItem.flat ? "true" : "false");
+        fprintf(out, "            // childIndexes\n");
+        fprintf(out, "            {%s},\n",
+                joinNumbers(subItem.childIndexes, QStringLiteral(", ")).toLocal8Bit().data());
+        fprintf(out, "        },\n");
     }
 }
 
 static void generateBuildRoutines(FILE *out, const QVector<ActionBuildRoutineMessage> &routines) {
+    int i = 0;
     for (const auto &item : std::as_const(routines)) {
         fprintf(out, "        {\n");
+        fprintf(out, "            // index %d\n", i++);
         fprintf(out, "            // anchorToken\n");
         fprintf(out, "            ActionBuildRoutine::%s,\n",
                 item.anchorToken.toLocal8Bit().data());
@@ -133,25 +132,9 @@ static void generateBuildRoutines(FILE *out, const QVector<ActionBuildRoutineMes
                     escapeString(item.relativeTo.toLocal8Bit()).data());
         }
 
-        fprintf(out, "            // items\n");
-        fprintf(out, "            {\n");
-        for (const auto &subItem : std::as_const(item.items)) {
-            fprintf(out, "                {\n");
-            fprintf(out, "                    // id\n");
-            if (subItem.id.isEmpty()) {
-                fprintf(out, "                    QString(),\n");
-            } else {
-                fprintf(out, "                    QStringLiteral(\"%s\"),\n",
-                        escapeString(subItem.id.toLocal8Bit()).data());
-            }
-            fprintf(out, "                    // type\n");
-            fprintf(out, "                    ActionObjectInfo::%s,\n",
-                    subItem.typeToken.toLocal8Bit().data());
-            fprintf(out, "                    // flat\n");
-            fprintf(out, "                    %s,\n", subItem.flat ? "true" : "false");
-            fprintf(out, "                },\n");
-        }
-        fprintf(out, "            },\n");
+        fprintf(out, "            // entryIndexes\n");
+        fprintf(out, "            {%s},\n",
+                joinNumbers(item.entryIndexes, QStringLiteral(", ")).toLocal8Bit().data());
         fprintf(out, "        },\n");
     }
 }
@@ -197,19 +180,35 @@ static ActionExtensionPrivate *getData() {
         generateObjects(out, msg.objects);
         fprintf(out, "    };\n");
         fprintf(out, "    data.objectData = objectData;\n");
-        fprintf(out, "    data.objectCount = sizeof(objectData) / sizeof(ActionObjectInfoData);\n");
+        fprintf(out, "    data.objectCount = sizeof(objectData) / sizeof(objectData[0]);\n");
     }
     fprintf(out, "\n");
 
     if (msg.layouts.isEmpty()) {
-        fprintf(out, "    data.layoutData = nullptr;\n");
-        fprintf(out, "    data.layoutCount = 0;\n");
+        fprintf(out, "    data.layoutEntryData = nullptr;\n");
+        fprintf(out, "    data.layoutEntryCount = 0;\n");
     } else {
-        fprintf(out, "    static ActionLayoutInfoData layoutData[] = {\n");
+        fprintf(out, "    static ActionLayoutInfoEntry layoutEntryData[] = {\n");
         generateLayouts(out, msg.layouts);
         fprintf(out, "    };\n");
-        fprintf(out, "    data.layoutData = layoutData;\n");
-        fprintf(out, "    data.layoutCount = sizeof(layoutData) / sizeof(ActionLayoutInfoData);\n");
+        fprintf(out, "    data.layoutEntryData = layoutEntryData;\n");
+        fprintf(
+            out,
+            "    data.layoutEntryCount = sizeof(layoutEntryData) / sizeof(layoutEntryData[0]);\n");
+    }
+    fprintf(out, "\n");
+
+    if (msg.layoutRootIndexes.isEmpty()) {
+        fprintf(out, "    data.layoutRootData = nullptr;\n");
+        fprintf(out, "    data.layoutRootCount = 0;\n");
+    } else {
+        fprintf(out, "    static int layoutRootData[] = {\n");
+        fprintf(out, "        %s\n",
+                joinNumbers(msg.layoutRootIndexes, QStringLiteral(", ")).toLocal8Bit().data());
+        fprintf(out, "    };\n");
+        fprintf(out, "    data.layoutRootData = layoutRootData;\n");
+        fprintf(out,
+                "    data.layoutRootCount = sizeof(layoutRootData) / sizeof(layoutRootData[0]);\n");
     }
     fprintf(out, "\n");
 
@@ -222,7 +221,7 @@ static ActionExtensionPrivate *getData() {
         fprintf(out, "    };\n");
         fprintf(out, "    data.buildRoutineData = buildRoutineData;\n");
         fprintf(out, "    data.buildRoutineCount = sizeof(buildRoutineData) / "
-                     "sizeof(ActionBuildRoutineData);\n");
+                     "sizeof(buildRoutineData[0]);\n");
     }
     fprintf(out, "\n");
 

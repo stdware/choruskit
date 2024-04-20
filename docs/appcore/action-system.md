@@ -93,7 +93,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
     </parserConfig>
 
     <objects>
-        <menu id="File" text="&amp;File">
+        <menu id="File" text="&amp;File" />
         <action id="NewFile" class="${NewFileClass}" shortcut="Ctrl+N" />
         <action id="OpenFile" class="File" shortcut="Ctrl+O" />
         <action id="SaveFile" class="File" shortcut="Ctrl+S" />
@@ -159,11 +159,18 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
     - 子节点属性：
         - `id`：标识符
         - `flat`：是否平铺，菜单、菜单栏、工具栏可用，属于顶级菜单但不处于顶级的必须设为`true`
+        - `_seq`：实例标识符，只有非顶级菜单和组可指定
+            - 默认为从 0 开始的递增编号，不属于文件数据
+            - 如果指定了已经出现过的值，那么从对应的实例复制布局，若出现无限递归则会报错
+            - 如果没有子节点，则默认为第一个实例的`_seq`值
+            - 如果指定为空，则忽略上一条规则，解析为编号
+            - 如果指定为纯数字，且数字大于当前编号，则视为上一条规则的情况
     - 注意事项：
         - 如果`id`为`objects`中没有出现的，则将解析为新的菜单元素，除 ID 外其他属性为空，否则，其类型必须与`objects`中声明的类型一致；
         - 如果`objects`中某个菜单元素没有声明`category`，那么`category`将按以下规则确定：
-            - 如果它没有出现在`layout`中，或者在`layout`中第一次作为根节点出现，那么使用`parserConfig`中的`defaultCategory`；
+            - 如果它没有出现在`layout`中，或者在`layout`中第一次作为根节点出现，那么使用`parserConfig`中的`defaultCategory`加上其`text`（去掉所有加速键）；
             - 如果在`layout`中第一次作为非根节点出现，将以根节点的`category`为基础，依次添加路径节点的`text`（去掉所有加速键）；
+            - `category`如果前面有空项，则全部忽略；如果后面有空项，则用其`text`（去掉所有加速键）代替；
         - 菜单元素作为非叶子节点最多只允许出现一次（即只允许声明一次其下级结构），类型为`action`的菜单元素不允许作为非叶子节点出现；
 - `buildRoutines`：包含构造例程，子节点标签`buildRoutine`；
     - `buildRoutine`属性：

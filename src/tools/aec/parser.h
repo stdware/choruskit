@@ -12,32 +12,23 @@ struct ActionObjectInfoMessage {
     QStringList shortcutTokens;
     QStringList categories;
     bool topLevel = false;
-    
+
     // Metadata
     QString tag;
 };
 
-struct ActionLayoutInfoMessage {
-    struct Entry {
-        QString id;
-        QString typeToken;
-        bool flat = false;
-        QVector<int> childIndexes;
-    };
-    QVector<Entry> entryData;
+struct ActionLayoutEntryMessage {
+    QString id;
+    QString typeToken;
+    bool flat = false;
+    QVector<int> childIndexes;
 };
 
 struct ActionBuildRoutineMessage {
     QString anchorToken;
     QString parent;
     QString relativeTo;
-
-    struct Item {
-        QString id;
-        QString typeToken;
-        bool flat = false;
-    };
-    QVector<Item> items;
+    QVector<int> entryIndexes;
 };
 
 struct ActionExtensionMessage {
@@ -45,7 +36,8 @@ struct ActionExtensionMessage {
     QString version;
 
     QVector<ActionObjectInfoMessage> objects;
-    QVector<ActionLayoutInfoMessage> layouts;
+    QVector<ActionLayoutEntryMessage> layouts;
+    QVector<int> layoutRootIndexes;
     QVector<ActionBuildRoutineMessage> buildRoutines;
 };
 

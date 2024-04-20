@@ -4,12 +4,12 @@
 #include <list>
 #include <variant>
 
+#include <QSet>
+
 #include <QMCore/qmchronoset.h>
 #include <QMCore/qmchronomap.h>
 
 #include <CoreApi/actiondomain.h>
-
-#include <CoreApi/private/actionextension_p.h>
 
 namespace Core {
 
@@ -26,9 +26,7 @@ namespace Core {
         QString id;
         ActionObjectInfo::Type type = ActionObjectInfo::Action;
         bool flat = false;
-        ActionLayout::IconReference icon;
         QList<ActionLayout> children;
-        QHash<QString, int> indexes;
     };
 
     class ActionDomainPrivate {
@@ -42,8 +40,9 @@ namespace Core {
         ActionDomain *q_ptr;
 
         // Actions
-        QMChronoMap<QString, const ActionExtension *> extensions;         // hash -> ext
-        QMChronoMap<QString, const ActionObjectInfoData *> objectInfoMap; // id -> obj
+        QMChronoMap<QString, const ActionExtension *> extensions; // hash -> ext
+        QMChronoMap<QString, ActionObjectInfo> objectInfoMap;     // id -> obj
+        QSet<QByteArrayList> objectCategories;
         mutable std::optional<ActionCatalogue> catalogue;
         mutable std::optional<QList<ActionLayout>> layouts;
 
@@ -80,7 +79,7 @@ namespace Core {
         mutable IconStorage iconStorage;
 
         QHash<QString, std::optional<QList<QKeySequence>>> overriddenShortcuts;
-        QHash<QString, std::optional<QString>> overriddenIcons;
+        QHash<QString, std::optional<ActionDomain::IconReference>> overriddenIcons;
 
         void flushIcons() const;
     };

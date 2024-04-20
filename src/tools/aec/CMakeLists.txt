@@ -9,7 +9,7 @@ file(GLOB _src *.h *.cpp)
 qm_configure_target(${PROJECT_NAME}
     SOURCES ${_src}
     QT_LINKS Core
-    LINKS $<BUILD_INTERFACE:xmladaptor>
+    LINKS $<BUILD_INTERFACE:xmladaptor> $<BUILD_INTERFACE:qtmediate::Core>
     DEFINES APP_VERSION="${PROJECT_VERSION}"
     FEATURES cxx_std_17
 )
