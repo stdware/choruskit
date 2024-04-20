@@ -7,11 +7,11 @@
 struct ActionObjectInfoMessage {
     QString id;
     QString typeToken;
+    QString shapeToken;
     QString text;
     QString commandClass;
     QStringList shortcutTokens;
     QStringList categories;
-    bool topLevel = false;
 
     // Metadata
     QString tag;

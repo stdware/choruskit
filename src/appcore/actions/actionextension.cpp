@@ -17,6 +17,12 @@ namespace Core {
         return ActionExtensionPrivate::get(ext)->objectData[idx].type;
     }
 
+    ActionObjectInfo::Shape ActionObjectInfo::shape() const {
+        if (!ext)
+            return {};
+        return ActionExtensionPrivate::get(ext)->objectData[idx].shape;
+    }
+
     QByteArray ActionObjectInfo::text() const {
         if (!ext)
             return {};
@@ -39,12 +45,6 @@ namespace Core {
         if (!ext)
             return {};
         return ActionExtensionPrivate::get(ext)->objectData[idx].categories;
-    }
-
-    bool ActionObjectInfo::topLevel() const {
-        if (!ext)
-            return {};
-        return ActionExtensionPrivate::get(ext)->objectData[idx].topLevel;
     }
 
     QString ActionObjectInfo::translatedText(const QByteArray &text) {

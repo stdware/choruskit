@@ -32,13 +32,19 @@ namespace Core {
             Stretch,
         };
 
+        enum Shape {
+            Plain = 0,
+            Widget = 1,
+            TopLevel = 1,
+        };
+
         QString id() const;
         Type type() const;
+        Shape shape() const;
         QByteArray text() const;
         QByteArray commandClass() const;
         QList<QKeySequence> shortcuts() const;
         QByteArrayList categories() const;
-        bool topLevel() const;
 
         static QString translatedText(const QByteArray &text);
         static QString translatedCommandClass(const QByteArray &commandClass);

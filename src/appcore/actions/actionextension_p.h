@@ -8,11 +8,11 @@ namespace Core {
     struct ActionObjectInfoData {
         QString id;
         ActionObjectInfo::Type type;
+        ActionObjectInfo::Shape shape;
         QByteArray text;
         QByteArray commandClass;
         QList<QKeySequence> shortcuts;
         QByteArrayList categories;
-        bool topLevel;
     };
 
     struct ActionLayoutInfoEntry {

@@ -110,8 +110,11 @@ namespace Core {
         QByteArray saveLayouts() const;
         bool restoreLayouts(const QByteArray &obj);
 
-        QByteArray saveOverriddenAttributes() const;
-        bool restoreOverriddenAttributes(const QByteArray &obj);
+        QByteArray saveOverriddenShortcuts() const;
+        bool restoreOverriddenShortcuts(const QByteArray &obj);
+
+        QByteArray saveOverriddenIcons() const;
+        bool restoreOverriddenIcons(const QByteArray &obj);
 
     public:
         QStringList objectIds() const;

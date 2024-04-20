@@ -329,15 +329,21 @@ struct ParserPrivate {
     void determineObjectType(const QMXmlAdaptorElement &e, ActionObjectInfoMessage &info,
                              const char *field) const {
         auto name = e.name;
+        info.shapeToken = QStringLiteral("Plain");
         if (name == QStringLiteral("action")) {
             info.typeToken = QStringLiteral("Action");
+        } else if (name == QStringLiteral("widget")) {
+            info.typeToken = QStringLiteral("Action");
+            info.shapeToken = QStringLiteral("Widget");
         } else if (name == QStringLiteral("group")) {
             info.typeToken = QStringLiteral("Group");
         } else if (name == QStringLiteral("menuBar") || name == QStringLiteral("toolBar")) {
             info.typeToken = QStringLiteral("Menu");
-            info.topLevel = true;
+            info.shapeToken = QStringLiteral("TopLevel");
         } else if (name == QStringLiteral("menu")) {
             info.typeToken = QStringLiteral("Menu");
+            if (resolve(e.properties.value(QStringLiteral("shape"))) == QStringLiteral("topLevel"))
+                info.shapeToken = QStringLiteral("TopLevel");
         } else {
             fprintf(stderr, "%s:%s: unknown %s object tag \"%s\"\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName), field,
@@ -359,8 +365,6 @@ struct ParserPrivate {
         info.id = id;
 
         // type
-        info.topLevel =
-            resolve(e.properties.value(QStringLiteral("top"))) == QStringLiteral("true");
         determineObjectType(e, info, "object");
 
         // text
@@ -473,7 +477,7 @@ struct ParserPrivate {
             seqs.append(seq, entryIndex);
             entries.append(entry); // Make a placeholder
         } else {
-            if (info.topLevel) {
+            if (info.shapeToken == QStringLiteral("TopLevel")) {
                 fprintf(stderr,
                         "%s:%s: layout element \"%s\" has multiple defined structures while it's "
                         "top level\n",

@@ -1,9 +1,13 @@
 #include "actiondomain.h"
 #include "actiondomain_p.h"
 
+#include <utility>
+
 #include <QFileInfo>
 #include <QRegularExpression>
-#include <utility>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 #include <qmxmladaptor.h>
 
@@ -314,17 +318,37 @@ namespace Core {
                 idIndexes[layout.id()].append(instanceIdx);
                 return instanceIdx;
             }
+
+            ActionLayout toLayout(const QVector<TreeNode> &heap, int idx,
+                                  QHash<int, ActionLayout> &layoutIndexes) const {
+                if (auto it = layoutIndexes.find(idx); it != layoutIndexes.end()) {
+                    return it.value();
+                }
+
+                ActionLayout res;
+                res.setId(id);
+                res.setType(type);
+                res.setFlat(flat);
+                QList<ActionLayout> children1;
+                children1.reserve(children.size());
+                for (const auto &childIdx : children) {
+                    children1.append(heap.at(childIdx).toLayout(heap, childIdx, layoutIndexes));
+                }
+                res.setChildren(children1);
+                layoutIndexes.insert(idx, res);
+                return res;
+            }
         };
 
-        QVector<TreeNode> layoutInstances;
-        layoutInstances.append({{}, ActionObjectInfo::Separator, false, {}});
-        layoutInstances.append({{}, ActionObjectInfo::Stretch, false, {}});
+        QVector<TreeNode> heap;
+        heap.append({{}, ActionObjectInfo::Separator, false, {}});
+        heap.append({{}, ActionObjectInfo::Stretch, false, {}});
 
         QHash<QString, QVector<int>> idIndexes;
         QHash<const ActionExtension *, QHash<int, int>> extensionIndexes;
         for (const auto &ext : extensions) {
             for (int i = 0; i < ext->layoutCount(); ++i) {
-                std::ignore = TreeNode::layoutInfoToLayout(ext->layout(i), layoutInstances,
+                std::ignore = TreeNode::layoutInfoToLayout(ext->layout(i), heap,
                                                            extensionIndexes[ext], idIndexes);
             }
         }
@@ -338,15 +362,15 @@ namespace Core {
                 if (it == idIndexes.end())
                     continue;
 
+                QVector<int> layoutsToInsert;
+                layoutsToInsert.reserve(routine.itemCount());
+                for (int j = 0; j < routine.itemCount(); ++j) {
+                    auto idx = TreeNode::layoutInfoToLayout(routine.item(j), heap, curExtIndexes,
+                                                            idIndexes);
+                    layoutsToInsert.append(idx);
+                }
                 for (const auto &parentIdx : std::as_const(it.value())) {
-                    QVector<int> layoutsToInsert;
-                    layoutsToInsert.reserve(routine.itemCount());
-                    for (int j = 0; j < routine.itemCount(); ++j) {
-                        auto idx = TreeNode::layoutInfoToLayout(routine.item(j), layoutInstances,
-                                                                curExtIndexes, idIndexes);
-                        layoutsToInsert.append(idx);
-                    }
-                    auto &parentLayout = layoutInstances[parentIdx];
+                    auto &parentLayout = heap[parentIdx];
                     switch (routine.anchor()) {
                         case ActionBuildRoutine::Last: {
                             parentLayout.children += layoutsToInsert;
@@ -358,7 +382,7 @@ namespace Core {
                         }
                         case ActionBuildRoutine::After: {
                             for (int j = 0; j < parentLayout.children.size(); ++j) {
-                                if (layoutInstances[j].id == routine.relativeTo()) {
+                                if (heap[parentLayout.children[j]].id == routine.relativeTo()) {
                                     parentLayout.children.insert(j + 1, layoutsToInsert.size(), 0);
                                     for (int k = 0; k < layoutsToInsert.size(); ++k) {
                                         parentLayout.children[j + 1 + k] = layoutsToInsert[k];
@@ -370,7 +394,7 @@ namespace Core {
                         }
                         case ActionBuildRoutine::Before: {
                             for (int j = 0; j < parentLayout.children.size(); ++j) {
-                                if (layoutInstances[j].id == routine.relativeTo()) {
+                                if (heap[parentLayout.children[j]].id == routine.relativeTo()) {
                                     parentLayout.children.insert(j, layoutsToInsert.size(), 0);
                                     for (int k = 0; k < layoutsToInsert.size(); ++k) {
                                         parentLayout.children[j + k] = layoutsToInsert[k];
@@ -385,7 +409,19 @@ namespace Core {
             }
         }
 
-
+        // Convert to layout
+        QHash<int, ActionLayout> layoutIndexes;
+        QList<ActionLayout> result;
+        for (int i = 0; i < heap.size(); ++i) {
+            const auto &item = heap.at(i);
+            auto it = objectInfoMap.find(item.id);
+            if (it == objectInfoMap.end())
+                continue;
+            if (it->type() != ActionObjectInfo::Menu || it->shape() != ActionItem::TopLevel)
+                continue;
+            result.append(item.toLayout(heap, i, layoutIndexes));
+        }
+        layouts = result;
     }
 
     void ActionDomainPrivate::flushIcons() const {
@@ -454,22 +490,118 @@ namespace Core {
         }
     }
 
-    ActionDomain::ActionDomain(QObject *parent) : QObject(parent) {
+    ActionDomain::ActionDomain(QObject *parent) : ActionDomain(*new ActionDomainPrivate(), parent) {
     }
     ActionDomain::~ActionDomain() = default;
+
+    static QSharedPointer<QMXmlAdaptorElement>
+        createLayoutElementRecursively(const ActionLayout &layout) {
+        auto e = QSharedPointer<QMXmlAdaptorElement>::create();
+        if (auto id = layout.id(); !id.isEmpty())
+            e->properties.insert(QStringLiteral("id"), id);
+
+        switch (layout.type()) {
+            case ActionObjectInfo::Action:
+                e->name = QStringLiteral("action");
+                break;
+            case ActionObjectInfo::Group:
+                e->name = QStringLiteral("group");
+                break;
+            case ActionObjectInfo::Menu:
+                e->name = QStringLiteral("menu");
+                if (layout.flat())
+                    e->properties.insert(QStringLiteral("flat"), QStringLiteral("true"));
+                break;
+            case ActionObjectInfo::Separator:
+                e->name = QStringLiteral("separator");
+                break;
+            case ActionObjectInfo::Stretch:
+                e->name = QStringLiteral("stretch");
+                break;
+        }
+
+        for (const auto &child : layout.children())
+            e->children.append(createLayoutElementRecursively(child));
+        return e;
+    }
+
     QByteArray ActionDomain::saveLayouts() const {
-        // TODO
-        return {};
+        Q_D(const ActionDomain);
+
+        d->flushLayouts();
+
+        QMXmlAdaptor xml;
+
+        QMXmlAdaptorElement &root = xml.root;
+        root.name = QStringLiteral("actionDomain");
+
+        auto extensionsElement = QSharedPointer<QMXmlAdaptorElement>::create();
+        extensionsElement->name = QStringLiteral("extensions");
+        extensionsElement->children.reserve(d->extensions.size());
+        for (const auto &item : d->extensions) {
+            auto e = QSharedPointer<QMXmlAdaptorElement>::create();
+            e->name = QStringLiteral("extension");
+            e->properties.insert(QStringLiteral("hash"), item->hash());
+            extensionsElement->children.append(e);
+        }
+
+        auto layoutsElement = QSharedPointer<QMXmlAdaptorElement>::create();
+        layoutsElement->name = QStringLiteral("layouts");
+        layoutsElement->children.reserve(d->layouts->size());
+        for (const auto &item : d->layouts.value()) {
+            layoutsElement->children.append(createLayoutElementRecursively(item));
+        }
+
+        root.children.append({extensionsElement, layoutsElement});
+
+        return xml.saveData();
     }
     bool ActionDomain::restoreLayouts(const QByteArray &obj) {
         // TODO
         return false;
     }
-    QByteArray ActionDomain::saveOverriddenAttributes() const {
-        // TODO
-        return {};
+    QByteArray ActionDomain::saveOverriddenShortcuts() const {
+        Q_D(const ActionDomain);
+        QJsonObject rootObj;
+        for (auto it = d->overriddenShortcuts.begin(); it != d->overriddenShortcuts.end(); ++it) {
+            auto it2 = d->objectInfoMap.find(it.key());
+            if (it2 == d->objectInfoMap.end())
+                continue;
+            if (it2->type() != ActionObjectInfo::Action || it2->shape() != ActionObjectInfo::Plain)
+                continue;
+
+            QJsonValue value = QJsonValue::Null;
+            if (const auto &val = it.value()) {
+                QJsonArray arr;
+                for (const auto &subItem : val.value()) {
+                    arr.push_back(subItem.toString());
+                }
+                value = arr;
+            }
+            rootObj.insert(it.key(), value);
+        }
+        return QJsonDocument(rootObj).toJson();
     }
-    bool ActionDomain::restoreOverriddenAttributes(const QByteArray &obj) {
+    bool ActionDomain::restoreOverriddenShortcuts(const QByteArray &obj) {
+        // TODO
+        return false;
+    }
+    QByteArray ActionDomain::saveOverriddenIcons() const {
+        Q_D(const ActionDomain);
+        QJsonObject rootObj;
+        for (auto it = d->overriddenIcons.begin(); it != d->overriddenIcons.end(); ++it) {
+            QJsonValue value = QJsonValue::Null;
+            if (const auto &val = it.value()) {
+                QJsonObject obj;
+                obj.insert(QStringLiteral("fromFile"), val->fromFile());
+                obj.insert(QStringLiteral("data"), val->data());
+                value = obj;
+            }
+            rootObj.insert(it.key(), value);
+        }
+        return QJsonDocument(rootObj).toJson();
+    }
+    bool ActionDomain::restoreOverriddenIcons(const QByteArray &obj) {
         // TODO
         return false;
     }

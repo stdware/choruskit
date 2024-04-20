@@ -60,6 +60,8 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
                 escapeString(item.id.toLocal8Bit()).data());
         fprintf(out, "            // type\n");
         fprintf(out, "            ActionObjectInfo::%s,\n", item.typeToken.toLocal8Bit().data());
+        fprintf(out, "            // shape\n");
+        fprintf(out, "            ActionObjectInfo::%s,\n", item.shapeToken.toLocal8Bit().data());
         fprintf(out, "            // text\n");
         fprintf(out, "            QByteArrayLiteral(\"%s\"),\n",
                 escapeString(item.text.toLocal8Bit()).data());
@@ -84,8 +86,6 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
                     escapeString(subItem.toLocal8Bit()).data());
         }
         fprintf(out, "            },\n");
-        fprintf(out, "            // topLevel\n");
-        fprintf(out, "            %s,\n", item.topLevel ? "true" : "false");
         fprintf(out, "        },\n");
     }
 }
