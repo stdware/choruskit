@@ -141,6 +141,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
 - `objects`：包含所有菜单元素的属性声明；
     - 子节点标签：
         - `action`：命令
+        - `widget`：控件
         - `group`：组
         - `menu`：菜单
         - `menuBar`：菜单栏
@@ -151,7 +152,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         - `class`：命令类别，仅命令可用
         - `shortcut`/`shortcuts`：仅命令，仅命令可用
         - `category/categories`：静态目录标签
-        - `shape`：具体形式，命令可设为`Plain`或`Widget`，菜单可设为`Plain`或`TopLevel`
+        - `top`：是否为顶级菜单，菜单可用
     - 注意事项：
         - `shortcut`与`category`可包含一个列表，使用`;`作为分隔符，`\`作为转义符（与 C 语言一致）
 - `layouts`：包含具有组织关系的布局声明；

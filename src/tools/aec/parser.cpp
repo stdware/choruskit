@@ -342,8 +342,9 @@ struct ParserPrivate {
             info.shapeToken = QStringLiteral("TopLevel");
         } else if (name == QStringLiteral("menu")) {
             info.typeToken = QStringLiteral("Menu");
-            if (resolve(e.properties.value(QStringLiteral("shape"))) == QStringLiteral("topLevel"))
+            if (resolve(e.properties.value(QStringLiteral("top"))) == QStringLiteral("true")) {
                 info.shapeToken = QStringLiteral("TopLevel");
+            }
         } else {
             fprintf(stderr, "%s:%s: unknown %s object tag \"%s\"\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName), field,

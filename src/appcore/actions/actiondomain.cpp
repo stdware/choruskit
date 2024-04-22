@@ -937,14 +937,6 @@ namespace Core {
         items.remove(keys);
         items.append({fileName}, itemToBeRemoved);
     }
-    ActionItem::MenuFactory ActionDomain::defaultMenuFactory() const {
-        Q_D(const ActionDomain);
-        return d->sharedMenuItem->d_func()->menuFactory;
-    }
-    void ActionDomain::setDefaultMenuFactory(const ActionItem::MenuFactory &fac) {
-        Q_D(ActionDomain);
-        d->sharedMenuItem->d_func()->menuFactory = fac;
-    }
     QStringList ActionDomain::objectIds() const {
         Q_D(const ActionDomain);
         return d->objectInfoMap.keys_qlist();
@@ -1091,6 +1083,8 @@ namespace Core {
                         if (!parent)
                             break;
                         auto menu = d->sharedMenuItem->requestMenu(parent);
+                        if (!menu)
+                            break;
                         menu->setProperty("action-item-id", layout.id());
                         d->sharedMenuItem->addMenuAsRequested(menu);
                         parent->addAction(menu->menuAction());
@@ -1116,6 +1110,8 @@ namespace Core {
                             auto menu = actionItem->requestMenu(parent);
                             if (!menu) {
                                 menu = d->sharedMenuItem->requestMenu(parent);
+                                if (!menu)
+                                    break;
                             }
                             parent->addAction(menu->menuAction());
                             lastMenuItems[parent] = Action;
@@ -1153,7 +1149,8 @@ namespace Core {
         }
     };
 
-    bool ActionDomain::buildLayouts(const QList<ActionItem *> &items) const {
+    bool ActionDomain::buildLayouts(const QList<ActionItem *> &items,
+                                    const ActionItem::MenuFactory &defaultMenuFactory) const {
         Q_D(const ActionDomain);
         d->flushLayouts();
 
@@ -1186,6 +1183,9 @@ namespace Core {
         d->sharedMenuItem->d_func()->deleteAllMenus();
 
         // Build layouts
+        auto &fac = d->sharedMenuItem->d_func()->menuFactory;
+        auto oldFac = fac;
+        fac = defaultMenuFactory;
         for (const auto &item : d->layouts.value()) {
             auto pair = itemMap.value(item.id());
             if (pair.second.type() != ActionObjectInfo::Menu ||
@@ -1194,6 +1194,7 @@ namespace Core {
             }
             UILayoutBuildHelper(d).build(item, itemMap, nullptr);
         }
+        fac = oldFac;
         return true;
     }
     void ActionDomain::updateTexts(const QList<ActionItem *> &items) const {
@@ -1230,7 +1231,11 @@ namespace Core {
             }
         }
         for (const auto &menu : d->sharedMenuItem->createdMenus()) {
-            menu->setTitle(menu->property("action-item-id").toString());
+            auto it = d->objectInfoMap.find(menu->property("action-item-id").toString());
+            if (it == d->objectInfoMap.end())
+                continue;
+            auto text = ActionObjectInfo::translatedText(it.value().text());
+            menu->setTitle(text);
         }
     }
     void ActionDomain::updateIcons(const QString &theme, const QList<ActionItem *> &items) const {

@@ -47,7 +47,7 @@ namespace Core {
 
         QAction *action() const;
         QWidgetAction *widgetAction() const;
-        QWidget* topLevel() const;
+        QWidget *topLevel() const;
         QList<QWidget *> createdWidgets() const;
         QList<QMenu *> createdMenus() const;
 
