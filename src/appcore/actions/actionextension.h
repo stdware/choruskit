@@ -11,8 +11,6 @@ namespace Core {
 
     class ActionDomain;
 
-    class ActionDomainPrivate;
-
     class ActionExtension;
 
     class ActionBuildRoutine;
@@ -28,8 +26,6 @@ namespace Core {
             Action,
             Group,
             Menu,
-            Separator,
-            Stretch,
         };
 
         enum Shape {
@@ -56,7 +52,6 @@ namespace Core {
 
         friend class ActionExtension;
         friend class ActionDomain;
-        friend class ActionDomainPrivate;
     };
 
     class CKAPPCORE_EXPORT ActionLayoutInfo {
@@ -66,9 +61,23 @@ namespace Core {
             return ext != nullptr;
         };
 
+        enum TypeFlags {
+            TerminalFlag = 1,    // leaf node
+            GroupFlag = 2,       // group of nodes
+            PlaceHolderFlag = 4, // placeholder node
+        };
+
+        enum Type {
+            Action = 0x100 | TerminalFlag,
+            Group = 0x200 | GroupFlag,
+            Menu = 0x400,
+            ExpandedMenu = 0x400 | GroupFlag,
+            Separator = 0x800 | TerminalFlag | PlaceHolderFlag,
+            Stretch = 0x1000 | TerminalFlag | PlaceHolderFlag,
+        };
+
         QString id() const;
-        ActionObjectInfo::Type type() const;
-        bool flat() const;
+        Type type() const;
 
         int childCount() const;
         ActionLayoutInfo child(int index) const;
@@ -80,7 +89,6 @@ namespace Core {
         friend class ActionExtension;
         friend class ActionBuildRoutine;
         friend class ActionDomain;
-        friend class ActionDomainPrivate;
     };
 
     class CKAPPCORE_EXPORT ActionBuildRoutine {
@@ -110,7 +118,6 @@ namespace Core {
 
         friend class ActionExtension;
         friend class ActionDomain;
-        friend class ActionDomainPrivate;
     };
 
     class CKAPPCORE_EXPORT ActionExtension {

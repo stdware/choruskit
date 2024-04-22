@@ -65,16 +65,10 @@ namespace Core {
         return ActionExtensionPrivate::get(ext)->layoutEntryData[idx].id;
     }
 
-    ActionObjectInfo::Type ActionLayoutInfo::type() const {
+    ActionLayoutInfo::Type ActionLayoutInfo::type() const {
         if (!ext)
             return {};
         return ActionExtensionPrivate::get(ext)->layoutEntryData[idx].type;
-    }
-
-    bool ActionLayoutInfo::flat() const {
-        if (!ext)
-            return {};
-        return ActionExtensionPrivate::get(ext)->layoutEntryData[idx].flat;
     }
 
     int ActionLayoutInfo::childCount() const {

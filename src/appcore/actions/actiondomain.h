@@ -55,11 +55,8 @@ namespace Core {
         QString id() const;
         void setId(const QString &id);
 
-        ActionObjectInfo::Type type() const;
-        void setType(ActionObjectInfo::Type type);
-
-        bool flat() const;
-        void setFlat(bool flat);
+        ActionLayoutInfo::Type type() const;
+        void setType(ActionLayoutInfo::Type type);
 
         QList<ActionLayout> children() const;
         void addChild(const ActionLayout &child);
@@ -108,13 +105,13 @@ namespace Core {
 
     public:
         QByteArray saveLayouts() const;
-        bool restoreLayouts(const QByteArray &obj);
+        bool restoreLayouts(const QByteArray &data);
 
         QByteArray saveOverriddenShortcuts() const;
-        bool restoreOverriddenShortcuts(const QByteArray &obj);
+        bool restoreOverriddenShortcuts(const QByteArray &data);
 
         QByteArray saveOverriddenIcons() const;
-        bool restoreOverriddenIcons(const QByteArray &obj);
+        bool restoreOverriddenIcons(const QByteArray &data);
 
     public:
         QStringList objectIds() const;

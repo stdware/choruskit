@@ -430,7 +430,7 @@ struct ParserPrivate {
             return entryIndex;
         } else if (e->name == QStringLiteral("stretch")) {
             checkChildren("stretch");
-            entry.typeToken = QStringLiteral("Stretch");
+            entry.typeToken = QStringLiteral("Separator");
             entries.append(entry);
             return entryIndex;
         }
@@ -449,14 +449,19 @@ struct ParserPrivate {
         entry.typeToken = info.typeToken;
 
         if (info.typeToken == QStringLiteral("Action")) {
+            entry.typeToken = QStringLiteral("Action");
             checkChildren(QString(R"("%1")").arg(id).toLatin1());
             entries.append(entry);
             return entryIndex;
         } else if (info.typeToken == QStringLiteral("Menu")) {
-            entry.flat =
-                resolve(e->properties.value(QStringLiteral("flat"))) == QStringLiteral("true");
+            if (resolve(e->properties.value(QStringLiteral("flat"))) == QStringLiteral("true")) {
+                entry.typeToken = QStringLiteral("ExpandedMenu");
+            } else {
+                entry.typeToken = QStringLiteral("Menu");
+            }
+        } else {
+            entry.typeToken = QStringLiteral("Group");
         }
-
 
         QString seq;
         auto &seqs = objSeqMap[id];
@@ -485,9 +490,9 @@ struct ParserPrivate {
                         id.toLatin1().data());
                 std::exit(1);
             }
-            auto flat = entry.flat;
+            auto typeToken = entry.typeToken;
             entry = entries.at(it.value());
-            entry.flat = flat;
+            entry.typeToken = typeToken;
             entries.append(entry);
             return entryIndex;
         }
@@ -590,9 +595,17 @@ struct ParserPrivate {
                 entry.id = id;
                 entry.typeToken = info.typeToken;
 
-                if (info.typeToken == QStringLiteral("Menu")) {
-                    entry.flat = resolve(e.properties.value(QStringLiteral("flat"))) ==
-                                 QStringLiteral("true");
+                if (info.typeToken == QStringLiteral("Action")) {
+                    entry.typeToken = QStringLiteral("Action");
+                } else if (info.typeToken == QStringLiteral("Menu")) {
+                    if (resolve(e.properties.value(QStringLiteral("flat"))) ==
+                        QStringLiteral("true")) {
+                        entry.typeToken = QStringLiteral("ExpandedMenu");
+                    } else {
+                        entry.typeToken = QStringLiteral("Menu");
+                    }
+                } else {
+                    entry.typeToken = QStringLiteral("Group");
                 }
 
                 int idx = -1;
@@ -607,9 +620,9 @@ struct ParserPrivate {
                 }
 
                 if (idx >= 0) {
-                    auto flat = entry.flat;
+                    auto typeToken = entry.typeToken;
                     entry = entries.at(idx);
-                    entry.flat = flat;
+                    entry.typeToken = typeToken;
                 }
             }
             entries.append(entry);

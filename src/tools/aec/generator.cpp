@@ -103,9 +103,7 @@ static void generateLayouts(FILE *out, const QVector<ActionLayoutEntryMessage> &
                     escapeString(subItem.id.toLocal8Bit()).data());
         }
         fprintf(out, "            // type\n");
-        fprintf(out, "            ActionObjectInfo::%s,\n", subItem.typeToken.toLocal8Bit().data());
-        fprintf(out, "            // flat\n");
-        fprintf(out, "            %s,\n", subItem.flat ? "true" : "false");
+        fprintf(out, "            ActionLayoutInfo::%s,\n", subItem.typeToken.toLocal8Bit().data());
         fprintf(out, "            // childIndexes\n");
         fprintf(out, "            {%s},\n",
                 joinNumbers(subItem.childIndexes, QStringLiteral(", ")).toLocal8Bit().data());
@@ -281,7 +279,7 @@ static ActionExtensionPrivate *getData() {
             categories.insert(subItem);
             fprintf(out,
                     "    QCoreApplication::translate(\"ChorusKit::ActionCategory\", \"%s\");\n",
-                    escapeString(item.commandClass.toLocal8Bit()).data());
+                    escapeString(subItem.toLocal8Bit()).data());
         }
     }
     fprintf(out, "\n");

@@ -24,7 +24,7 @@ namespace Core {
     class ActionLayoutData : public QSharedData {
     public:
         QString id;
-        ActionObjectInfo::Type type = ActionObjectInfo::Action;
+        ActionLayoutInfo::Type type = ActionLayoutInfo::Action;
         bool flat = false;
         QList<ActionLayout> children;
     };

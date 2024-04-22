@@ -20,7 +20,6 @@ struct ActionObjectInfoMessage {
 struct ActionLayoutEntryMessage {
     QString id;
     QString typeToken;
-    bool flat = false;
     QVector<int> childIndexes;
 };
 

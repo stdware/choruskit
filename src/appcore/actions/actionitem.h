@@ -13,6 +13,8 @@
 
 namespace Core {
 
+    class ActionDomain;
+
     class ActionItemPrivate;
 
     class CKAPPCORE_EXPORT ActionItem : public QObject {
@@ -55,6 +57,11 @@ namespace Core {
         ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent = nullptr);
 
         QScopedPointer<ActionItemPrivate> d_ptr;
+
+    protected:
+        void deleteAllMenus();
+
+        friend class ActionDomain;
     };
 
     inline bool ActionItem::isAction() const {

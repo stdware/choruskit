@@ -17,8 +17,7 @@ namespace Core {
 
     struct ActionLayoutInfoEntry {
         QString id;
-        ActionObjectInfo::Type type;
-        bool flat;
+        ActionLayoutInfo::Type type;
         QVector<int> childIndexes;
     };
 

@@ -46,17 +46,13 @@ namespace Core {
     }
 
     ActionItemPrivate::~ActionItemPrivate() {
+        Q_Q(ActionItem);
         switch (type) {
             case ActionItem::Widget:
                 delete widgetAction;
                 break;
             case ActionItem::Menu: {
-                for (const auto &menu : std::as_const(createdMenus)) {
-                    connect(menu, &QObject::destroyed, this, &ActionItemPrivate::_q_menuDestroyed);
-                }
-                auto menusToDelete = createdMenus;
-                createdMenus.clear();
-                qDeleteAll(menusToDelete);
+                q->deleteAllMenus();
                 break;
             }
             default:
@@ -158,7 +154,7 @@ namespace Core {
 
     QMenu *ActionItem::requestMenu(QWidget *parent) {
         Q_D(ActionItem);
-        
+
         auto menu = d->menuFactory(parent);
         // Q_EMIT menuCreated(menu);
         connect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
@@ -172,6 +168,18 @@ namespace Core {
         d.id = id;
 
         d.init();
+    }
+
+    void ActionItem::deleteAllMenus() {
+        Q_D(ActionItem);
+        if (d->createdMenus.isEmpty())
+            return;
+        for (const auto &menu : std::as_const(d->createdMenus)) {
+            disconnect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
+        }
+        auto menusToDelete = d->createdMenus;
+        d->createdMenus.clear();
+        qDeleteAll(menusToDelete);
     }
 
 }
