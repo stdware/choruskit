@@ -239,7 +239,9 @@ namespace Core {
 
 
     ActionDomainPrivate::ActionDomainPrivate()
-        : sharedStretchWidgetAction(new StretchWidgetAction()) {
+        : sharedStretchWidgetAction(new StretchWidgetAction()),
+          sharedMenuItem(new ActionItem(
+              {}, ActionItem::MenuFactory([](QWidget *parent) { return new QMenu(parent); }))) {
     }
     ActionDomainPrivate::~ActionDomainPrivate() = default;
     void ActionDomainPrivate::init() {
@@ -300,34 +302,45 @@ namespace Core {
 
             static int layoutInfoToLayout(const ActionLayoutInfo &layout, QVector<TreeNode> &heap,
                                           QHash<QString, QVector<int>> &idIndexes) {
-                TreeNode res;
-                res.id = layout.id();
-                res.type = layout.type();
+                TreeNode node;
+                node.type = layout.type();
+                if (node.type == ActionLayoutInfo::Separator ||
+                    node.type == ActionLayoutInfo::Stretch) {
+                    int instanceIdx = heap.size();
+                    heap.append(node);
+                    return instanceIdx;
+                }
 
-                res.children.reserve(layout.childCount());
+                node.id = layout.id();
+                node.children.reserve(layout.childCount());
                 for (int i = 0; i < layout.childCount(); ++i) {
-                    res.children.append(layoutInfoToLayout(layout.child(i), heap, idIndexes));
+                    node.children.append(layoutInfoToLayout(layout.child(i), heap, idIndexes));
                 }
 
                 int instanceIdx = heap.size();
-                idIndexes[layout.id()].append(instanceIdx);
+                heap.append(node);
+                idIndexes[node.id].append(instanceIdx);
                 return instanceIdx;
             }
 
             ActionLayout toLayout(const QVector<TreeNode> &heap,
                                   const ActionLayout &sharedSeparator,
                                   const ActionLayout &sharedStretch) const {
-                ActionLayout res;
-                res.setId(id);
-                res.setType(type);
+                if (type == ActionLayoutInfo::Separator)
+                    return sharedSeparator;
+                if (type == ActionLayoutInfo::Stretch)
+                    return sharedStretch;
+                ActionLayout layout;
+                layout.setId(id);
+                layout.setType(type);
                 QList<ActionLayout> children1;
                 children1.reserve(children.size());
                 for (const auto &childIdx : children) {
                     children1.append(
                         heap.at(childIdx).toLayout(heap, sharedSeparator, sharedStretch));
                 }
-                res.setChildren(children1);
-                return res;
+                layout.setChildren(children1);
+                return layout;
             }
         };
 
@@ -413,6 +426,13 @@ namespace Core {
                 return -1;
             }
 
+            if (node.type == ActionLayoutInfo::Separator ||
+                node.type == ActionLayoutInfo::Stretch) {
+                int instanceIdx = heap.size();
+                heap.append(node);
+                return instanceIdx;
+            }
+
             for (const auto &child : e->children) {
                 auto childIdx = restoreElementHelper(child.data(), heap, idIndexes);
                 if (childIdx < 0) {
@@ -495,7 +515,7 @@ namespace Core {
                 effectiveExtensions.append(ext);
             }
 
-            return applyBuildRoutines(extensions.values_qlist(), heap, idIndexes);
+            return applyBuildRoutines(effectiveExtensions, heap, idIndexes);
         }
 
         static inline QByteArray
@@ -917,6 +937,14 @@ namespace Core {
         items.remove(keys);
         items.append({fileName}, itemToBeRemoved);
     }
+    ActionItem::MenuFactory ActionDomain::defaultMenuFactory() const {
+        Q_D(const ActionDomain);
+        return d->sharedMenuItem->d_func()->menuFactory;
+    }
+    void ActionDomain::setDefaultMenuFactory(const ActionItem::MenuFactory &fac) {
+        Q_D(ActionDomain);
+        d->sharedMenuItem->d_func()->menuFactory = fac;
+    }
     QStringList ActionDomain::objectIds() const {
         Q_D(const ActionDomain);
         return d->objectInfoMap.keys_qlist();
@@ -1012,70 +1040,125 @@ namespace Core {
         UILayoutBuildHelper(const ActionDomainPrivate *d) : d(d) {
         }
 
-        void build(const ActionLayout &layout, const QHash<QString, ActionItem *> &itemMap,
-                   QWidget *w) {
-            if (w->inherits("QMenu")) {
-                return buildImpl(layout, itemMap, static_cast<QMenu *>(w));
-            }
-            if (w->inherits("QToolBar")) {
-                return buildImpl(layout, itemMap, static_cast<QMenuBar *>(w));
-            }
-            if (w->inherits("QToolBar")) {
-                return buildImpl(layout, itemMap, static_cast<QToolBar *>(w));
-            }
-        }
-
-        template <class T>
-        void buildImpl(const ActionLayout &layout, const QHash<QString, ActionItem *> &itemMap,
-                       T *parent) {
-            for (const auto &layoutItem : layout.children()) {
-                auto actionItem = itemMap.value(layoutItem.id());
-                if (!actionItem)
-                    continue;
-
-                switch (layoutItem.type()) {
-                    case ActionLayoutInfo::Action: {
+        void build(const ActionLayout &layout,
+                   const QHash<QString, QPair<ActionItem *, ActionObjectInfo>> &itemMap,
+                   QWidget *parent) {
+            switch (layout.type()) {
+                case ActionLayoutInfo::Action: {
+                    if (!parent)
+                        break;
+                    auto pair = itemMap.value(layout.id());
+                    auto actionItem = pair.first;
+                    if (!actionItem || pair.second.type() != ActionObjectInfo::Action) {
+                        break;
+                    }
+                    if (actionItem->isAction()) {
                         parent->addAction(actionItem->action());
-                        break;
+                        lastMenuItems[parent] = Action;
+                    } else if (actionItem->isWidget()) {
+                        parent->addAction(actionItem->widgetAction());
+                        lastMenuItems[parent] = Action;
                     }
-                    case ActionLayoutInfo::ExpandedMenu:
-                    case ActionLayoutInfo::Group: {
-                        for (const auto &childLayoutItem : layoutItem.children()) {
-                            build(childLayoutItem, itemMap, parent);
-                        }
+                    break;
+                }
+                case ActionLayoutInfo::ExpandedMenu: {
+                    if (!parent)
                         break;
+                    auto info = d->objectInfoMap.value(layout.id());
+                    if (info.type() != ActionObjectInfo::Menu)
+                        break;
+                    for (const auto &childLayoutItem : layout.children()) {
+                        build(childLayoutItem, itemMap, parent);
                     }
-                    case ActionLayoutInfo::Menu: {
-                        auto menu = actionItem->requestMenu(parent);
+                    break;
+                }
+                case ActionLayoutInfo::Group: {
+                    if (!parent)
+                        break;
+                    auto info = d->objectInfoMap.value(layout.id());
+                    if (info.type() != ActionObjectInfo::Group)
+                        break;
+                    for (const auto &childLayoutItem : layout.children()) {
+                        build(childLayoutItem, itemMap, parent);
+                    }
+                    break;
+                }
+                case ActionLayoutInfo::Menu: {
+                    auto pair = itemMap.value(layout.id());
+                    QWidget *nextParent;
+                    auto actionItem = pair.first;
+                    if (!actionItem) {
+                        if (!parent)
+                            break;
+                        auto menu = d->sharedMenuItem->requestMenu(parent);
+                        menu->setProperty("action-item-id", layout.id());
+                        d->sharedMenuItem->addMenuAsRequested(menu);
                         parent->addAction(menu->menuAction());
-                        for (const auto &childLayoutItem : layoutItem.children()) {
-                            build(childLayoutItem, itemMap, menu);
+                        lastMenuItems[parent] = Action;
+                        nextParent = menu;
+                    } else {
+                        if (pair.second.type() != ActionObjectInfo::Menu)
+                            break;
+                        if (actionItem->isTopLevel()) {
+                            auto w = actionItem->topLevel();
+                            if (parent) {
+                                auto menu = qobject_cast<QMenu *>(w);
+                                if (menu) {
+                                    parent->addAction(menu->menuAction());
+                                    lastMenuItems[parent] = Action;
+                                }
+                            }
+                            // other menu types will be ignored
+                            nextParent = w;
+                        } else if (actionItem->isMenu()) {
+                            if (!parent)
+                                break;
+                            auto menu = actionItem->requestMenu(parent);
+                            if (!menu) {
+                                menu = d->sharedMenuItem->requestMenu(parent);
+                            }
+                            parent->addAction(menu->menuAction());
+                            lastMenuItems[parent] = Action;
+                            nextParent = menu;
+                        } else {
+                            break;
                         }
-                        break;
                     }
-                    case ActionLayoutInfo::Separator: {
-                        if (lastMenuItems.value(parent) == Action) {
-                            parent->addSeparator();
-                        }
-                        break;
+                    for (const auto &childLayoutItem : layout.children()) {
+                        build(childLayoutItem, itemMap, nextParent);
                     }
-                    case ActionLayoutInfo::Stretch: {
-                        if (lastMenuItems.value(parent) == Action) {
-                            parent->addAction(d->sharedStretchWidgetAction.data());
-                        }
-                        break;
+                    break;
+                }
+                case ActionLayoutInfo::Separator: {
+                    if (lastMenuItems.value(parent) == Action) {
+                        auto action = new QAction(parent);
+                        action->setSeparator(true);
+                        parent->addAction(action);
+                        lastMenuItems[parent] = Separator;
                     }
+                    break;
+                }
+                case ActionLayoutInfo::Stretch: {
+                    if (lastMenuItems.value(parent) == Action) {
+                        parent->addAction(d->sharedStretchWidgetAction.data());
+                        lastMenuItems[parent] = Stretch;
+                    } else if (lastMenuItems.value(parent) == Separator) {
+                        parent->removeAction(parent->actions().back());
+                        parent->addAction(d->sharedStretchWidgetAction.data());
+                        lastMenuItems[parent] = Stretch;
+                    }
+                    break;
                 }
             }
         }
     };
 
-    bool ActionDomain::buildLayouts(const QString &theme, const QList<ActionItem *> &items) const {
+    bool ActionDomain::buildLayouts(const QList<ActionItem *> &items) const {
         Q_D(const ActionDomain);
         d->flushLayouts();
 
         // Build item map
-        QHash<QString, ActionItem *> itemMap;
+        QHash<QString, QPair<ActionItem *, ActionObjectInfo>> itemMap;
         itemMap.reserve(items.size());
         for (const auto &item : items) {
             auto id = item->id();
@@ -1084,7 +1167,14 @@ namespace Core {
                     << "Core::ActionDomain::buildLayouts(): duplicated item id " << id;
                 return false;
             }
-            itemMap.insert(id, item);
+
+            auto it = d->objectInfoMap.find(id);
+            if (it == d->objectInfoMap.end()) {
+                qWarning().noquote().nospace()
+                    << "Core::ActionDomain::buildLayouts(): unknown item id " << id;
+                return false;
+            }
+            itemMap.insert(id, {item, *it});
         }
 
         // Remove all menus
@@ -1093,18 +1183,59 @@ namespace Core {
                 item->d_func()->deleteAllMenus();
             }
         }
+        d->sharedMenuItem->d_func()->deleteAllMenus();
 
         // Build layouts
         for (const auto &item : d->layouts.value()) {
-            auto actionItem = itemMap.value(item.id());
-            if (!actionItem || !actionItem->isTopLevel()) {
+            auto pair = itemMap.value(item.id());
+            if (pair.second.type() != ActionObjectInfo::Menu ||
+                pair.second.shape() != ActionObjectInfo::TopLevel || !pair.first->isTopLevel()) {
                 continue;
             }
-            UILayoutBuildHelper(d).build(item, itemMap, actionItem->topLevel());
+            UILayoutBuildHelper(d).build(item, itemMap, nullptr);
         }
-
-        // Set icons
-        for (const auto &item : itemMap) {
+        return true;
+    }
+    void ActionDomain::updateTexts(const QList<ActionItem *> &items) const {
+        Q_D(const ActionDomain);
+        for (const auto &item : items) {
+            auto it = d->objectInfoMap.find(item->id());
+            if (it == d->objectInfoMap.end())
+                continue;
+            auto text = ActionObjectInfo::translatedText(it.value().text());
+            switch (item->type()) {
+                case ActionItem::Action: {
+                    item->action()->setText(text);
+                    break;
+                }
+                case ActionItem::Menu: {
+                    for (const auto &menu : item->createdMenus()) {
+                        menu->setTitle(text);
+                    }
+                    break;
+                }
+                case ActionItem::TopLevel: {
+                    auto w = item->topLevel();
+                    auto mo = item->topLevel()->metaObject();
+                    if (auto idx = mo->indexOfProperty("text"); idx >= 0) {
+                        auto prop = mo->property(idx);
+                        if (prop.isWritable()) {
+                            prop.write(w, text);
+                        }
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        for (const auto &menu : d->sharedMenuItem->createdMenus()) {
+            menu->setTitle(menu->property("action-item-id").toString());
+        }
+    }
+    void ActionDomain::updateIcons(const QString &theme, const QList<ActionItem *> &items) const {
+        Q_D(const ActionDomain);
+        for (const auto &item : items) {
             switch (item->type()) {
                 case ActionItem::Action: {
                     item->action()->setIcon(objectIcon(theme, item->id()));
@@ -1131,7 +1262,9 @@ namespace Core {
                     break;
             }
         }
-        return true;
+        for (const auto &menu : d->sharedMenuItem->createdMenus()) {
+            menu->setIcon(objectIcon(theme, menu->property("action-item-id").toString()));
+        }
     }
 
     ActionDomain::ActionDomain(ActionDomainPrivate &d, QObject *parent)

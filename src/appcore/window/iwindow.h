@@ -106,13 +106,13 @@ namespace Core {
     template <class T>
     inline T *IWindow::cast() {
         static_assert(std::is_base_of<IWindow, T>::value, "T should inherit from Core::IWindow");
-        return qobject_cast<T *>(this);
+        return static_cast<T *>(this);
     }
 
     template <class T>
     inline const T *IWindow::cast() const {
         static_assert(std::is_base_of<IWindow, T>::value, "T should inherit from Core::IWindow");
-        return qobject_cast<T *>(this);
+        return static_cast<T *>(this);
     }
 
     template <class T, class... Args>

@@ -19,6 +19,9 @@ namespace Core {
     ActionItemPrivate::~ActionItemPrivate() {
         Q_Q(ActionItem);
         switch (type) {
+            case ActionItem::Action:
+                delete action;
+                break;
             case ActionItem::Widget:
                 delete sharedWidgetAction;
                 break;
@@ -81,7 +84,8 @@ namespace Core {
     };
 
 
-    ActionItem::ActionItem(const QString &id, const WidgetFactory &fac, QObject *parent) {
+    ActionItem::ActionItem(const QString &id, const WidgetFactory &fac, QObject *parent)
+        : ActionItem(*new ActionItemPrivate(), id, parent) {
         Q_D(ActionItem);
         d->type = Widget;
         d->sharedWidgetAction = new ActionItemWidgetAction(fac, id, this);
@@ -94,7 +98,8 @@ namespace Core {
         d->menuFactory = fac;
     }
 
-    ActionItem::ActionItem(const QString &id, QWidget *topLevelWidget, QObject *parent) {
+    ActionItem::ActionItem(const QString &id, QWidget *topLevelWidget, QObject *parent)
+        : ActionItem(*new ActionItemPrivate(), id, parent) {
         Q_D(ActionItem);
         d->type = TopLevel;
         d->topLevelWidget = topLevelWidget;
@@ -141,12 +146,19 @@ namespace Core {
 
     QMenu *ActionItem::requestMenu(QWidget *parent) {
         Q_D(ActionItem);
-
+        if (!d->menuFactory)
+            return nullptr;
         auto menu = d->menuFactory(parent);
+        addMenuAsRequested(menu);
+        return menu;
+    }
+
+    void ActionItem::addMenuAsRequested(QMenu *menu) {
+        Q_D(ActionItem);
+
         // Q_EMIT menuCreated(menu);
         connect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
         d->createdMenus.insert(menu);
-        return menu;
     }
 
     ActionItem::ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent)

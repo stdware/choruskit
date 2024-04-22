@@ -328,7 +328,7 @@ struct ParserPrivate {
 
     void determineObjectType(const QMXmlAdaptorElement &e, ActionObjectInfoMessage &info,
                              const char *field) const {
-        auto name = e.name;
+        const auto &name = e.name;
         info.shapeToken = QStringLiteral("Plain");
         if (name == QStringLiteral("action")) {
             info.typeToken = QStringLiteral("Action");
@@ -430,7 +430,7 @@ struct ParserPrivate {
             return entryIndex;
         } else if (e->name == QStringLiteral("stretch")) {
             checkChildren("stretch");
-            entry.typeToken = QStringLiteral("Separator");
+            entry.typeToken = QStringLiteral("Stretch");
             entries.append(entry);
             return entryIndex;
         }

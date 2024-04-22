@@ -103,6 +103,9 @@ namespace Core {
         void removeIcon(const QString &theme, const QString &id);
         void removeIconConfiguration(const QString &fileName);
 
+        ActionItem::MenuFactory defaultMenuFactory() const;
+        void setDefaultMenuFactory(const ActionItem::MenuFactory &fac);
+
     public:
         QByteArray saveLayouts() const;
         bool restoreLayouts(const QByteArray &data);
@@ -140,7 +143,9 @@ namespace Core {
         inline QIcon objectIcon(const QString &theme, const QString &objId) const;
         inline QList<QKeySequence> objectShortcuts(const QString &objId) const;
 
-        bool buildLayouts(const QString &theme, const QList<ActionItem *> &items) const;
+        bool buildLayouts(const QList<ActionItem *> &items) const;
+        void updateTexts(const QList<ActionItem *> &items) const;
+        void updateIcons(const QString &theme, const QList<ActionItem *> &items) const;
 
     protected:
         ActionDomain(ActionDomainPrivate &d, QObject *parent = nullptr);

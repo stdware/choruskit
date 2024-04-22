@@ -113,7 +113,7 @@ namespace Core {
         switch (event->type()) {
             case QEvent::ActionAdded: {
                 auto e = static_cast<QActionEvent *>(event);
-                auto w = qobject_cast<QWidget *>(obj);
+                auto w = static_cast<QWidget *>(obj);
                 addAction(e->action(), w);
                 flushAction(e->action());
                 break;
@@ -125,7 +125,7 @@ namespace Core {
             }
             case QEvent::ActionRemoved: {
                 auto e = static_cast<QActionEvent *>(event);
-                auto w = qobject_cast<QWidget *>(obj);
+                auto w = static_cast<QWidget *>(obj);
                 removeAction(e->action(), w);
                 break;
             }

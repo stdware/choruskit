@@ -81,6 +81,7 @@ namespace Core {
         QHash<QString, std::optional<ActionDomain::IconReference>> overriddenIcons;
 
         QScopedPointer<QWidgetAction> sharedStretchWidgetAction;
+        QScopedPointer<ActionItem> sharedMenuItem;
 
         void flushIcons() const;
     };

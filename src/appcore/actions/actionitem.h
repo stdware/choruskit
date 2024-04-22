@@ -52,6 +52,7 @@ namespace Core {
         QList<QMenu *> createdMenus() const;
 
         QMenu *requestMenu(QWidget *parent);
+        void addMenuAsRequested(QMenu *menu);
 
     protected:
         ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent = nullptr);
