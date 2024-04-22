@@ -145,6 +145,20 @@ namespace Core {
         QHash<QString, QString> variables;
     };
 
+    class StretchWidgetAction : public QWidgetAction {
+    public:
+        explicit StretchWidgetAction(QObject *parent = nullptr) : QWidgetAction(parent) {
+        }
+
+    protected:
+        QWidget *createWidget(QWidget *parent) override {
+            auto w = new QWidget(parent);
+            w->setDisabled(true);
+            w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            return w;
+        }
+    };
+
     ActionCatalogue::ActionCatalogue() : d(new ActionCatalogueData()) {
     }
     ActionCatalogue::ActionCatalogue(const QByteArray &name) : ActionCatalogue() {
@@ -222,7 +236,8 @@ namespace Core {
 
 
 
-    ActionDomainPrivate::ActionDomainPrivate() {
+    ActionDomainPrivate::ActionDomainPrivate()
+        : sharedStretchWidgetAction(new StretchWidgetAction()) {
     }
     ActionDomainPrivate::~ActionDomainPrivate() = default;
     void ActionDomainPrivate::init() {
@@ -981,6 +996,78 @@ namespace Core {
         Q_D(ActionDomain);
         d->overriddenIcons.clear();
     }
+
+    class UILayoutBuildHelper {
+    public:
+        enum LastMenuItem {
+            Action,
+            Separator,
+            Stretch,
+        };
+        QHash<QWidget *, LastMenuItem> lastMenuItems;
+        const ActionDomainPrivate *d;
+
+        UILayoutBuildHelper(const ActionDomainPrivate *d) : d(d) {
+        }
+
+        void build(const ActionLayout &layout, const QHash<QString, ActionItem *> &itemMap,
+                   QWidget *w) {
+            if (w->inherits("QMenu")) {
+                return buildImpl(layout, itemMap, static_cast<QMenu *>(w));
+            }
+            if (w->inherits("QToolBar")) {
+                return buildImpl(layout, itemMap, static_cast<QMenuBar *>(w));
+            }
+            if (w->inherits("QToolBar")) {
+                return buildImpl(layout, itemMap, static_cast<QToolBar *>(w));
+            }
+        }
+
+        template <class T>
+        void buildImpl(const ActionLayout &layout, const QHash<QString, ActionItem *> &itemMap,
+                       T *parent) {
+            for (const auto &layoutItem : layout.children()) {
+                auto actionItem = itemMap.value(layoutItem.id());
+                if (!actionItem)
+                    continue;
+
+                switch (layoutItem.type()) {
+                    case ActionLayoutInfo::Action: {
+                        parent->addAction(actionItem->action());
+                        break;
+                    }
+                    case ActionLayoutInfo::ExpandedMenu:
+                    case ActionLayoutInfo::Group: {
+                        for (const auto &childLayoutItem : layoutItem.children()) {
+                            build(childLayoutItem, itemMap, parent);
+                        }
+                        break;
+                    }
+                    case ActionLayoutInfo::Menu: {
+                        auto menu = actionItem->requestMenu(parent);
+                        parent->addAction(menu->menuAction());
+                        for (const auto &childLayoutItem : layoutItem.children()) {
+                            build(childLayoutItem, itemMap, menu);
+                        }
+                        break;
+                    }
+                    case ActionLayoutInfo::Separator: {
+                        if (lastMenuItems.value(parent) == Action) {
+                            parent->addSeparator();
+                        }
+                        break;
+                    }
+                    case ActionLayoutInfo::Stretch: {
+                        if (lastMenuItems.value(parent) == Action) {
+                            parent->addAction(d->sharedStretchWidgetAction.data());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    };
+
     bool ActionDomain::buildLayouts(const QString &theme, const QList<ActionItem *> &items) const {
         Q_D(const ActionDomain);
         d->flushLayouts();
@@ -1005,8 +1092,14 @@ namespace Core {
             }
         }
 
-        // TODO: Build indexes
-
+        // Build layouts
+        for (const auto &item : d->layouts.value()) {
+            auto actionItem = itemMap.value(item.id());
+            if (!actionItem || !actionItem->isTopLevel()) {
+                continue;
+            }
+            UILayoutBuildHelper(d).build(item, itemMap, actionItem->topLevel());
+        }
 
         // Set icons
         for (const auto &item : itemMap) {

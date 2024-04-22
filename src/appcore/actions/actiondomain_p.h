@@ -25,7 +25,6 @@ namespace Core {
     public:
         QString id;
         ActionLayoutInfo::Type type = ActionLayoutInfo::Action;
-        bool flat = false;
         QList<ActionLayout> children;
     };
 
@@ -80,6 +79,8 @@ namespace Core {
 
         QHash<QString, std::optional<QList<QKeySequence>>> overriddenShortcuts;
         QHash<QString, std::optional<ActionDomain::IconReference>> overriddenIcons;
+
+        QScopedPointer<QWidgetAction> sharedStretchWidgetAction;
 
         void flushIcons() const;
     };
