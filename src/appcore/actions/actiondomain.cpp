@@ -12,6 +12,8 @@
 
 #include <qmxmladaptor.h>
 
+#include "actionitem_p.h"
+
 namespace Core {
 
     static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
@@ -1088,7 +1090,7 @@ namespace Core {
         // Remove all menus
         for (const auto &item : items) {
             if (item->isMenu()) {
-                item->deleteAllMenus();
+                item->d_func()->deleteAllMenus();
             }
         }
 

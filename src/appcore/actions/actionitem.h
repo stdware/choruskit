@@ -58,9 +58,6 @@ namespace Core {
 
         QScopedPointer<ActionItemPrivate> d_ptr;
 
-    protected:
-        void deleteAllMenus();
-
         friend class ActionDomain;
     };
 

@@ -1,47 +1,18 @@
 #include "actionitem.h"
+#include "actionitem_p.h"
+
+#include <utility>
 
 #include <QDebug>
-#include <utility>
 
 namespace Core {
 
 #define myWarning(func) qWarning() << "Core::ActionItem(): "
 
-    class ActionItemPrivate : public QObject {
-        Q_DECLARE_PUBLIC(ActionItem)
-    public:
-        ActionItemPrivate();
-        virtual ~ActionItemPrivate();
-
-        void init();
-
-        ActionItem *q_ptr;
-
-        QString id;
-        ActionItem::Type type;
-
-        QAction *action;
-
-        QWidgetAction *widgetAction;
-
-        ActionItem::MenuFactory menuFactory;
-        QSet<QMenu *> createdMenus;
-
-        QWidget *topLevelWidget;
-
-    private:
-        void _q_menuDestroyed(QObject *obj) {
-            // Q_Q(ActionItem);
-            auto menu = static_cast<QMenu *>(obj);
-            // Q_EMIT q->menuDestroyed(menu);
-            createdMenus.remove(menu);
-        }
-    };
-
     ActionItemPrivate::ActionItemPrivate() : q_ptr(nullptr) {
         type = ActionItem::Action;
         action = nullptr;
-        widgetAction = nullptr;
+        sharedWidgetAction = nullptr;
         topLevelWidget = nullptr;
     }
 
@@ -49,10 +20,10 @@ namespace Core {
         Q_Q(ActionItem);
         switch (type) {
             case ActionItem::Widget:
-                delete widgetAction;
+                delete sharedWidgetAction;
                 break;
             case ActionItem::Menu: {
-                q->deleteAllMenus();
+                deleteAllMenus();
                 break;
             }
             default:
@@ -63,6 +34,24 @@ namespace Core {
     void ActionItemPrivate::init() {
     }
 
+    void ActionItemPrivate::deleteAllMenus() {
+        if (createdMenus.isEmpty())
+            return;
+        for (const auto &menu : std::as_const(createdMenus)) {
+            disconnect(menu, &QObject::destroyed, this, &ActionItemPrivate::_q_menuDestroyed);
+        }
+        auto menusToDelete = createdMenus;
+        createdMenus.clear();
+        qDeleteAll(menusToDelete);
+    }
+
+    void ActionItemPrivate::_q_menuDestroyed(QObject *obj) {
+        // Q_Q(ActionItem);
+        auto menu = static_cast<QMenu *>(obj);
+        // Q_EMIT q->menuDestroyed(menu);
+        createdMenus.remove(menu);
+    }
+
     ActionItem::ActionItem(const QString &id, QAction *action, QObject *parent)
         : ActionItem(*new ActionItemPrivate(), id, parent) {
         Q_D(ActionItem);
@@ -71,34 +60,31 @@ namespace Core {
         // action->setProperty("action-id", id);
     }
 
-    namespace {
+    class ActionItemWidgetAction : public QWidgetAction {
+    public:
+        explicit ActionItemWidgetAction(ActionItem::WidgetFactory factory, const QString &id,
+                                        QObject *parent = nullptr)
+            : QWidgetAction(parent), fac(std::move(factory)) {
+        }
 
-        class WidgetAction : public QWidgetAction {
-        public:
-            explicit WidgetAction(ActionItem::WidgetFactory factory, const QString &id,
-                                  QObject *parent = nullptr)
-                : QWidgetAction(parent), fac(std::move(factory)) {
-            }
+    protected:
+        QWidget *createWidget(QWidget *parent) override {
+            auto w = fac(parent);
+            // w->setProperty("action-id", id);
+            return w;
+        }
 
-        protected:
-            QWidget *createWidget(QWidget *parent) override {
-                auto w = fac(parent);
-                // w->setProperty("action-id", id);
-                return w;
-            }
+        ActionItem::WidgetFactory fac;
+        QString id;
 
-            ActionItem::WidgetFactory fac;
-            QString id;
+        friend class ActionItem;
+    };
 
-            friend class Core::ActionItem;
-        };
-
-    }
 
     ActionItem::ActionItem(const QString &id, const WidgetFactory &fac, QObject *parent) {
         Q_D(ActionItem);
         d->type = Widget;
-        d->widgetAction = new WidgetAction(fac, id, this);
+        d->sharedWidgetAction = new ActionItemWidgetAction(fac, id, this);
     }
 
     ActionItem::ActionItem(const QString &id, const MenuFactory &fac, QObject *parent)
@@ -133,7 +119,7 @@ namespace Core {
 
     QWidgetAction *ActionItem::widgetAction() const {
         Q_D(const ActionItem);
-        return d->widgetAction;
+        return d->sharedWidgetAction;
     }
 
     QWidget *ActionItem::topLevel() const {
@@ -143,8 +129,9 @@ namespace Core {
 
     QList<QWidget *> ActionItem::createdWidgets() const {
         Q_D(const ActionItem);
-        return d->widgetAction ? static_cast<WidgetAction *>(d->widgetAction)->createdWidgets()
-                               : QList<QWidget *>();
+        return d->sharedWidgetAction
+                   ? static_cast<ActionItemWidgetAction *>(d->sharedWidgetAction)->createdWidgets()
+                   : QList<QWidget *>();
     }
 
     QList<QMenu *> ActionItem::createdMenus() const {
@@ -168,18 +155,6 @@ namespace Core {
         d.id = id;
 
         d.init();
-    }
-
-    void ActionItem::deleteAllMenus() {
-        Q_D(ActionItem);
-        if (d->createdMenus.isEmpty())
-            return;
-        for (const auto &menu : std::as_const(d->createdMenus)) {
-            disconnect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
-        }
-        auto menusToDelete = d->createdMenus;
-        d->createdMenus.clear();
-        qDeleteAll(menusToDelete);
     }
 
 }
