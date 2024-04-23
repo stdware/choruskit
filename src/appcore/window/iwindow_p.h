@@ -52,8 +52,7 @@ namespace Core {
         QHash<QString, QWidget *> widgetMap;
 
         struct DragFileHandler {
-            QObject *obj;
-            const char *member;
+            std::function<void(const QString &)> func;
             int max;
         };
         QHash<QString, DragFileHandler> dragFileHandlerMap;

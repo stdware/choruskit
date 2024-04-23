@@ -31,7 +31,7 @@ namespace Core {
 
         void load();
         void exit();
-        
+
         State state() const;
         inline bool isEffectivelyClosed() const;
 
@@ -47,7 +47,7 @@ namespace Core {
         QList<QWidget *> widgets() const;
 
         void addActionItem(ActionItem *item);
-        void addActionItems(const QList<ActionItem *> &items);
+        inline void addActionItems(const QList<ActionItem *> &items);
         void removeActionItem(ActionItem *item);
         void removeActionItem(const QString &id);
         ActionItem *actionItem(const QString &id) const;
@@ -62,8 +62,17 @@ namespace Core {
         QList<QWidget *> shortcutContexts() const;
 
         bool hasDragFileHandler(const QString &suffix);
-        void setDragFileHandler(const QString &suffix, QObject *obj, const char *member, int maxCount = 0);
+        void setDragFileHandler(const QString &suffix,
+                                const std::function<void(const QString &)> &handler,
+                                int maxCount = 0);
         void removeDragFileHandler(const QString &suffix);
+
+        template <class Func>
+        void setDragFileHandler(const QString &suffix,
+                                typename QtPrivate::FunctionPointer<Func>::Object *o, Func slot,
+                                int maxCount = 0) {
+            setDragFileHandler(suffix, std::bind(slot, o), maxCount);
+        }
 
     Q_SIGNALS:
         void widgetAdded(const QString &id, QWidget *w);
@@ -90,10 +99,10 @@ namespace Core {
 
     public:
         template <class T>
-        inline T *cast();
+        inline Q_DECL_CONSTEXPR T *cast();
 
         template <class T>
-        inline const T *cast() const;
+        inline Q_DECL_CONSTEXPR const T *cast() const;
 
         template <class T, class... Args>
         static inline T *create(Args &&...args);
@@ -103,14 +112,20 @@ namespace Core {
         return state() >= Exiting;
     }
 
+    inline void IWindow::addActionItems(const QList<Core::ActionItem *> &items) {
+        for (const auto &item : items) {
+            addActionItem(item);
+        }
+    }
+
     template <class T>
-    inline T *IWindow::cast() {
+    inline Q_DECL_CONSTEXPR T *IWindow::cast() {
         static_assert(std::is_base_of<IWindow, T>::value, "T should inherit from Core::IWindow");
         return static_cast<T *>(this);
     }
 
     template <class T>
-    inline const T *IWindow::cast() const {
+    inline Q_DECL_CONSTEXPR const T *IWindow::cast() const {
         static_assert(std::is_base_of<IWindow, T>::value, "T should inherit from Core::IWindow");
         return static_cast<T *>(this);
     }

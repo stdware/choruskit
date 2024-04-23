@@ -11,7 +11,7 @@
 
 void error(const char *msg = "Invalid argument") {
     if (msg)
-        fprintf(stderr, "%s:%s\n", qPrintable(qApp->applicationName()), msg);
+        fprintf(stderr, "%s: %s\n", qPrintable(qApp->applicationName()), msg);
 }
 
 int main(int argc, char *argv[]) {
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     QFile in;
     in.setFileName(filename);
     if (!in.open(QIODevice::ReadOnly)) {
-        fprintf(stderr, "%s:%s: No such file\n", qPrintable(qApp->applicationName()),
+        fprintf(stderr, "%s: %s: No such file\n", qPrintable(qApp->applicationName()),
                 qPrintable(filename));
         return 1;
     }

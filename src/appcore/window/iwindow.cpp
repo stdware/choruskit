@@ -260,10 +260,6 @@ namespace Core {
         bool eventFilter(QObject *obj, QEvent *event) override;
     };
 
-    static void qtimer_single_shot_impl(QObject *obj, const char *member, const QString &s) {
-        QMetaObject::invokeMethod(obj, member, Qt::DirectConnection, Q_ARG(QString, s));
-    }
-
     WindowEventFilter::WindowEventFilter(IWindowPrivate *d, QWidget *w) : QObject(d), d(d), w(w) {
         w->installEventFilter(this);
     }
@@ -320,8 +316,7 @@ namespace Core {
                                 auto it = d->dragFileHandlerMap.find("/");
                                 if (it != d->dragFileHandlerMap.end()) {
                                     for (const auto &dir : qAsConst(dirs)) {
-                                        qtimer_single_shot_impl(it->obj, it->member,
-                                                                dir.absoluteFilePath());
+                                        it->func(dir.absoluteFilePath());
                                     }
                                     accept = true;
                                 }
@@ -334,8 +329,7 @@ namespace Core {
                                     const auto &handler = *it2;
                                     if (handler.max == 0 || handler.max >= it->size()) {
                                         for (const auto &file : qAsConst(it.value())) {
-                                            qtimer_single_shot_impl(handler.obj, handler.member,
-                                                                    file.absoluteFilePath());
+                                            handler.func(file.absoluteFilePath());
                                         }
                                         accept = true;
                                     }
@@ -351,8 +345,7 @@ namespace Core {
                                 if (it != d->dragFileHandlerMap.end()) {
                                     for (const auto &fileList : qAsConst(files)) {
                                         for (const auto &file : fileList) {
-                                            qtimer_single_shot_impl(it->obj, it->member,
-                                                                    file.absoluteFilePath());
+                                            it->func(file.absoluteFilePath());
                                         }
                                     }
                                     accept = true;
@@ -660,12 +653,6 @@ namespace Core {
         }
     }
 
-    void IWindow::addActionItems(const QList<Core::ActionItem *> &items) {
-        for (const auto &item : items) {
-            addActionItem(item);
-        }
-    }
-
     void IWindow::removeActionItem(Core::ActionItem *item) {
         if (item == nullptr) {
             myWarning(__func__) << "trying to remove null item";
@@ -731,18 +718,19 @@ namespace Core {
         return d->dragFileHandlerMap.contains(suffix.toLower());
     }
 
-    void IWindow::setDragFileHandler(const QString &suffix, QObject *obj, const char *member,
+    void IWindow::setDragFileHandler(const QString &suffix,
+                                     const std::function<void(const QString &)> &handler,
                                      int maxCount) {
         Q_D(IWindow);
 
         if (suffix.isEmpty())
             return;
 
-        if (!obj || maxCount < 0) {
+        if (maxCount < 0) {
             removeDragFileHandler(suffix);
             return;
         }
-        d->dragFileHandlerMap[suffix.toLower()] = {obj, member, maxCount};
+        d->dragFileHandlerMap[suffix.toLower()] = {handler, maxCount};
     }
 
     void IWindow::removeDragFileHandler(const QString &suffix) {

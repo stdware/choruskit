@@ -160,7 +160,7 @@ struct ParserPrivate {
                                                     const char *field) {
         auto id = resolve(e->properties.value(QStringLiteral("id")));
         if (id.isEmpty()) {
-            fprintf(stderr, "%s:%s: %s element \"%s\" doesn't have an \"id\" field\n",
+            fprintf(stderr, "%s: %s: %s element \"%s\" doesn't have an \"id\" field\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName), field,
                     e->name.toLatin1().data());
             std::exit(1);
@@ -174,7 +174,7 @@ struct ParserPrivate {
             // Check if the tag matches
             if (info.tag != e->name && info.tag != QStringLiteral("object")) {
                 fprintf(stderr,
-                        "%s:%s: %s element \"%s\" has inconsistent tag \"%s\" with the "
+                        "%s: %s: %s element \"%s\" has inconsistent tag \"%s\" with the "
                         "object element \"%s\"\n",
                         qPrintable(qApp->applicationName()), qPrintable(fileName), field,
                         id.toLatin1().data(), e->name.toLatin1().data(),
@@ -206,7 +206,7 @@ struct ParserPrivate {
 
         // Read file
         if (!xml.loadData(data)) {
-            fprintf(stderr, "%s:%s: invalid format\n", qPrintable(qApp->applicationName()),
+            fprintf(stderr, "%s: %s: invalid format\n", qPrintable(qApp->applicationName()),
                     qPrintable(fileName));
             std::exit(1);
         }
@@ -214,7 +214,7 @@ struct ParserPrivate {
         // Check root name
         const auto &root = xml.root;
         if (const auto &rootName = root.name; rootName != QStringLiteral("actionExtension")) {
-            fprintf(stderr, "%s:%s: unknown root element tag %s\n",
+            fprintf(stderr, "%s: %s: unknown root element tag %s\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     rootName.toLatin1().data());
             std::exit(1);
@@ -249,7 +249,7 @@ struct ParserPrivate {
             if (item->name == QStringLiteral("version")) {
                 if (!version.isEmpty()) {
                     fprintf(stderr,
-                            "%s:%s: duplicated version value \"%s\", the previous one is \"%s\"\n",
+                            "%s: %s: duplicated version value \"%s\", the previous one is \"%s\"\n",
                             qPrintable(qApp->applicationName()), qPrintable(fileName),
                             item->value.toLatin1().data(), version.toLatin1().data());
                     std::exit(1);
@@ -259,7 +259,7 @@ struct ParserPrivate {
             }
             if (item->name == QStringLiteral("parserConfig")) {
                 if (hasParserConfig) {
-                    fprintf(stderr, "%s:%s: duplicated parser config elements\n",
+                    fprintf(stderr, "%s: %s: duplicated parser config elements\n",
                             qPrintable(qApp->applicationName()), qPrintable(fileName));
                     std::exit(1);
                 }
@@ -277,7 +277,7 @@ struct ParserPrivate {
         for (const auto &item : std::as_const(objElements)) {
             auto entity = parseObject(*item);
             if (objInfoMap.contains(entity.id)) {
-                fprintf(stderr, "%s:%s: duplicated object id %s\n",
+                fprintf(stderr, "%s: %s: duplicated object id %s\n",
                         qPrintable(qApp->applicationName()), qPrintable(fileName),
                         entity.id.toLatin1().data());
                 std::exit(1);
@@ -346,7 +346,7 @@ struct ParserPrivate {
                 info.shapeToken = QStringLiteral("TopLevel");
             }
         } else {
-            fprintf(stderr, "%s:%s: unknown %s object tag \"%s\"\n",
+            fprintf(stderr, "%s: %s: unknown %s object tag \"%s\"\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName), field,
                     name.toLatin1().data());
             std::exit(1);
@@ -358,7 +358,7 @@ struct ParserPrivate {
         ActionObjectInfoMessage info;
         auto id = resolve(e.properties.value(QStringLiteral("id")));
         if (id.isEmpty()) {
-            fprintf(stderr, "%s:%s: object element \"%s\" doesn't have an \"id\" field\n",
+            fprintf(stderr, "%s: %s: object element \"%s\" doesn't have an \"id\" field\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     e.name.toLatin1().data());
             std::exit(1);
@@ -402,7 +402,7 @@ struct ParserPrivate {
         }
 
         if (!e.children.isEmpty()) {
-            fprintf(stderr, "%s:%s: object declaration element \"%s\" shouldn't have children\n",
+            fprintf(stderr, "%s: %s: object declaration element \"%s\" shouldn't have children\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     e.name.toLatin1().data());
             std::exit(1);
@@ -415,7 +415,7 @@ struct ParserPrivate {
                                QStringList &path) {
         const auto &checkChildren = [this, e](const char *name) {
             if (!e->children.isEmpty()) {
-                fprintf(stderr, "%s:%s: layout element %s shouldn't have children\n",
+                fprintf(stderr, "%s: %s: layout element %s shouldn't have children\n",
                         qPrintable(qApp->applicationName()), qPrintable(fileName), name);
                 std::exit(1);
             }
@@ -441,7 +441,7 @@ struct ParserPrivate {
 
         // Check recursive
         if (path.contains(id)) {
-            fprintf(stderr, "%s:%s: recursive chain in layout: %s\n",
+            fprintf(stderr, "%s: %s: recursive chain in layout: %s\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     (QStringList(path) << id).join(", ").toLatin1().data());
             std::exit(1);
@@ -485,7 +485,7 @@ struct ParserPrivate {
         } else {
             if (info.shapeToken == QStringLiteral("TopLevel")) {
                 fprintf(stderr,
-                        "%s:%s: layout element \"%s\" has multiple defined structures while it's "
+                        "%s: %s: layout element \"%s\" has multiple defined structures while it's "
                         "top level\n",
                         qPrintable(qApp->applicationName()), qPrintable(fileName),
                         id.toLatin1().data());
@@ -523,7 +523,7 @@ struct ParserPrivate {
         auto &entries = result.layouts;
 
         if (const auto &rootName = root.name; rootName != QStringLiteral("buildRoutine")) {
-            fprintf(stderr, "%s:%s: unknown build routine element tag %s\n",
+            fprintf(stderr, "%s: %s: unknown build routine element tag %s\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     rootName.toLatin1().data());
             std::exit(1);
@@ -531,7 +531,7 @@ struct ParserPrivate {
 
         auto parent = resolve(root.properties.value(QStringLiteral("parent")));
         if (parent.isEmpty()) {
-            fprintf(stderr, "%s:%s: build routine doesn't have a parent\n",
+            fprintf(stderr, "%s: %s: build routine doesn't have a parent\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName));
             std::exit(1);
         }
@@ -550,7 +550,7 @@ struct ParserPrivate {
             anchorToken = QStringLiteral("After");
             needRelative = true;
         } else {
-            fprintf(stderr, "%s:%s: unknown build routine anchor %s\n",
+            fprintf(stderr, "%s: %s: unknown build routine anchor \"%s\"\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     anchor.toLatin1().data());
             std::exit(1);
@@ -559,7 +559,7 @@ struct ParserPrivate {
         auto relative = resolve(root.properties.value(QStringLiteral("relativeTo")));
         if (needRelative && relative.isEmpty()) {
             fprintf(stderr,
-                    "%s:%s: build routine with anchor \"%s\" must have a relative sibling\n",
+                    "%s: %s: build routine with anchor \"%s\" must have a relative sibling\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     anchor.toLatin1().data());
             std::exit(1);
@@ -571,7 +571,7 @@ struct ParserPrivate {
         routine.relativeTo = relative;
 
         if (root.children.isEmpty()) {
-            fprintf(stderr, "%s:%s: empty routine\n", qPrintable(qApp->applicationName()),
+            fprintf(stderr, "%s: %s: empty routine\n", qPrintable(qApp->applicationName()),
                     qPrintable(fileName));
             std::exit(1);
         }
@@ -588,7 +588,7 @@ struct ParserPrivate {
                 auto &info = findOrInsertObjectInfo(&e, parserConfig.defaultCategory, "routine");
                 auto id = info.id;
                 if (!e.children.isEmpty()) {
-                    fprintf(stderr, "%s:%s: routine element \"%s\" shouldn't have children\n",
+                    fprintf(stderr, "%s: %s: routine element \"%s\" shouldn't have children\n",
                             qPrintable(qApp->applicationName()), qPrintable(fileName),
                             e.name.toLatin1().data());
                     std::exit(1);
