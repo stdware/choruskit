@@ -214,7 +214,7 @@ struct ParserPrivate {
         // Check root name
         const auto &root = xml.root;
         if (const auto &rootName = root.name; rootName != QStringLiteral("actionExtension")) {
-            fprintf(stderr, "%s: %s: unknown root element tag %s\n",
+            fprintf(stderr, "%s: %s: unknown root element tag \"%s\"\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     rootName.toLatin1().data());
             std::exit(1);
@@ -523,7 +523,7 @@ struct ParserPrivate {
         auto &entries = result.layouts;
 
         if (const auto &rootName = root.name; rootName != QStringLiteral("buildRoutine")) {
-            fprintf(stderr, "%s: %s: unknown build routine element tag %s\n",
+            fprintf(stderr, "%s: %s: unknown build routine element tag \"%s\"\n",
                     qPrintable(qApp->applicationName()), qPrintable(fileName),
                     rootName.toLatin1().data());
             std::exit(1);

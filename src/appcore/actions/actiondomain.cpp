@@ -55,14 +55,14 @@ namespace Core {
         QHash<QString, QHash<QString, QString>> parse() {
             QMXmlAdaptor xml;
             if (!xml.load(fileName)) {
-                fprintf(stdout, "Core::ActionDomain:%s: failed to read icon configuration file\n",
+                fprintf(stdout, "Core::ActionDomain: %s: failed to read icon configuration file\n",
                         qPrintable(fileName));
                 return {};
             }
 
             const auto &root = xml.root;
             if (const auto &rootName = root.name; rootName != QStringLiteral("iconConfiguration")) {
-                fprintf(stdout, "Core::ActionDomain:%s: unknown root element tag %s\n",
+                fprintf(stdout, "Core::ActionDomain: %s: unknown root element tag \"%s\"\n",
                         qPrintable(fileName), rootName.toLatin1().data());
                 return {};
             }
@@ -79,7 +79,7 @@ namespace Core {
                 if (item->name == QStringLiteral("parserConfig")) {
                     if (hasParserConfig) {
                         fprintf(stdout,
-                                "Core::ActionDomain:%s: duplicated parser config elements\n",
+                                "Core::ActionDomain: %s: duplicated parser config elements\n",
                                 qPrintable(fileName));
                         return {};
                     }
@@ -397,12 +397,8 @@ namespace Core {
             if (it == objectInfoMap.end())
                 return false;
 
-            auto type = it->type();
-            if (type != ActionObjectInfo::Menu && type != ActionObjectInfo::Group)
-                return false;
-
             node.id = id;
-            switch (type) {
+            switch (it->type()) {
                 case ActionObjectInfo::Action:
                     node.type = ActionLayoutInfo::Action;
                     break;
@@ -484,7 +480,7 @@ namespace Core {
                 if (const auto &rootName = root.name; rootName != QStringLiteral("actionDomain")) {
                     fprintf(
                         stdout,
-                        "Core::ActionCatalogue::restoreLayouts(): unknown root element tag %s\n",
+                        "Core::ActionCatalogue::restoreLayouts(): unknown root element tag \"%s\"\n",
                         rootName.toLatin1().data());
                     return {};
                 }
@@ -721,7 +717,7 @@ namespace Core {
         d->layouts = layouts;
         return true;
     }
-    QByteArray ActionDomain::saveOverriddenShortcuts() const {
+    QJsonObject ActionDomain::saveOverriddenShortcuts() const {
         Q_D(const ActionDomain);
         QJsonObject rootObj;
         for (auto it = d->overriddenShortcuts.begin(); it != d->overriddenShortcuts.end(); ++it) {
@@ -743,21 +739,12 @@ namespace Core {
             }
             rootObj.insert(key, value);
         }
-        return QJsonDocument(rootObj).toJson();
+        return rootObj;
     }
-    bool ActionDomain::restoreOverriddenShortcuts(const QByteArray &data) {
+    bool ActionDomain::restoreOverriddenShortcuts(const QJsonObject &object) {
         Q_D(ActionDomain);
-        QJsonParseError err;
-        QJsonDocument doc = QJsonDocument::fromJson(data, &err);
-        if (err.error != QJsonParseError::NoError) {
-            qWarning().noquote().nospace()
-                << "Core::ActionCatalogue: load failed " << err.errorString();
-            return false;
-        }
-
         QHash<QString, std::optional<QList<QKeySequence>>> result;
-        auto rootObj = doc.object();
-        for (auto it = rootObj.begin(); it != rootObj.end(); ++it) {
+        for (auto it = object.begin(); it != object.end(); ++it) {
             const auto &key = it.key();
             auto it2 = d->objectInfoMap.find(key);
             if (it2 == d->objectInfoMap.end())
@@ -783,7 +770,7 @@ namespace Core {
         }
         return false;
     }
-    QByteArray ActionDomain::saveOverriddenIcons() const {
+    QJsonObject ActionDomain::saveOverriddenIcons() const {
         Q_D(const ActionDomain);
         QJsonObject rootObj;
         for (auto it = d->overriddenIcons.begin(); it != d->overriddenIcons.end(); ++it) {
@@ -797,21 +784,12 @@ namespace Core {
             }
             rootObj.insert(key, value);
         }
-        return QJsonDocument(rootObj).toJson();
+        return rootObj;
     }
-    bool ActionDomain::restoreOverriddenIcons(const QByteArray &data) {
+    bool ActionDomain::restoreOverriddenIcons(const QJsonObject &object) {
         Q_D(ActionDomain);
-        QJsonParseError err;
-        QJsonDocument doc = QJsonDocument::fromJson(data, &err);
-        if (err.error != QJsonParseError::NoError) {
-            qWarning().noquote().nospace()
-                << "Core::ActionCatalogue: load failed " << err.errorString();
-            return false;
-        }
-
         QHash<QString, std::optional<IconReference>> result;
-        auto rootObj = doc.object();
-        for (auto it = rootObj.begin(); it != rootObj.end(); ++it) {
+        for (auto it = object.begin(); it != object.end(); ++it) {
             const auto &key = it.key();
             const auto &value = it.value();
             if (value.isNull()) {

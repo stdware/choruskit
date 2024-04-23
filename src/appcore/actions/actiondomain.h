@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include <QIcon>
+#include <QJsonObject>
 
 #include <CoreApi/actionitem.h>
 #include <CoreApi/actionextension.h>
@@ -107,11 +108,11 @@ namespace Core {
         QByteArray saveLayouts() const;
         bool restoreLayouts(const QByteArray &data);
 
-        QByteArray saveOverriddenShortcuts() const;
-        bool restoreOverriddenShortcuts(const QByteArray &data);
+        QJsonObject saveOverriddenShortcuts() const;
+        bool restoreOverriddenShortcuts(const QJsonObject &object);
 
-        QByteArray saveOverriddenIcons() const;
-        bool restoreOverriddenIcons(const QByteArray &data);
+        QJsonObject saveOverriddenIcons() const;
+        bool restoreOverriddenIcons(const QJsonObject &object);
 
     public:
         QStringList objectIds() const;
