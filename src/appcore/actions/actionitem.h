@@ -25,7 +25,7 @@ namespace Core {
             Action = 1,
             Menu = 2,
             Widget = 4,
-            TopLevel = 8,
+            Standalone = 8,
         };
 
         using MenuFactory = std::function<QMenu *(QWidget *)>;
@@ -43,11 +43,11 @@ namespace Core {
         inline bool isAction() const;
         inline bool isMenu() const;
         inline bool isWidget() const;
-        inline bool isTopLevel() const;
+        inline bool isStandalone() const;
 
         QAction *action() const;
         QWidgetAction *widgetAction() const;
-        QWidget *topLevel() const;
+        QWidget *standalone() const;
         QList<QWidget *> createdWidgets() const;
         QList<QMenu *> createdMenus() const;
 
@@ -74,8 +74,8 @@ namespace Core {
         return type() == Widget;
     }
 
-    inline bool ActionItem::isTopLevel() const {
-        return type() == TopLevel;
+    inline bool ActionItem::isStandalone() const {
+        return type() == Standalone;
     }
 
 }

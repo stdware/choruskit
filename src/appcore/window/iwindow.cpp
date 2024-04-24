@@ -644,8 +644,8 @@ namespace Core {
                 window()->addAction(item->action());
                 break;
             }
-            case ActionItem::TopLevel: {
-                addShortcutContext(item->topLevel(), Stable);
+            case ActionItem::Standalone: {
+                addShortcutContext(item->standalone(), Stable);
                 break;
             }
             default:
@@ -676,8 +676,8 @@ namespace Core {
                 window()->removeAction(item->action());
                 break;
             }
-            case ActionItem::TopLevel: {
-                removeShortcutContext(item->topLevel());
+            case ActionItem::Standalone: {
+                removeShortcutContext(item->standalone());
                 break;
             }
             default:

@@ -7,7 +7,7 @@
 struct ActionObjectInfoMessage {
     QString id;
     QString typeToken;
-    QString shapeToken;
+    QString modeToken;
     QString text;
     QString commandClass;
     QStringList shortcutTokens;

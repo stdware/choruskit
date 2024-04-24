@@ -8,7 +8,7 @@ namespace Core {
     struct ActionObjectInfoData {
         QString id;
         ActionObjectInfo::Type type;
-        ActionObjectInfo::Shape shape;
+        int mode;
         QByteArray text;
         QByteArray commandClass;
         QList<QKeySequence> shortcuts;

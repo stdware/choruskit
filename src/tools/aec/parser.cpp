@@ -329,21 +329,37 @@ struct ParserPrivate {
     void determineObjectType(const QMXmlAdaptorElement &e, ActionObjectInfoMessage &info,
                              const char *field) const {
         const auto &name = e.name;
-        info.shapeToken = QStringLiteral("Plain");
         if (name == QStringLiteral("action")) {
+            info.modeToken = QStringLiteral("Plain");
             info.typeToken = QStringLiteral("Action");
+            auto mode = resolve(e.properties.value(QStringLiteral("mode")));
+            if (mode == QStringLiteral("widget")) {
+                info.modeToken = QStringLiteral("Widget");
+            }
         } else if (name == QStringLiteral("widget")) {
+            info.modeToken = QStringLiteral("Plain");
             info.typeToken = QStringLiteral("Action");
-            info.shapeToken = QStringLiteral("Widget");
+            info.modeToken = QStringLiteral("Widget");
         } else if (name == QStringLiteral("group")) {
+            info.modeToken = QStringLiteral("Unique");
             info.typeToken = QStringLiteral("Group");
+
+            auto mode = resolve(e.properties.value(QStringLiteral("mode")));
+            if (mode == QStringLiteral("unique")) {
+                info.modeToken = QStringLiteral("Unique");
+            }
         } else if (name == QStringLiteral("menuBar") || name == QStringLiteral("toolBar")) {
+            info.modeToken = QStringLiteral("TopLevel");
             info.typeToken = QStringLiteral("Menu");
-            info.shapeToken = QStringLiteral("TopLevel");
         } else if (name == QStringLiteral("menu")) {
+            info.modeToken = QStringLiteral("Unique");
             info.typeToken = QStringLiteral("Menu");
-            if (resolve(e.properties.value(QStringLiteral("top"))) == QStringLiteral("true")) {
-                info.shapeToken = QStringLiteral("TopLevel");
+
+            auto mode = resolve(e.properties.value(QStringLiteral("mode")));
+            if (mode == QStringLiteral("plain")) {
+                info.modeToken = QStringLiteral("Plain");
+            } else if (mode == QStringLiteral("top")) {
+                info.modeToken = QStringLiteral("TopLevel");
             }
         } else {
             fprintf(stderr, "%s: %s: unknown %s object tag \"%s\"\n",
@@ -467,6 +483,7 @@ struct ParserPrivate {
         QString seq;
         auto &seqs = objSeqMap[id];
 
+        // Read or create the sequence id for each menu or group
         {
             auto it = e->properties.find(QStringLiteral("_seq"));
             auto autoSeq = QString::number(seqs.size());
@@ -479,18 +496,28 @@ struct ParserPrivate {
             }
         }
 
-        if (auto it = seqs.find(seq); it == seqs.end()) {
+        if (seqs.isEmpty()) {
+            seqs.append(seq, entryIndex);
+            entries.append(entry); // Make a placeholder
+        } else if (auto it = seqs.find(seq); it == seqs.end()) {
+            // Cannot declare Non-plain menu's layout more than once
+            if (info.modeToken != QStringLiteral("Plain")) {
+                if (e->children.isEmpty()) {
+                    entries.append(entry);
+                    return entryIndex;
+                } else {
+                    fprintf(
+                        stderr,
+                        "%s: %s: layout element \"%s\" has multiple defined structures while it's "
+                        "not plain\n",
+                        qPrintable(qApp->applicationName()), qPrintable(fileName),
+                        id.toLatin1().data());
+                    std::exit(1);
+                }
+            }
             seqs.append(seq, entryIndex);
             entries.append(entry); // Make a placeholder
         } else {
-            if (info.shapeToken == QStringLiteral("TopLevel")) {
-                fprintf(stderr,
-                        "%s: %s: layout element \"%s\" has multiple defined structures while it's "
-                        "top level\n",
-                        qPrintable(qApp->applicationName()), qPrintable(fileName),
-                        id.toLatin1().data());
-                std::exit(1);
-            }
             auto typeToken = entry.typeToken;
             entry = entries.at(it.value());
             entry.typeToken = typeToken;

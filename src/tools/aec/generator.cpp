@@ -61,7 +61,7 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
         fprintf(out, "            // type\n");
         fprintf(out, "            ActionObjectInfo::%s,\n", item.typeToken.toLocal8Bit().data());
         fprintf(out, "            // shape\n");
-        fprintf(out, "            ActionObjectInfo::%s,\n", item.shapeToken.toLocal8Bit().data());
+        fprintf(out, "            ActionObjectInfo::%s,\n", item.modeToken.toLocal8Bit().data());
         fprintf(out, "            // text\n");
         fprintf(out, "            QByteArrayLiteral(\"%s\"),\n",
                 escapeString(item.text.toLocal8Bit()).data());
@@ -183,7 +183,7 @@ static void generateExtraInformation(FILE *out, const QVector<ActionObjectInfoMe
 
     for (const auto &item : objects) {
         if (item.typeToken == QStringLiteral("Action")) {
-            if (item.shapeToken == QStringLiteral("Plain")) {
+            if (item.modeToken == QStringLiteral("Plain")) {
                 actions.append(item);
             } else {
                 widgets.append(item);
@@ -191,7 +191,7 @@ static void generateExtraInformation(FILE *out, const QVector<ActionObjectInfoMe
         } else if (item.typeToken == QStringLiteral("Group")) {
             groups.append(item);
         } else if (item.typeToken == QStringLiteral("Menu")) {
-            if (item.shapeToken == QStringLiteral("Plain")) {
+            if (item.modeToken == QStringLiteral("Plain")) {
                 menus.append(item);
             } else {
                 topLevels.append(item);

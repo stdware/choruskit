@@ -88,9 +88,11 @@ namespace Core {
         bool setLayouts_helper(const QList<ActionLayout> &layouts) const;
 
         void buildLayoutsRecursively(
-            const ActionLayout &layout,
-            const QHash<QString, QPair<ActionItem *, ActionObjectInfo>> &itemMap, QWidget *parent,
-            QHash<QWidget *, int> &lastMenuItems) const;
+            const ActionLayout &layout, QWidget *parent,
+            const QHash<QString, QPair<ActionItem *, ActionObjectInfo>> &itemMap,
+            QHash<QWidget *, int> &lastMenuItems,
+            QHash<QString, QMenu *> &autoCreatedStandaloneMenus,
+            QHash<QString, ActionLayout> &standaloneLayouts) const;
     };
 
 }

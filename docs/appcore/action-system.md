@@ -152,7 +152,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
         - `class`：命令类别，仅命令可用
         - `shortcut`/`shortcuts`：仅命令，仅命令可用
         - `category/categories`：静态目录标签
-        - `top`：是否为顶级菜单，菜单可用
+        - `mode`：枝干节点模式，可选值为`plain`、`unique`、`top`，组默认`plain`，菜单默认`unique`，菜单栏与工具栏默认`top`
     - 注意事项：
         - `shortcut`与`category`可包含一个列表，使用`;`作为分隔符，`\`作为转义符（与 C 语言一致）
 - `layouts`：包含具有组织关系的布局声明；
@@ -172,7 +172,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
             - 如果它没有出现在`layout`中，或者在`layout`中第一次作为根节点出现，那么使用`parserConfig`中的`defaultCategory`加上其`text`（去掉所有加速键）；
             - 如果在`layout`中第一次作为非根节点出现，将以根节点的`category`为基础，依次添加路径节点的`text`（去掉所有加速键）；
             - `category`如果前面有空项，则全部忽略；如果后面有空项，则用其`text`（去掉所有加速键）代替；
-        - 菜单元素作为非叶子节点最多只允许出现一次（即只允许声明一次其下级结构），类型为`action`的菜单元素不允许作为非叶子节点出现；
+        - `mode`为`unique`的菜单或组作为非叶子节点最多只允许出现一次（即只允许声明一次其下级结构），类型为`action`的菜单元素不允许作为非叶子节点出现；
 - `buildRoutines`：包含构造例程，子节点标签`buildRoutine`；
     - `buildRoutine`属性：
         - `anchor`：插入方式，可选值为`last`、`first`、`before`或`after`；

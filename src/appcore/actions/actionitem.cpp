@@ -102,7 +102,7 @@ namespace Core {
     ActionItem::ActionItem(const QString &id, QWidget *topLevelWidget, QObject *parent)
         : ActionItem(*new ActionItemPrivate(), id, parent) {
         Q_D(ActionItem);
-        d->type = TopLevel;
+        d->type = Standalone;
         d->topLevelWidget = topLevelWidget;
     }
 
@@ -128,7 +128,7 @@ namespace Core {
         return d->sharedWidgetAction;
     }
 
-    QWidget *ActionItem::topLevel() const {
+    QWidget *ActionItem::standalone() const {
         Q_D(const ActionItem);
         return d->topLevelWidget;
     }

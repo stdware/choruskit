@@ -17,10 +17,10 @@ namespace Core {
         return ActionExtensionPrivate::get(ext)->objectData[idx].type;
     }
 
-    ActionObjectInfo::Shape ActionObjectInfo::shape() const {
+    int ActionObjectInfo::mode() const {
         if (!ext)
             return {};
-        return ActionExtensionPrivate::get(ext)->objectData[idx].shape;
+        return ActionExtensionPrivate::get(ext)->objectData[idx].mode;
     }
 
     QByteArray ActionObjectInfo::text() const {

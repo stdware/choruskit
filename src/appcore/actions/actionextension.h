@@ -19,7 +19,7 @@ namespace Core {
     public:
         inline ActionObjectInfo() : ext(nullptr), idx(0){};
         inline bool isNull() const {
-            return ext != nullptr;
+            return ext == nullptr;
         };
 
         enum Type {
@@ -28,15 +28,16 @@ namespace Core {
             Menu,
         };
 
-        enum Shape {
+        enum Mode {
             Plain = 0,
             Widget = 1,
-            TopLevel = 1,
+            Unique = 1,
+            TopLevel = 2,
         };
 
         QString id() const;
         Type type() const;
-        Shape shape() const;
+        int mode() const;
         QByteArray text() const;
         QByteArray commandClass() const;
         QList<QKeySequence> shortcuts() const;
@@ -58,7 +59,7 @@ namespace Core {
     public:
         inline ActionLayoutInfo() : ext(nullptr), idx(0){};
         inline bool isNull() const {
-            return ext != nullptr;
+            return ext == nullptr;
         };
 
         enum TypeFlags {
@@ -95,7 +96,7 @@ namespace Core {
     public:
         inline ActionBuildRoutine() : ext(nullptr), idx(0){};
         inline bool isNull() const {
-            return ext != nullptr;
+            return ext == nullptr;
         };
 
         enum Anchor {

@@ -301,29 +301,6 @@ namespace Core {
             inline TreeNode(ActionLayoutInfo::Type type = ActionLayoutInfo::Action) : type(type) {
             }
 
-            static int layoutInfoToLayout(const ActionLayoutInfo &layout, QVector<TreeNode> &heap,
-                                          QHash<QString, QVector<int>> &idIndexes) {
-                TreeNode node;
-                node.type = layout.type();
-                if (node.type == ActionLayoutInfo::Separator ||
-                    node.type == ActionLayoutInfo::Stretch) {
-                    int instanceIdx = heap.size();
-                    heap.append(node);
-                    return instanceIdx;
-                }
-
-                node.id = layout.id();
-                node.children.reserve(layout.childCount());
-                for (int i = 0; i < layout.childCount(); ++i) {
-                    node.children.append(layoutInfoToLayout(layout.child(i), heap, idIndexes));
-                }
-
-                int instanceIdx = heap.size();
-                heap.append(node);
-                idIndexes[node.id].append(instanceIdx);
-                return instanceIdx;
-            }
-
             ActionLayout toLayout(const QVector<TreeNode> &heap,
                                   const ActionLayout &sharedSeparator,
                                   const ActionLayout &sharedStretch) const {
@@ -347,6 +324,29 @@ namespace Core {
 
         const QMChronoMap<QString, const ActionExtension *> &extensions;
         const QMChronoMap<QString, ActionObjectInfo> &objectInfoMap;
+
+        static int layoutInfoToLayout(const ActionLayoutInfo &layout, QVector<TreeNode> &heap,
+                                      QHash<QString, QVector<int>> &idIndexes) {
+            TreeNode node;
+            node.type = layout.type();
+            if (node.type == ActionLayoutInfo::Separator ||
+                node.type == ActionLayoutInfo::Stretch) {
+                int instanceIdx = heap.size();
+                heap.append(node);
+                return instanceIdx;
+            }
+
+            node.id = layout.id();
+            node.children.reserve(layout.childCount());
+            for (int i = 0; i < layout.childCount(); ++i) {
+                node.children.append(layoutInfoToLayout(layout.child(i), heap, idIndexes));
+            }
+
+            int instanceIdx = heap.size();
+            heap.append(node);
+            idIndexes[node.id].append(instanceIdx);
+            return instanceIdx;
+        }
 
         static QSharedPointer<QMXmlAdaptorElement> serializeLayout(const ActionLayout &layout) {
             auto e = QSharedPointer<QMXmlAdaptorElement>::create();
@@ -379,7 +379,8 @@ namespace Core {
             return e;
         }
 
-        bool fromNodeElement(const QMXmlAdaptorElement *e, TreeNode &node) const {
+        bool fromNodeElement(const QMXmlAdaptorElement *e, TreeNode &node,
+                             bool standaloneRequired) const {
             if (e->name == QStringLiteral("separator")) {
                 node.type = ActionLayoutInfo::Separator;
                 return true;
@@ -397,6 +398,11 @@ namespace Core {
             auto it = objectInfoMap.find(id);
             if (it == objectInfoMap.end())
                 return false;
+
+            if (standaloneRequired) {
+                if (it->type() == ActionObjectInfo::Action || it->mode() == ActionObjectInfo::Plain)
+                    return false;
+            }
 
             node.id = id;
             switch (it->type()) {
@@ -417,9 +423,10 @@ namespace Core {
         };
 
         int restoreElementHelper(const QMXmlAdaptorElement *e, QVector<TreeNode> &heap,
-                                 QHash<QString, QVector<int>> &idIndexes) const {
+                                 QHash<QString, QVector<int>> &idIndexes,
+                                 bool standaloneRequired) const {
             TreeNode node;
-            if (!fromNodeElement(e, node)) {
+            if (!fromNodeElement(e, node, standaloneRequired)) {
                 return -1;
             }
 
@@ -431,7 +438,7 @@ namespace Core {
             }
 
             for (const auto &child : e->children) {
-                auto childIdx = restoreElementHelper(child.data(), heap, idIndexes);
+                auto childIdx = restoreElementHelper(child.data(), heap, idIndexes, false);
                 if (childIdx < 0) {
                     continue;
                 }
@@ -456,8 +463,32 @@ namespace Core {
             QVector<int> rootIndexes;
             for (const auto &ext : extensions) {
                 for (int i = 0; i < ext->layoutCount(); ++i) {
-                    rootIndexes.append(
-                        TreeNode::layoutInfoToLayout(ext->layout(i), heap, idIndexes));
+                    QList<ActionLayoutInfo> standaloneLayouts;
+
+                    // Collect standalone layouts
+                    std::list<ActionLayoutInfo> stack;
+                    stack.push_back(ext->layout(i));
+                    while (!stack.empty()) {
+                        auto layout = stack.front();
+                        stack.pop_front();
+
+                        auto it = objectInfoMap.find(layout.id());
+                        if (it == objectInfoMap.end())
+                            continue;
+
+                        if (it->type() != ActionObjectInfo::Action &&
+                            it->mode() != ActionObjectInfo::Plain) {
+                            standaloneLayouts.append(layout);
+                            continue;
+                        }
+
+                        for (int j = 0; j < layout.childCount(); ++j) {
+                            stack.push_back(layout.child(j));
+                        }
+                    }
+                    for (const auto &layout : std::as_const(standaloneLayouts)) {
+                        rootIndexes.append(layoutInfoToLayout(layout, heap, idIndexes));
+                    }
                 }
             }
             return applyBuildRoutines(extensions.values_qlist(), heap, idIndexes, rootIndexes);
@@ -501,7 +532,10 @@ namespace Core {
 
                     if (rootChild->name == QStringLiteral("layouts")) {
                         for (const auto &item : rootChild->children) {
-                            rootIndexes.append(restoreElementHelper(item.data(), heap, idIndexes));
+                            int idx = restoreElementHelper(item.data(), heap, idIndexes, true);
+                            if (idx < 0)
+                                continue;
+                            rootIndexes.append(idx);
                         }
                     }
                 }
@@ -560,13 +594,21 @@ namespace Core {
                     if (it == idIndexes.end())
                         continue;
 
+
                     QVector<int> layoutsToInsert;
                     layoutsToInsert.reserve(routine.itemCount());
                     for (int j = 0; j < routine.itemCount(); ++j) {
-                        auto idx = TreeNode::layoutInfoToLayout(routine.item(j), heap, idIndexes);
+                        auto idx = layoutInfoToLayout(routine.item(j), heap, idIndexes);
                         layoutsToInsert.append(idx);
                     }
-                    for (const auto &parentIdx : std::as_const(it.value())) {
+
+                    auto info = objectInfoMap.value(routine.parent());
+                    const QVector<int> &parentIndexes =
+                        (!info.isNull() && info.type() != ActionObjectInfo::Action &&
+                         info.mode() != ActionObjectInfo::Plain)
+                            ? QVector<int>{it->first()}
+                            : it.value();
+                    for (const auto &parentIdx : std::as_const(parentIndexes)) {
                         auto &parentLayout = heap[parentIdx];
                         switch (routine.anchor()) {
                             case ActionBuildRoutine::Last: {
@@ -615,14 +657,7 @@ namespace Core {
 
             QList<ActionLayout> result;
             for (const auto &rootIndex : rootIndexes) {
-                const auto &item = heap.at(rootIndex);
-                auto it = objectInfoMap.find(item.id);
-                if (it == objectInfoMap.end())
-                    continue;
-                if (it->type() != ActionObjectInfo::Menu ||
-                    it->shape() != ActionObjectInfo::TopLevel)
-                    continue;
-                result.append(item.toLayout(heap, sharedSeparator, sharedStretch));
+                result.append(heap.at(rootIndex).toLayout(heap, sharedSeparator, sharedStretch));
             }
             return result;
         }
@@ -715,8 +750,7 @@ namespace Core {
         Q_D(ActionDomain);
 
         bool ok;
-        QList<ActionLayout> layouts =
-            LayoutsHelper(d->extensions, d->objectInfoMap).restore(data, &ok);
+        auto layouts = LayoutsHelper(d->extensions, d->objectInfoMap).restore(data, &ok);
         if (!ok)
             return false;
 
@@ -734,7 +768,7 @@ namespace Core {
             auto it2 = d->objectInfoMap.find(key);
             if (it2 == d->objectInfoMap.end())
                 continue;
-            if (it2->type() != ActionObjectInfo::Action || it2->shape() != ActionObjectInfo::Plain)
+            if (it2->type() != ActionObjectInfo::Action || it2->mode() != ActionObjectInfo::Plain)
                 continue;
 
             QJsonValue value = QJsonValue::Null;
@@ -757,7 +791,7 @@ namespace Core {
             auto it2 = d->objectInfoMap.find(key);
             if (it2 == d->objectInfoMap.end())
                 continue;
-            if (it2->type() != ActionObjectInfo::Action || it2->shape() != ActionObjectInfo::Plain)
+            if (it2->type() != ActionObjectInfo::Action || it2->mode() != ActionObjectInfo::Plain)
                 continue;
 
             const auto &value = it.value();
@@ -963,7 +997,6 @@ namespace Core {
         return d->layouts.value();
     }
     bool ActionDomainPrivate::setLayouts_helper(const QList<ActionLayout> &layouts) const {
-        // Default empty
         class TopologicalSorter {
         private:
             QMap<QString, QSet<QString>> graph;
@@ -988,7 +1021,7 @@ namespace Core {
                 QQueue<QString> queue;
                 QStringList sorted;
 
-                // Add all non-indegrees
+                // Add all non-in degrees
                 for (auto it = inDegree.begin(); it != inDegree.end(); ++it) {
                     if (it.value() == 0) {
                         queue.enqueue(it.key());
@@ -1006,7 +1039,7 @@ namespace Core {
                     }
                 }
 
-                // Loop exists if there're degrees that hasn't been processed
+                // Loop exists if there are degrees that hasn't been processed
                 if (sorted.size() != graph.size()) {
                     qWarning().noquote().nospace()
                         << "Core::ActionDomain::setLayouts(): recursive chain detected";
@@ -1034,12 +1067,6 @@ namespace Core {
             }
             layoutMap.insert(id, layout);
 
-            const auto &info = it.value();
-            if (info.type() != ActionObjectInfo::Menu ||
-                info.shape() != ActionObjectInfo::TopLevel) {
-                continue;
-            }
-
             std::list<ActionLayout> stack;
             stack.push_back(layout);
             while (!stack.empty()) {
@@ -1053,7 +1080,7 @@ namespace Core {
                     if (it2 == objectInfoMap.end())
                         continue;
                     if (it2->type() == ActionObjectInfo::Menu &&
-                        it2->shape() == ActionObjectInfo::TopLevel) {
+                        it2->mode() != ActionObjectInfo::Plain) {
                         sorter.addEdge(item.id(), id);
                     }
                     if (!item.children().isEmpty()) {
@@ -1123,19 +1150,21 @@ namespace Core {
     }
 
     void ActionDomainPrivate::buildLayoutsRecursively(
-        const Core::ActionLayout &layout,
+        const Core::ActionLayout &layout, QWidget *parent,
         const QHash<QString, QPair<Core::ActionItem *, Core::ActionObjectInfo>> &itemMap,
-        QWidget *parent, QHash<QWidget *, int> &lastMenuItems) const {
+        QHash<QWidget *, int> &lastMenuItems, QHash<QString, QMenu *> &autoCreatedStandaloneMenus,
+        QHash<QString, ActionLayout> &standaloneLayouts) const {
         enum LastMenuItem {
             Action,
             Separator,
             Stretch,
         };
+        const auto &id = layout.id();
         switch (layout.type()) {
             case ActionLayoutInfo::Action: {
                 if (!parent)
                     break;
-                auto pair = itemMap.value(layout.id());
+                auto pair = itemMap.value(id);
                 auto actionItem = pair.first;
                 if (!actionItem || pair.second.type() != ActionObjectInfo::Action) {
                     break;
@@ -1152,46 +1181,91 @@ namespace Core {
             case ActionLayoutInfo::ExpandedMenu: {
                 if (!parent)
                     break;
-                auto info = objectInfoMap.value(layout.id());
-                if (info.type() != ActionObjectInfo::Menu)
+                auto info = objectInfoMap.value(id);
+                if (info.isNull() || info.type() != ActionObjectInfo::Menu)
                     break;
 
-                // Check if it's a top level menu
-                auto pair = itemMap.value(layout.id());
+                auto pair = itemMap.value(id);
                 auto actionItem = pair.first;
-                if (actionItem && actionItem->isTopLevel()) {
-                    // Has been constructed before
-                    parent->addActions(actionItem->topLevel()->actions());
-                    break;
-                }
+                auto nextLayout = layout;
+                if (info.mode() != ActionObjectInfo::Plain) {
+                    // Check if it's a top level menu
+                    if (!actionItem || !actionItem->isStandalone())
+                        break;
 
-                for (const auto &childLayoutItem : layout.children()) {
-                    buildLayoutsRecursively(childLayoutItem, itemMap, parent, lastMenuItems);
+                    auto it = standaloneLayouts.find(id);
+                    if (it == standaloneLayouts.end()) {
+                        // Construct for the first time and cache the layout
+                        for (const auto &childLayoutItem : layout.children()) {
+                            buildLayoutsRecursively(childLayoutItem, actionItem->standalone(),
+                                                    itemMap, lastMenuItems,
+                                                    autoCreatedStandaloneMenus, standaloneLayouts);
+                        }
+                        standaloneLayouts.insert(id, layout);
+                    } else {
+                        // Use the cached layout
+                        nextLayout = it.value();
+                    }
+                }
+                for (const auto &childLayoutItem : nextLayout.children()) {
+                    buildLayoutsRecursively(childLayoutItem, parent, itemMap, lastMenuItems,
+                                            autoCreatedStandaloneMenus, standaloneLayouts);
                 }
                 break;
             }
             case ActionLayoutInfo::Group: {
                 if (!parent)
                     break;
-                auto info = objectInfoMap.value(layout.id());
-                if (info.type() != ActionObjectInfo::Group)
+                auto info = objectInfoMap.value(id);
+                if (info.isNull() || info.type() != ActionObjectInfo::Group)
                     break;
-                for (const auto &childLayoutItem : layout.children()) {
-                    buildLayoutsRecursively(childLayoutItem, itemMap, parent, lastMenuItems);
+
+                auto nextLayout = layout;
+                if (info.mode() != ActionObjectInfo::Plain) {
+                    auto it = standaloneLayouts.find(id);
+                    if (it == standaloneLayouts.end()) {
+                        // Cache the layout for the first time
+                        standaloneLayouts.insert(id, layout);
+                    } else {
+                        // Use the cached layout
+                        nextLayout = it.value();
+                    }
+                }
+
+                for (const auto &childLayoutItem : nextLayout.children()) {
+                    buildLayoutsRecursively(childLayoutItem, parent, itemMap, lastMenuItems,
+                                            autoCreatedStandaloneMenus, standaloneLayouts);
                 }
                 break;
             }
             case ActionLayoutInfo::Menu: {
-                auto pair = itemMap.value(layout.id());
                 QWidget *nextParent;
+                auto pair = itemMap.value(id);
                 auto actionItem = pair.first;
                 if (!actionItem) {
                     if (!parent)
                         break;
-                    auto menu = sharedMenuItem->requestMenu(parent);
-                    if (!menu)
+                    auto info = objectInfoMap.value(id);
+                    if (info.isNull() || info.type() != ActionObjectInfo::Menu)
                         break;
-                    menu->setProperty("action-item-id", layout.id());
+                    QMenu *menu;
+                    if (info.mode() != ActionObjectInfo::Plain) {
+                        menu = autoCreatedStandaloneMenus.value(id);
+                        if (menu) {
+                            parent->addAction(menu->menuAction());
+                            lastMenuItems[parent] = Action;
+                            break;
+                        }
+                        menu = sharedMenuItem->requestMenu(parent);
+                        if (!menu)
+                            break;
+                        autoCreatedStandaloneMenus.insert(id, menu);
+                    } else {
+                        menu = sharedMenuItem->requestMenu(parent);
+                        if (!menu)
+                            break;
+                    }
+                    menu->setProperty("action-item-id", id);
                     sharedMenuItem->addMenuAsRequested(menu);
                     parent->addAction(menu->menuAction());
                     lastMenuItems[parent] = Action;
@@ -1199,28 +1273,32 @@ namespace Core {
                 } else {
                     if (pair.second.type() != ActionObjectInfo::Menu)
                         break;
-                    if (actionItem->isTopLevel()) {
-                        auto w = actionItem->topLevel();
+                    if (actionItem->isStandalone()) {
+                        auto w = actionItem->standalone();
                         if (parent) {
                             auto menu = qobject_cast<QMenu *>(w);
                             if (menu) {
                                 parent->addAction(menu->menuAction());
                                 lastMenuItems[parent] = Action;
                             }
-
-                            // Has been constructed before
-                            break;
                         }
                         // other menu types will be ignored
                         nextParent = w;
+
+                        auto it = standaloneLayouts.find(id);
+                        if (it == standaloneLayouts.end()) {
+                            // Cache the layout
+                            standaloneLayouts.insert(id, layout);
+                        } else {
+                            // Has been constructed
+                            break;
+                        }
                     } else if (actionItem->isMenu()) {
                         if (!parent)
                             break;
                         auto menu = actionItem->requestMenu(parent);
                         if (!menu) {
-                            menu = sharedMenuItem->requestMenu(parent);
-                            if (!menu)
-                                break;
+                            break;
                         }
                         parent->addAction(menu->menuAction());
                         lastMenuItems[parent] = Action;
@@ -1230,7 +1308,8 @@ namespace Core {
                     }
                 }
                 for (const auto &childLayoutItem : layout.children()) {
-                    buildLayoutsRecursively(childLayoutItem, itemMap, nextParent, lastMenuItems);
+                    buildLayoutsRecursively(childLayoutItem, nextParent, itemMap, lastMenuItems,
+                                            autoCreatedStandaloneMenus, standaloneLayouts);
                 }
                 break;
             }
@@ -1297,14 +1376,22 @@ namespace Core {
         auto &fac = d->sharedMenuItem->d_func()->menuFactory;
         auto oldFac = fac;
         fac = defaultMenuFactory;
+
+        QHash<QWidget *, int> lastMenuItems;
+        QHash<QString, QMenu *> autoCreatedStandaloneMenus;
+        QHash<QString, ActionLayout> standaloneLayouts;
+
+        // For standalone menus or groups, because of the topological ordering in
+        // setLayouts_helper(), we can be sure that the first encounter layout will be the actual
+        // layout rather than the reference.
         for (const auto &item : d->layouts.value()) {
             auto pair = itemMap.value(item.id());
             if (pair.second.type() != ActionObjectInfo::Menu ||
-                pair.second.shape() != ActionObjectInfo::TopLevel || !pair.first->isTopLevel()) {
+                pair.second.mode() == ActionObjectInfo::Plain || !pair.first->isStandalone()) {
                 continue;
             }
-            QHash<QWidget *, int> lastMenuItems;
-            d->buildLayoutsRecursively(item, itemMap, nullptr, lastMenuItems);
+            d->buildLayoutsRecursively(item, nullptr, itemMap, lastMenuItems,
+                                       autoCreatedStandaloneMenus, standaloneLayouts);
         }
         fac = oldFac;
         return true;
@@ -1327,9 +1414,9 @@ namespace Core {
                     }
                     break;
                 }
-                case ActionItem::TopLevel: {
-                    auto w = item->topLevel();
-                    auto mo = item->topLevel()->metaObject();
+                case ActionItem::Standalone: {
+                    auto w = item->standalone();
+                    auto mo = item->standalone()->metaObject();
                     if (auto idx = mo->indexOfProperty("text"); idx >= 0) {
                         auto prop = mo->property(idx);
                         if (prop.isWritable()) {
@@ -1364,9 +1451,9 @@ namespace Core {
                     }
                     break;
                 }
-                case ActionItem::TopLevel: {
-                    auto w = item->topLevel();
-                    auto mo = item->topLevel()->metaObject();
+                case ActionItem::Standalone: {
+                    auto w = item->standalone();
+                    auto mo = item->standalone()->metaObject();
                     if (auto idx = mo->indexOfProperty("icon"); idx >= 0) {
                         auto prop = mo->property(idx);
                         if (prop.isWritable()) {
