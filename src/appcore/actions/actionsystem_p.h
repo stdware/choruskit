@@ -2,7 +2,6 @@
 #define ACTIONSYSTEM_P_H
 
 #include <QMCore/qmchronomap.h>
-#include <QMCore/qmsimplevarexp.h>
 
 #include <CoreApi/actionsystem.h>
 

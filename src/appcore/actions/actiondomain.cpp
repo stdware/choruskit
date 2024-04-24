@@ -17,15 +17,16 @@
 
 namespace Core {
 
-    static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
-        QRegularExpressionMatch match;
-        int index = 0;
-        bool hasMatch = false;
+static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
+    static QRegularExpression reg(QStringLiteral(R"((?<!\$)(?:\$\$)*\$\{(\w+)\})"));
+    bool hasMatch;
+    do {
+        hasMatch = false;
 
-        static QRegularExpression reg(QStringLiteral(R"(\$\{(\w+)\})"));
+        int index = 0;
+        QRegularExpressionMatch match;
         while ((index = s.indexOf(reg, index, &match)) != -1) {
             hasMatch = true;
-
             const auto &name = match.captured(1);
             QString val;
             auto it = vars.find(name);
@@ -37,11 +38,10 @@ namespace Core {
 
             s.replace(index, match.captured(0).size(), val);
         }
-        if (!hasMatch) {
-            return s;
-        }
-        return parseExpression(s, vars);
-    }
+    } while (hasMatch);
+    s.replace(QStringLiteral("$$"), QStringLiteral("$"));
+    return s;
+}
 
     class IconConfigParser {
     public:

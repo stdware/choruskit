@@ -20,29 +20,29 @@ static QString calculateContentSha256(const QByteArray &data) {
 }
 
 static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
-    QRegularExpressionMatch match;
-    int index = 0;
-    bool hasMatch = false;
+    static QRegularExpression reg(QStringLiteral(R"((?<!\$)(?:\$\$)*\$\{(\w+)\})"));
+    bool hasMatch;
+    do {
+        hasMatch = false;
 
-    static QRegularExpression reg(QStringLiteral(R"(\$\{(\w+)\})"));
-    while ((index = s.indexOf(reg, index, &match)) != -1) {
-        hasMatch = true;
+        int index = 0;
+        QRegularExpressionMatch match;
+        while ((index = s.indexOf(reg, index, &match)) != -1) {
+            hasMatch = true;
+            const auto &name = match.captured(1);
+            QString val;
+            auto it = vars.find(name);
+            if (it == vars.end()) {
+                val = name;
+            } else {
+                val = it.value();
+            }
 
-        const auto &name = match.captured(1);
-        QString val;
-        auto it = vars.find(name);
-        if (it == vars.end()) {
-            val = name;
-        } else {
-            val = it.value();
+            s.replace(index, match.captured(0).size(), val);
         }
-
-        s.replace(index, match.captured(0).size(), val);
-    }
-    if (!hasMatch) {
-        return s;
-    }
-    return parseExpression(s, vars);
+    } while (hasMatch);
+    s.replace(QStringLiteral("$$"), QStringLiteral("$"));
+    return s;
 }
 
 static QString objIdToText(const QString &id) {
