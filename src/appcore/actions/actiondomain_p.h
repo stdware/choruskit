@@ -84,6 +84,11 @@ namespace Core {
         QScopedPointer<ActionItem> sharedMenuItem;
 
         void flushIcons() const;
+
+        void buildLayoutsRecursively(
+            const ActionLayout &layout,
+            const QHash<QString, QPair<ActionItem *, ActionObjectInfo>> &itemMap, QWidget *parent,
+            QHash<QWidget *, int> &lastMenuItems) const;
     };
 
 }

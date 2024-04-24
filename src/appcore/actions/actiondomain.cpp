@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QMetaProperty>
+#include <QQueue>
 
 #include <qmxmladaptor.h>
 
@@ -478,10 +479,10 @@ namespace Core {
                 // Check root name
                 const auto &root = xml.root;
                 if (const auto &rootName = root.name; rootName != QStringLiteral("actionDomain")) {
-                    fprintf(
-                        stdout,
-                        "Core::ActionCatalogue::restoreLayouts(): unknown root element tag \"%s\"\n",
-                        rootName.toLatin1().data());
+                    fprintf(stdout,
+                            "Core::ActionCatalogue::restoreLayouts(): unknown root element tag "
+                            "\"%s\"\n",
+                            rootName.toLatin1().data());
                     return {};
                 }
 
@@ -956,6 +957,60 @@ namespace Core {
     }
     void ActionDomain::setLayouts(const QList<ActionLayout> &layouts) {
         Q_D(ActionDomain);
+
+        class TopologicalSorter {
+        private:
+            QMap<QString, QSet<QString>> graph;
+            QMap<QString, int> inDegree;
+
+        public:
+            void addEdge(const QString &u, const QString &v) {
+                if (!graph[u].contains(v)) { // Avoid duplicated edge
+                    graph[u].insert(v);
+                    if (!inDegree.contains(v)) {
+                        inDegree[v] = 0;
+                    }
+                    if (!inDegree.contains(u)) {
+                        inDegree[u] = 0;
+                    }
+                    inDegree[v]++;
+                }
+            }
+
+            // 执行拓扑排序并返回排序结果
+            QList<QString> sort(bool *ok) {
+                *ok = false;
+                
+                QQueue<QString> queue;
+                QList<QString> sorted;
+
+                // 将所有入度为 0 的节点加入队列
+                for (auto it = inDegree.begin(); it != inDegree.end(); ++it) {
+                    if (it.value() == 0) {
+                        queue.enqueue(it.key());
+                    }
+                }
+
+                while (!queue.isEmpty()) {
+                    QString u = queue.dequeue();
+                    sorted.append(u);
+                    for (const QString &v : graph[u]) {
+                        inDegree[v]--;
+                        if (inDegree[v] == 0) {
+                            queue.enqueue(v);
+                        }
+                    }
+                }
+                // 检测是否所有节点都已处理，未处理的节点数表示存在环
+                if (sorted.size() != graph.size()) {
+                    return {};
+                }
+
+                *ok = true;
+                return sorted;
+            }
+        };
+
         d->layouts = layouts;
     }
     void ActionDomain::resetLayouts() {
@@ -997,135 +1052,127 @@ namespace Core {
         d->overriddenIcons.clear();
     }
 
-    class UILayoutBuildHelper {
-    public:
+    void ActionDomainPrivate::buildLayoutsRecursively(
+        const Core::ActionLayout &layout,
+        const QHash<QString, QPair<Core::ActionItem *, Core::ActionObjectInfo>> &itemMap,
+        QWidget *parent, QHash<QWidget *, int> &lastMenuItems) const {
         enum LastMenuItem {
             Action,
             Separator,
             Stretch,
         };
-        QHash<QWidget *, LastMenuItem> lastMenuItems;
-        const ActionDomainPrivate *d;
-
-        UILayoutBuildHelper(const ActionDomainPrivate *d) : d(d) {
-        }
-
-        void build(const ActionLayout &layout,
-                   const QHash<QString, QPair<ActionItem *, ActionObjectInfo>> &itemMap,
-                   QWidget *parent) {
-            switch (layout.type()) {
-                case ActionLayoutInfo::Action: {
-                    if (!parent)
-                        break;
-                    auto pair = itemMap.value(layout.id());
-                    auto actionItem = pair.first;
-                    if (!actionItem || pair.second.type() != ActionObjectInfo::Action) {
-                        break;
-                    }
-                    if (actionItem->isAction()) {
-                        parent->addAction(actionItem->action());
-                        lastMenuItems[parent] = Action;
-                    } else if (actionItem->isWidget()) {
-                        parent->addAction(actionItem->widgetAction());
-                        lastMenuItems[parent] = Action;
-                    }
+        switch (layout.type()) {
+            case ActionLayoutInfo::Action: {
+                if (!parent)
+                    break;
+                auto pair = itemMap.value(layout.id());
+                auto actionItem = pair.first;
+                if (!actionItem || pair.second.type() != ActionObjectInfo::Action) {
                     break;
                 }
-                case ActionLayoutInfo::ExpandedMenu: {
+                if (actionItem->isAction()) {
+                    parent->addAction(actionItem->action());
+                    lastMenuItems[parent] = Action;
+                } else if (actionItem->isWidget()) {
+                    parent->addAction(actionItem->widgetAction());
+                    lastMenuItems[parent] = Action;
+                }
+                break;
+            }
+            case ActionLayoutInfo::ExpandedMenu: {
+                if (!parent)
+                    break;
+                auto info = objectInfoMap.value(layout.id());
+                if (info.type() != ActionObjectInfo::Menu)
+                    break;
+                for (const auto &childLayoutItem : layout.children()) {
+                    buildLayoutsRecursively(childLayoutItem, itemMap, parent, lastMenuItems);
+                }
+                break;
+            }
+            case ActionLayoutInfo::Group: {
+                if (!parent)
+                    break;
+                auto info = objectInfoMap.value(layout.id());
+                if (info.type() != ActionObjectInfo::Group)
+                    break;
+                for (const auto &childLayoutItem : layout.children()) {
+                    buildLayoutsRecursively(childLayoutItem, itemMap, parent, lastMenuItems);
+                }
+                break;
+            }
+            case ActionLayoutInfo::Menu: {
+                auto pair = itemMap.value(layout.id());
+                QWidget *nextParent;
+                auto actionItem = pair.first;
+                if (!actionItem) {
                     if (!parent)
                         break;
-                    auto info = d->objectInfoMap.value(layout.id());
-                    if (info.type() != ActionObjectInfo::Menu)
+                    auto menu = sharedMenuItem->requestMenu(parent);
+                    if (!menu)
                         break;
-                    for (const auto &childLayoutItem : layout.children()) {
-                        build(childLayoutItem, itemMap, parent);
-                    }
-                    break;
-                }
-                case ActionLayoutInfo::Group: {
-                    if (!parent)
+                    menu->setProperty("action-item-id", layout.id());
+                    sharedMenuItem->addMenuAsRequested(menu);
+                    parent->addAction(menu->menuAction());
+                    lastMenuItems[parent] = Action;
+                    nextParent = menu;
+                } else {
+                    if (pair.second.type() != ActionObjectInfo::Menu)
                         break;
-                    auto info = d->objectInfoMap.value(layout.id());
-                    if (info.type() != ActionObjectInfo::Group)
-                        break;
-                    for (const auto &childLayoutItem : layout.children()) {
-                        build(childLayoutItem, itemMap, parent);
-                    }
-                    break;
-                }
-                case ActionLayoutInfo::Menu: {
-                    auto pair = itemMap.value(layout.id());
-                    QWidget *nextParent;
-                    auto actionItem = pair.first;
-                    if (!actionItem) {
+                    if (actionItem->isTopLevel()) {
+                        auto w = actionItem->topLevel();
+                        if (parent) {
+                            auto menu = qobject_cast<QMenu *>(w);
+                            if (menu) {
+                                parent->addAction(menu->menuAction());
+                                lastMenuItems[parent] = Action;
+                            }
+                        }
+                        // other menu types will be ignored
+                        nextParent = w;
+                    } else if (actionItem->isMenu()) {
                         if (!parent)
                             break;
-                        auto menu = d->sharedMenuItem->requestMenu(parent);
-                        if (!menu)
-                            break;
-                        menu->setProperty("action-item-id", layout.id());
-                        d->sharedMenuItem->addMenuAsRequested(menu);
+                        auto menu = actionItem->requestMenu(parent);
+                        if (!menu) {
+                            menu = sharedMenuItem->requestMenu(parent);
+                            if (!menu)
+                                break;
+                        }
                         parent->addAction(menu->menuAction());
                         lastMenuItems[parent] = Action;
                         nextParent = menu;
                     } else {
-                        if (pair.second.type() != ActionObjectInfo::Menu)
-                            break;
-                        if (actionItem->isTopLevel()) {
-                            auto w = actionItem->topLevel();
-                            if (parent) {
-                                auto menu = qobject_cast<QMenu *>(w);
-                                if (menu) {
-                                    parent->addAction(menu->menuAction());
-                                    lastMenuItems[parent] = Action;
-                                }
-                            }
-                            // other menu types will be ignored
-                            nextParent = w;
-                        } else if (actionItem->isMenu()) {
-                            if (!parent)
-                                break;
-                            auto menu = actionItem->requestMenu(parent);
-                            if (!menu) {
-                                menu = d->sharedMenuItem->requestMenu(parent);
-                                if (!menu)
-                                    break;
-                            }
-                            parent->addAction(menu->menuAction());
-                            lastMenuItems[parent] = Action;
-                            nextParent = menu;
-                        } else {
-                            break;
-                        }
+                        break;
                     }
-                    for (const auto &childLayoutItem : layout.children()) {
-                        build(childLayoutItem, itemMap, nextParent);
-                    }
-                    break;
                 }
-                case ActionLayoutInfo::Separator: {
-                    if (lastMenuItems.value(parent) == Action) {
-                        auto action = new QAction(parent);
-                        action->setSeparator(true);
-                        parent->addAction(action);
-                        lastMenuItems[parent] = Separator;
-                    }
-                    break;
+                for (const auto &childLayoutItem : layout.children()) {
+                    buildLayoutsRecursively(childLayoutItem, itemMap, nextParent, lastMenuItems);
                 }
-                case ActionLayoutInfo::Stretch: {
-                    if (lastMenuItems.value(parent) == Action) {
-                        parent->addAction(d->sharedStretchWidgetAction.data());
-                        lastMenuItems[parent] = Stretch;
-                    } else if (lastMenuItems.value(parent) == Separator) {
-                        parent->removeAction(parent->actions().back());
-                        parent->addAction(d->sharedStretchWidgetAction.data());
-                        lastMenuItems[parent] = Stretch;
-                    }
-                    break;
+                break;
+            }
+            case ActionLayoutInfo::Separator: {
+                if (lastMenuItems.value(parent) == Action) {
+                    auto action = new QAction(parent);
+                    action->setSeparator(true);
+                    parent->addAction(action);
+                    lastMenuItems[parent] = Separator;
                 }
+                break;
+            }
+            case ActionLayoutInfo::Stretch: {
+                if (lastMenuItems.value(parent) == Action) {
+                    parent->addAction(sharedStretchWidgetAction.data());
+                    lastMenuItems[parent] = Stretch;
+                } else if (lastMenuItems.value(parent) == Separator) {
+                    parent->removeAction(parent->actions().back());
+                    parent->addAction(sharedStretchWidgetAction.data());
+                    lastMenuItems[parent] = Stretch;
+                }
+                break;
             }
         }
-    };
+    }
 
     bool ActionDomain::buildLayouts(const QList<ActionItem *> &items,
                                     const ActionItem::MenuFactory &defaultMenuFactory) const {
@@ -1170,7 +1217,8 @@ namespace Core {
                 pair.second.shape() != ActionObjectInfo::TopLevel || !pair.first->isTopLevel()) {
                 continue;
             }
-            UILayoutBuildHelper(d).build(item, itemMap, nullptr);
+            QHash<QWidget *, int> lastMenuItems;
+            d->buildLayoutsRecursively(item, itemMap, nullptr, lastMenuItems);
         }
         fac = oldFac;
         return true;
