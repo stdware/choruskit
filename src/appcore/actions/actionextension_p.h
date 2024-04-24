@@ -8,7 +8,7 @@ namespace Core {
     struct ActionObjectInfoData {
         QString id;
         ActionObjectInfo::Type type;
-        int mode;
+        ActionObjectInfo::Mode mode;
         QByteArray text;
         QByteArray commandClass;
         QList<QKeySequence> shortcuts;
@@ -36,7 +36,7 @@ namespace Core {
         int objectCount;
         ActionObjectInfoData *objectData;
 
-        int layoutEntryCount; // Not used
+        [[maybe_unused]] int layoutEntryCount; // Not used
         ActionLayoutInfoEntry *layoutEntryData;
 
         int layoutRootCount;

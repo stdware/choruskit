@@ -407,12 +407,18 @@ namespace Core {
             node.id = id;
             switch (it->type()) {
                 case ActionObjectInfo::Action:
+                    if (e->name != QStringLiteral("action"))
+                        return false;
                     node.type = ActionLayoutInfo::Action;
                     break;
                 case ActionObjectInfo::Group:
+                    if (e->name != QStringLiteral("group"))
+                        return false;
                     node.type = ActionLayoutInfo::Group;
                     break;
                 case ActionObjectInfo::Menu:
+                    if (e->name != QStringLiteral("menu"))
+                        return false;
                     node.type =
                         e->properties.value(QStringLiteral("flat")) == QStringLiteral("true")
                             ? ActionLayoutInfo::ExpandedMenu
@@ -1189,17 +1195,30 @@ namespace Core {
                 auto actionItem = pair.first;
                 auto nextLayout = layout;
                 if (info.mode() != ActionObjectInfo::Plain) {
-                    // Check if it's a top level menu
-                    if (!actionItem || !actionItem->isStandalone())
-                        break;
-
                     auto it = standaloneLayouts.find(id);
                     if (it == standaloneLayouts.end()) {
+                        QWidget *thisParent;
+                        if (actionItem) {
+                            thisParent = actionItem->standalone();
+                        } else {
+                            auto menu = autoCreatedStandaloneMenus.value(id);
+                            if (!menu) {
+                                menu = sharedMenuItem->requestMenu(parent);
+                                if (!menu)
+                                    break;
+                                autoCreatedStandaloneMenus.insert(id, menu);
+
+                                menu->setProperty("action-item-id", id);
+                                sharedMenuItem->addMenuAsRequested(menu);
+                            }
+                            thisParent = menu;
+                        }
+
                         // Construct for the first time and cache the layout
                         for (const auto &childLayoutItem : layout.children()) {
-                            buildLayoutsRecursively(childLayoutItem, actionItem->standalone(),
-                                                    itemMap, lastMenuItems,
-                                                    autoCreatedStandaloneMenus, standaloneLayouts);
+                            buildLayoutsRecursively(childLayoutItem, thisParent, itemMap,
+                                                    lastMenuItems, autoCreatedStandaloneMenus,
+                                                    standaloneLayouts);
                         }
                         standaloneLayouts.insert(id, layout);
                     } else {
@@ -1207,6 +1226,7 @@ namespace Core {
                         nextLayout = it.value();
                     }
                 }
+
                 for (const auto &childLayoutItem : nextLayout.children()) {
                     buildLayoutsRecursively(childLayoutItem, parent, itemMap, lastMenuItems,
                                             autoCreatedStandaloneMenus, standaloneLayouts);
@@ -1382,8 +1402,8 @@ namespace Core {
         QHash<QString, ActionLayout> standaloneLayouts;
 
         // For standalone menus or groups, because of the topological ordering in
-        // setLayouts_helper(), we can be sure that the first encounter layout will be the actual
-        // layout rather than the reference.
+        // setLayouts_helper(), we can be sure that the first encounter layout will be the
+        // actual layout rather than the reference.
         for (const auto &item : d->layouts.value()) {
             auto pair = itemMap.value(item.id());
             if (pair.second.type() != ActionObjectInfo::Menu ||
@@ -1477,5 +1497,4 @@ namespace Core {
 
         d.init();
     }
-
 }

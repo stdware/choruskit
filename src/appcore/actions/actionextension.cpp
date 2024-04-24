@@ -17,7 +17,7 @@ namespace Core {
         return ActionExtensionPrivate::get(ext)->objectData[idx].type;
     }
 
-    int ActionObjectInfo::mode() const {
+    ActionObjectInfo::Mode ActionObjectInfo::mode() const {
         if (!ext)
             return {};
         return ActionExtensionPrivate::get(ext)->objectData[idx].mode;

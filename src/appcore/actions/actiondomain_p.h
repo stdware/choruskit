@@ -11,6 +11,8 @@
 
 #include <CoreApi/actiondomain.h>
 
+QT_SPECIALIZE_STD_HASH_TO_CALL_QHASH_BY_CREF(QStringList)
+
 namespace Core {
 
     class ActionCatalogueData : public QSharedData {
@@ -48,12 +50,6 @@ namespace Core {
         void flushCatalogue() const;
         void flushLayouts() const;
 
-        struct StringListHash {
-            size_t operator()(const QStringList &s) const noexcept {
-                return qHash(s);
-            }
-        };
-
         // Icons
         struct IconChange {
             struct Single {
@@ -66,12 +62,12 @@ namespace Core {
                 QString fileName;
                 bool remove;
             };
-            QMChronoMap<QStringList, std::variant<Single, Config>, StringListHash> items;
+            QMChronoMap<QStringList, std::variant<Single, Config>> items;
         };
         struct IconStorage {
             QHash<QString, QHash<QString, QString>> singles;
             QHash<QString, QHash<QString, QHash<QString, QString>>> configFiles;
-            QMChronoSet<QStringList, StringListHash> items;
+            QMChronoSet<QStringList> items;
             QHash<QString, QHash<QString, QString>> storage;
         };
         mutable IconChange iconChange;

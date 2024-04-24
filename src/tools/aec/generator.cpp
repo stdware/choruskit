@@ -313,7 +313,7 @@ void Generator::generateCode() {
     fprintf(out, R"(
 using namespace Core;
 
-static ActionExtensionPrivate *getData() {
+static ActionExtensionPrivate *get_data() {
     static ActionExtensionPrivate data;
 )");
 
@@ -387,7 +387,7 @@ static ActionExtensionPrivate *getData() {
             identifier.data());
     fprintf(out, "    static Core::ActionExtension extension{\n");
     fprintf(out, "        {\n");
-    fprintf(out, "            ckStaticActionExtension_%s::getData(),\n", identifier.data());
+    fprintf(out, "            ckStaticActionExtension_%s::get_data(),\n", identifier.data());
     fprintf(out, "        },\n");
     fprintf(out, "    };\n");
 

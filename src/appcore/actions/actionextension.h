@@ -37,7 +37,7 @@ namespace Core {
 
         QString id() const;
         Type type() const;
-        int mode() const;
+        Mode mode() const;
         QByteArray text() const;
         QByteArray commandClass() const;
         QList<QKeySequence> shortcuts() const;
