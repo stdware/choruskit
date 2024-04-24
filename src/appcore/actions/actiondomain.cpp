@@ -453,17 +453,20 @@ namespace Core {
         inline QList<ActionLayout> build() const {
             QVector<TreeNode> heap;
             QHash<QString, QVector<int>> idIndexes;
+            QVector<int> rootIndexes;
             for (const auto &ext : extensions) {
                 for (int i = 0; i < ext->layoutCount(); ++i) {
-                    std::ignore = TreeNode::layoutInfoToLayout(ext->layout(i), heap, idIndexes);
+                    rootIndexes.append(
+                        TreeNode::layoutInfoToLayout(ext->layout(i), heap, idIndexes));
                 }
             }
-            return applyBuildRoutines(extensions.values_qlist(), heap, idIndexes);
+            return applyBuildRoutines(extensions.values_qlist(), heap, idIndexes, rootIndexes);
         }
 
         inline QList<ActionLayout> restore(const QByteArray &data, bool *ok) const {
             QVector<TreeNode> heap;
             QHash<QString, QVector<int>> idIndexes;
+            QVector<int> rootIndexes;
             QSet<QString> extensionHashSet;
 
             *ok = false;
@@ -498,7 +501,7 @@ namespace Core {
 
                     if (rootChild->name == QStringLiteral("layouts")) {
                         for (const auto &item : rootChild->children) {
-                            std::ignore = restoreElementHelper(item.data(), heap, idIndexes);
+                            rootIndexes.append(restoreElementHelper(item.data(), heap, idIndexes));
                         }
                     }
                 }
@@ -512,7 +515,7 @@ namespace Core {
                 effectiveExtensions.append(ext);
             }
 
-            return applyBuildRoutines(effectiveExtensions, heap, idIndexes);
+            return applyBuildRoutines(effectiveExtensions, heap, idIndexes, rootIndexes);
         }
 
         static inline QByteArray
@@ -547,8 +550,8 @@ namespace Core {
     private:
         QList<ActionLayout>
             applyBuildRoutines(const QList<const ActionExtension *> &effectiveExtensions,
-                               QVector<TreeNode> &heap,
-                               QHash<QString, QVector<int>> &idIndexes) const {
+                               QVector<TreeNode> &heap, QHash<QString, QVector<int>> &idIndexes,
+                               const QVector<int> &rootIndexes) const {
             // Apply build routines
             for (const auto &ext : effectiveExtensions) {
                 for (int i = 0; i < ext->buildRoutineCount(); ++i) {
@@ -611,8 +614,8 @@ namespace Core {
             sharedStretch.setType(ActionLayoutInfo::Stretch);
 
             QList<ActionLayout> result;
-            for (int i = 0; i < heap.size(); ++i) {
-                const auto &item = heap.at(i);
+            for (const auto &rootIndex : rootIndexes) {
+                const auto &item = heap.at(rootIndex);
                 auto it = objectInfoMap.find(item.id);
                 if (it == objectInfoMap.end())
                     continue;
@@ -628,7 +631,9 @@ namespace Core {
     void ActionDomainPrivate::flushLayouts() const {
         if (layouts)
             return;
-        layouts = LayoutsHelper(extensions, objectInfoMap).build();
+        if (!setLayouts_helper(LayoutsHelper(extensions, objectInfoMap).build())) {
+            layouts = QList<ActionLayout>();
+        }
     }
 
     void ActionDomainPrivate::flushIcons() const {
@@ -715,7 +720,9 @@ namespace Core {
         if (!ok)
             return false;
 
-        d->layouts = layouts;
+        if (!d->setLayouts_helper(layouts)) {
+            return false;
+        }
         return true;
     }
     QJsonObject ActionDomain::saveOverriddenShortcuts() const {
@@ -955,36 +962,33 @@ namespace Core {
         d->flushLayouts();
         return d->layouts.value();
     }
-    void ActionDomain::setLayouts(const QList<ActionLayout> &layouts) {
-        Q_D(ActionDomain);
-
+    bool ActionDomainPrivate::setLayouts_helper(const QList<ActionLayout> &layouts) const {
+        // Default empty
         class TopologicalSorter {
         private:
             QMap<QString, QSet<QString>> graph;
             QMap<QString, int> inDegree;
 
         public:
+            QStringList result;
+
             void addEdge(const QString &u, const QString &v) {
-                if (!graph[u].contains(v)) { // Avoid duplicated edge
+                // Avoid duplicated edge
+                if (!graph[u].contains(v)) {
                     graph[u].insert(v);
-                    if (!inDegree.contains(v)) {
-                        inDegree[v] = 0;
-                    }
                     if (!inDegree.contains(u)) {
                         inDegree[u] = 0;
                     }
+                    inDegree[u];
                     inDegree[v]++;
                 }
             }
 
-            // 执行拓扑排序并返回排序结果
-            QList<QString> sort(bool *ok) {
-                *ok = false;
-                
+            bool sort() {
                 QQueue<QString> queue;
-                QList<QString> sorted;
+                QStringList sorted;
 
-                // 将所有入度为 0 的节点加入队列
+                // Add all non-indegrees
                 for (auto it = inDegree.begin(); it != inDegree.end(); ++it) {
                     if (it.value() == 0) {
                         queue.enqueue(it.key());
@@ -994,24 +998,90 @@ namespace Core {
                 while (!queue.isEmpty()) {
                     QString u = queue.dequeue();
                     sorted.append(u);
-                    for (const QString &v : graph[u]) {
+                    for (const QString &v : std::as_const(graph[u])) {
                         inDegree[v]--;
                         if (inDegree[v] == 0) {
                             queue.enqueue(v);
                         }
                     }
                 }
-                // 检测是否所有节点都已处理，未处理的节点数表示存在环
+
+                // Loop exists if there're degrees that hasn't been processed
                 if (sorted.size() != graph.size()) {
-                    return {};
+                    qWarning().noquote().nospace()
+                        << "Core::ActionDomain::setLayouts(): recursive chain detected";
+                    return false;
                 }
 
-                *ok = true;
-                return sorted;
+                result = sorted;
+                return true;
             }
         };
 
-        d->layouts = layouts;
+        TopologicalSorter sorter;
+        QHash<QString, ActionLayout> layoutMap;
+        layoutMap.reserve(layouts.size());
+        for (const auto &layout : layouts) {
+            auto id = layout.id();
+            auto it = objectInfoMap.find(id);
+            if (it == objectInfoMap.end())
+                continue;
+
+            if (layoutMap.contains(id)) {
+                qWarning().noquote().nospace()
+                    << "Core::ActionDomain::setLayouts(): duplicated layout root id " << id;
+                return false;
+            }
+            layoutMap.insert(id, layout);
+
+            const auto &info = it.value();
+            if (info.type() != ActionObjectInfo::Menu ||
+                info.shape() != ActionObjectInfo::TopLevel) {
+                continue;
+            }
+
+            std::list<ActionLayout> stack;
+            stack.push_back(layout);
+            while (!stack.empty()) {
+                auto currentLayout = stack.front();
+                stack.pop_front();
+                for (const auto &item : currentLayout.children()) {
+                    const auto &childId = item.id();
+                    if (childId.isEmpty())
+                        continue;
+                    auto it2 = objectInfoMap.find(childId);
+                    if (it2 == objectInfoMap.end())
+                        continue;
+                    if (it2->type() == ActionObjectInfo::Menu &&
+                        it2->shape() == ActionObjectInfo::TopLevel) {
+                        sorter.addEdge(item.id(), id);
+                    }
+                    if (!item.children().isEmpty()) {
+                        stack.push_back(item);
+                    }
+                }
+            }
+        }
+
+        // Topologically sort all the top-level menus, the front ones are included by some of the
+        // back ones
+        bool ok;
+        if (!sorter.sort()) {
+            return false;
+        }
+
+        QList<ActionLayout> result;
+        for (const auto &id : std::as_const(sorter.result)) {
+            result.append(layoutMap.value(id));
+        }
+        this->layouts = layouts;
+        return true;
+    }
+    void ActionDomain::setLayouts(const QList<ActionLayout> &layouts) {
+        Q_D(ActionDomain);
+        if (!d->setLayouts_helper(layouts)) {
+            d->layouts = QList<ActionLayout>();
+        }
     }
     void ActionDomain::resetLayouts() {
         Q_D(ActionDomain);
@@ -1085,6 +1155,16 @@ namespace Core {
                 auto info = objectInfoMap.value(layout.id());
                 if (info.type() != ActionObjectInfo::Menu)
                     break;
+
+                // Check if it's a top level menu
+                auto pair = itemMap.value(layout.id());
+                auto actionItem = pair.first;
+                if (actionItem && actionItem->isTopLevel()) {
+                    // Has been constructed before
+                    parent->addActions(actionItem->topLevel()->actions());
+                    break;
+                }
+
                 for (const auto &childLayoutItem : layout.children()) {
                     buildLayoutsRecursively(childLayoutItem, itemMap, parent, lastMenuItems);
                 }
@@ -1127,6 +1207,9 @@ namespace Core {
                                 parent->addAction(menu->menuAction());
                                 lastMenuItems[parent] = Action;
                             }
+
+                            // Has been constructed before
+                            break;
                         }
                         // other menu types will be ignored
                         nextParent = w;
@@ -1206,6 +1289,9 @@ namespace Core {
             }
         }
         d->sharedMenuItem->d_func()->deleteAllMenus();
+
+        if (d->layouts->isEmpty())
+            return true;
 
         // Build layouts
         auto &fac = d->sharedMenuItem->d_func()->menuFactory;

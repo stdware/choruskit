@@ -85,6 +85,8 @@ namespace Core {
 
         void flushIcons() const;
 
+        bool setLayouts_helper(const QList<ActionLayout> &layouts) const;
+
         void buildLayoutsRecursively(
             const ActionLayout &layout,
             const QHash<QString, QPair<ActionItem *, ActionObjectInfo>> &itemMap, QWidget *parent,
