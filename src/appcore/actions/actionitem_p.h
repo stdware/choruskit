@@ -2,6 +2,7 @@
 #define ACTIONITEM_P_H
 
 #include <QSet>
+#include <QPointer>
 
 #include <CoreApi/actionitem.h>
 
@@ -25,7 +26,7 @@ namespace Core {
         QWidgetAction *sharedWidgetAction;
 
         ActionItem::MenuFactory menuFactory;
-        QSet<QMenu *> createdMenus;
+        QList<QPointer<QMenu>> createdMenus; // some menus maybe children of other menus
 
         QWidget *topLevelWidget;
 

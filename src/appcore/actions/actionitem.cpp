@@ -41,7 +41,8 @@ namespace Core {
         if (createdMenus.isEmpty())
             return;
         for (const auto &menu : std::as_const(createdMenus)) {
-            disconnect(menu, &QObject::destroyed, this, &ActionItemPrivate::_q_menuDestroyed);
+            disconnect(menu.data(), &QObject::destroyed, this,
+                       &ActionItemPrivate::_q_menuDestroyed);
         }
         auto menusToDelete = createdMenus;
         createdMenus.clear();
@@ -52,7 +53,7 @@ namespace Core {
         // Q_Q(ActionItem);
         auto menu = static_cast<QMenu *>(obj);
         // Q_EMIT q->menuDestroyed(menu);
-        createdMenus.remove(menu);
+        createdMenus.removeAll(menu);
     }
 
     ActionItem::ActionItem(const QString &id, QAction *action, QObject *parent)
@@ -141,7 +142,12 @@ namespace Core {
 
     QList<QMenu *> ActionItem::createdMenus() const {
         Q_D(const ActionItem);
-        return d->createdMenus.values();
+        QList<QMenu *> menus;
+        menus.reserve(d->createdMenus.size());
+        for (const auto &item : d->createdMenus) {
+            menus.append(item);
+        }
+        return menus;
     }
 
     QMenu *ActionItem::requestMenu(QWidget *parent) {
@@ -158,7 +164,7 @@ namespace Core {
 
         // Q_EMIT menuCreated(menu);
         connect(menu, &QObject::destroyed, d, &ActionItemPrivate::_q_menuDestroyed);
-        d->createdMenus.insert(menu);
+        d->createdMenus.append(menu);
     }
 
     ActionItem::ActionItem(ActionItemPrivate &d, const QString &id, QObject *parent)
