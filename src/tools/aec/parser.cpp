@@ -25,10 +25,14 @@ static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
     do {
         hasMatch = false;
 
-        int index = 0;
+        QString result;
         QRegularExpressionMatch match;
+        int index = 0;
+        int lastIndex = 0;
         while ((index = s.indexOf(reg, index, &match)) != -1) {
             hasMatch = true;
+            result += s.midRef(lastIndex, index - lastIndex);
+
             const auto &name = match.captured(1);
             QString val;
             auto it = vars.find(name);
@@ -38,8 +42,12 @@ static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
                 val = it.value();
             }
 
-            s.replace(index, match.captured(0).size(), val);
+            result += val;
+            index += match.captured(0).size();
+            lastIndex = index;
         }
+        result += s.midRef(lastIndex);
+        s = result;
     } while (hasMatch);
     s.replace(QStringLiteral("$$"), QStringLiteral("$"));
     return s;

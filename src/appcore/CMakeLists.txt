@@ -3,15 +3,12 @@ project(CkAppCore
     LANGUAGES CXX
 )
 
-find_package(ExtensionSystem REQUIRED)
-
 file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
 choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
     SOURCES ${_src}
     LINKS
         qtmediate::Widgets
-        ExtensionSystem::ExtensionSystem
         xmladaptor
     QT_LINKS
         Core Widgets Network

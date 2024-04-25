@@ -3,8 +3,6 @@
 
 #include <QApplication>
 
-#include <extensionsystem/pluginmanager.h>
-
 namespace Core {
 
     ICoreBasePrivate::ICoreBasePrivate() {
