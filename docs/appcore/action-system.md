@@ -117,7 +117,7 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
             </menu>
         </menuBar>
 
-        <toolBar id="MainToolBar">
+        <toolBar id="MainToolbar">
             <action id="OpenFile" />
             <action id="SaveFile" />
             <separator />
@@ -169,9 +169,9 @@ QToolBar 是工具栏，将添加到其中的 QAction 的图标转化为按钮�
     - 注意事项：
         - 如果`id`为`objects`中没有出现的，则将解析为新的菜单元素，除 ID 外其他属性为空，否则，其类型必须与`objects`中声明的类型一致；
         - 如果`objects`中某个菜单元素没有声明`category`，那么`category`将按以下规则确定：
-            - 如果它没有出现在`layout`中，或者在`layout`中第一次作为根节点出现，那么使用`parserConfig`中的`defaultCategory`加上其`text`（去掉所有加速键）；
-            - 如果在`layout`中第一次作为非根节点出现，将以根节点的`category`为基础，依次添加路径节点的`text`（去掉所有加速键）；
-            - `category`如果前面有空项，则全部忽略；如果后面有空项，则用其`text`（去掉所有加速键）代替；
+            - 如果它没有出现在`layout`中，或者在`layout`中第一次作为根节点出现，那么使用`parserConfig`中的`defaultCategory`加上推测名称，如果当前节点声明了`_cat`则推测名称为对应值，否则推测名称为去掉所有加速键与末尾省略号的`text`；
+            - 如果在`layout`中第一次作为非根节点出现，将以它父节点的`category`属性加上推测名称；
+        - `category`如果前面有空项，则全部忽略；如果后面有空项，则用其`text`（去掉所有加速键）代替；
         - `mode`为`unique`的菜单或组作为非叶子节点最多只允许出现一次（即只允许声明一次其下级结构），类型为`action`的菜单元素不允许作为非叶子节点出现；
 - `buildRoutines`：包含构造例程，子节点标签`buildRoutine`；
     - `buildRoutine`属性：

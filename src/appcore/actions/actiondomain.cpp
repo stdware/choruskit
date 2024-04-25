@@ -17,31 +17,31 @@
 
 namespace Core {
 
-static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
-    static QRegularExpression reg(QStringLiteral(R"((?<!\$)(?:\$\$)*\$\{(\w+)\})"));
-    bool hasMatch;
-    do {
-        hasMatch = false;
+    static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
+        static QRegularExpression reg(QStringLiteral(R"((?<!\$)(?:\$\$)*\$\{(\w+)\})"));
+        bool hasMatch;
+        do {
+            hasMatch = false;
 
-        int index = 0;
-        QRegularExpressionMatch match;
-        while ((index = s.indexOf(reg, index, &match)) != -1) {
-            hasMatch = true;
-            const auto &name = match.captured(1);
-            QString val;
-            auto it = vars.find(name);
-            if (it == vars.end()) {
-                val = name;
-            } else {
-                val = it.value();
+            int index = 0;
+            QRegularExpressionMatch match;
+            while ((index = s.indexOf(reg, index, &match)) != -1) {
+                hasMatch = true;
+                const auto &name = match.captured(1);
+                QString val;
+                auto it = vars.find(name);
+                if (it == vars.end()) {
+                    val = name;
+                } else {
+                    val = it.value();
+                }
+
+                s.replace(index, match.captured(0).size(), val);
             }
-
-            s.replace(index, match.captured(0).size(), val);
-        }
-    } while (hasMatch);
-    s.replace(QStringLiteral("$$"), QStringLiteral("$"));
-    return s;
-}
+        } while (hasMatch);
+        s.replace(QStringLiteral("$$"), QStringLiteral("$"));
+        return s;
+    }
 
     class IconConfigParser {
     public:
@@ -1369,14 +1369,14 @@ static QString parseExpression(QString s, const QHash<QString, QString> &vars) {
             if (itemMap.contains(id)) {
                 qWarning().noquote().nospace()
                     << "Core::ActionDomain::buildLayouts(): duplicated item id " << id;
-                return false;
+                continue;
             }
 
             auto it = d->objectInfoMap.find(id);
             if (it == d->objectInfoMap.end()) {
                 qWarning().noquote().nospace()
                     << "Core::ActionDomain::buildLayouts(): unknown item id " << id;
-                return false;
+                continue;
             }
             itemMap.insert(id, {item, *it});
         }

@@ -76,7 +76,7 @@ static QString objIdToText(const QString &id) {
     return parts.join(QChar(' '));
 }
 
-static QString removeAccelerateKeys(const QString &s) {
+static QString simplifyActionText(const QString &s) {
     QString res;
 
     for (int i = 0; i < s.size(); ++i) {
@@ -89,6 +89,9 @@ static QString removeAccelerateKeys(const QString &s) {
             continue;
         }
         res += ch;
+    }
+    if (res.endsWith(QStringLiteral("..."))) {
+        res.chop(3);
     }
     return res;
 }
@@ -129,7 +132,7 @@ static void fixCategories(ActionObjectInfoMessage &info) {
         res.append(*it);
     }
     if (info.categories.back().isEmpty()) {
-        res += removeAccelerateKeys(info.text);
+        res += simplifyActionText(info.text);
     }
     info.categories = res;
 }
@@ -166,6 +169,8 @@ struct ParserPrivate {
             std::exit(1);
         }
 
+        QString maybeCategory = resolve(e->properties.value(QStringLiteral("_cat")));
+
         ActionObjectInfoMessage *pInfo;
         if (auto it = objInfoMap.find(id); it != objInfoMap.end()) {
             // This layout object has been declared in the objects field
@@ -184,7 +189,9 @@ struct ParserPrivate {
 
             if (info.categories.isEmpty()) {
                 // The object doesn't have a specified category, use the current one
-                info.categories = QStringList(categories) << removeAccelerateKeys(info.text);
+                info.categories =
+                    QStringList(categories)
+                    << (maybeCategory.isEmpty() ? simplifyActionText(info.text) : maybeCategory);
             }
             pInfo = &info;
         } else {
@@ -193,7 +200,9 @@ struct ParserPrivate {
             info.id = id;
             determineObjectType(*e, info, field);
             info.text = objIdToText(id);
-            info.categories = QStringList(categories) << info.text;
+            info.categories =
+                QStringList(categories)
+                << (maybeCategory.isEmpty() ? simplifyActionText(info.text) : maybeCategory);
 
             auto insertResult = objInfoMap.append(id, info);
             pInfo = &insertResult.first.value();
