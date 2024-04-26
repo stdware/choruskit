@@ -440,10 +440,10 @@ namespace Core {
 
         // Create window
         auto win = q->createWindow(nullptr);
-
         win->setAttribute(Qt::WA_DeleteOnClose);
-        connect(qApp, &QApplication::aboutToQuit, win,
-                &QWidget::close); // Ensure closing window when quit
+        
+        // Ensure closing window when quit
+        connect(qApp, &QApplication::aboutToQuit, win, &QWidget::close);
 
         q->setWindow(win);
         shortcutCtx = new QMShortcutContext(this);
