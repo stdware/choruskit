@@ -30,7 +30,7 @@ namespace Core {
     protected:
         IExecutiveAddOn(IExecutiveAddOnPrivate &d, QObject *parent = nullptr);
 
-        QScopedPointer<IExecutiveAddOn> d_ptr;
+        QScopedPointer<IExecutiveAddOnPrivate> d_ptr;
 
         friend class IExecutive;
         friend class IExecutivePrivate;
@@ -57,7 +57,7 @@ namespace Core {
         Q_ENUM(State)
 
         State state() const;
-        
+
         void quit();
 
     Q_SIGNALS:
@@ -91,17 +91,19 @@ namespace Core {
         template <class T>
         void attach() {
             static_assert(std::is_base_of<AddOnType, T>::value, "T should inherit from ...");
-            factories.append([](QObject *parent) { return new HostType(parent); });
+            factories.append([](QObject *parent) -> IExecutiveAddOn * {
+                return new T(parent); //
+            });
         }
 
         template <class... Args>
         HostType *create(Args &&...args) const {
-            auto p = new HostType(args...);
+            auto e = new HostType(args...);
             for (const auto &fac : factories) {
-                p->attachImpl(fac(nullptr));
+                e->attachImpl(fac(e));
             }
-            p->loadImpl();
-            return p;
+            e->loadImpl();
+            return e;
         }
 
     protected:

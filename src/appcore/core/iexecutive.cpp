@@ -28,7 +28,8 @@ namespace Core {
         return d->host;
     }
 
-    IExecutiveAddOn::IExecutiveAddOn(IExecutiveAddOnPrivate &d, QObject *parent) {
+    IExecutiveAddOn::IExecutiveAddOn(IExecutiveAddOnPrivate &d, QObject *parent)
+        : QObject(parent), d_ptr(&d) {
         d.q_ptr = this;
         d.init();
     }
@@ -169,6 +170,7 @@ namespace Core {
             return;
 
         for (auto &addOn : qAsConst(d->addOns)) {
+            auto d1 = addOn->d_func();
             addOn->d_func()->host = this;
         }
         d->load(enableDelayed);

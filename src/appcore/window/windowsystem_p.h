@@ -55,8 +55,10 @@ namespace Core {
         QHash<QString, WindowGeometry> winGeometries;
         QHash<QString, SplitterSizes> splitterSizes;
 
-        void windowExit(IWindow *iWin);
+        void windowCreated(IWindow *iWin);
+        void windowAboutToDestroy(IWindow *iWin);
     };
+
 }
 
 #endif // WINDOWSYSTEM_P_H

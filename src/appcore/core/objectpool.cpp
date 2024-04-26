@@ -179,7 +179,7 @@ namespace Core {
         return nullptr;
     }
 
-    ObjectPool::ObjectPool(ObjectPoolPrivate &d, QObject *parent) : d_ptr(&d), QObject(parent) {
+    ObjectPool::ObjectPool(ObjectPoolPrivate &d, QObject *parent) : QObject(parent), d_ptr(&d) {
         d.q_ptr = this;
         d.init();
     }

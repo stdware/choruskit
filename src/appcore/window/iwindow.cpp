@@ -404,6 +404,8 @@ namespace Core {
     IWindowAddOnPrivate::IWindowAddOnPrivate() {
     }
 
+    IWindowAddOnPrivate::~IWindowAddOnPrivate() = default;
+
     void IWindowAddOnPrivate::init() {
     }
 
@@ -451,6 +453,8 @@ namespace Core {
 
         IExecutivePrivate::load(enableDelayed);
 
+        ICoreBase::instance()->windowSystem()->d_func()->windowCreated(q);
+
         win->show();
     }
 
@@ -460,6 +464,8 @@ namespace Core {
         auto w = q->window();
         if (!w->isHidden())
             w->hide();
+
+        ICoreBase::instance()->windowSystem()->d_func()->windowAboutToDestroy(q);
 
         delete shortcutCtx;
         shortcutCtx = nullptr;
@@ -591,6 +597,8 @@ namespace Core {
 
     void IWindow::addShortcutContext(QWidget *w, ShortcutContextPriority priority) {
         Q_D(IWindow);
+        auto d1 = d_func();
+        auto d2 = d_ptr.data();
         d->shortcutCtx->addWidget(w, priority);
     }
 
@@ -642,7 +650,6 @@ namespace Core {
     }
 
     IWindow::IWindow(IWindowPrivate &d, QObject *parent) : IExecutive(d, parent) {
-        d.q_ptr = this;
         d.init();
     }
 

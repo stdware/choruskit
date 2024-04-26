@@ -19,14 +19,13 @@ namespace Core {
 
     public:
         IWindow *findWindow(QWidget *window) const;
-
         int count() const;
         QList<IWindow *> windows() const;
         IWindow *firstWindow() const;
 
     public:
-        void loadWindowGeometry(const QString &id, QWidget *w, const QSize &fallback = {}) const;
-        void saveWindowGeometry(const QString &id, QWidget *w);
+        void loadGeometry(const QString &id, QWidget *w, const QSize &fallback = {}) const;
+        void saveGeometry(const QString &id, QWidget *w);
 
         void loadSplitterSizes(const QString &id, QSplitter *s,
                                const QList<int> &fallback = {}) const;

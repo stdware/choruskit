@@ -1,10 +1,9 @@
 #ifndef IWINDOW_H
 #define IWINDOW_H
 
-#include <CoreApi/objectpool.h>
 #include <CoreApi/iexecutive.h>
-#include <CoreApi/actionitem.h>
 #include <CoreApi/windowelementsadaptor.h>
+#include <CoreApi/actionitem.h>
 
 namespace Core {
 
@@ -31,12 +30,11 @@ namespace Core {
 
         friend class IWindow;
         friend class IWindowPrivate;
-        friend class WindowSystem;
-        friend class WindowSystemPrivate;
     };
 
     class CKAPPCORE_EXPORT IWindow : public IExecutive, public WindowElementsAdaptor {
         Q_OBJECT
+        Q_DECLARE_PRIVATE(IWindow)
     public:
         using AddOnType = IWindowAddOn;
         
@@ -91,12 +89,7 @@ namespace Core {
 
     protected:
         IWindow(IWindowPrivate &d, QObject *parent = nullptr);
-        QScopedPointer<IWindowPrivate> d_ptr;
 
-        Q_DECLARE_PRIVATE(IWindow)
-
-        friend class WindowSystem;
-        friend class WindowSystemPrivate;
         friend class ICore;
         friend class ICorePrivate;
         friend class Internal::CorePlugin;
