@@ -42,10 +42,6 @@ namespace Core {
     public:
         using AddOnType = IExecutiveAddOn;
 
-        explicit IExecutive(QObject *parent = nullptr);
-        ~IExecutive();
-
-    public:
         enum State {
             Preparatory,
             Starting,
@@ -72,6 +68,9 @@ namespace Core {
         virtual void nextLoadingState(State nextState);
 
     protected:
+        explicit IExecutive(QObject *parent = nullptr);
+        ~IExecutive();
+
         IExecutive(IExecutivePrivate &d, QObject *parent = nullptr);
 
         template <class T1>

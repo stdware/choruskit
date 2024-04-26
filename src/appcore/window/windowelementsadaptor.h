@@ -17,7 +17,7 @@ namespace Core {
         Q_DECLARE_TR_FUNCTIONS(WindowElementsAdaptor)
     public:
         explicit WindowElementsAdaptor(QWidget *w = nullptr);
-        ~WindowElementsAdaptor();
+        virtual ~WindowElementsAdaptor();
 
         QWidget *window() const;
 

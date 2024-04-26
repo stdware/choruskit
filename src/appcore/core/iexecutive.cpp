@@ -139,12 +139,6 @@ namespace Core {
         }
     }
 
-    IExecutive::IExecutive(QObject *parent) : IExecutive(*new IExecutivePrivate(), parent) {
-    }
-
-    IExecutive::~IExecutive() {
-    }
-
     IExecutive::State IExecutive::state() const {
         Q_D(const IExecutive);
         return d->state;
@@ -178,6 +172,12 @@ namespace Core {
 
     void IExecutive::nextLoadingState(State nextState) {
         Q_UNUSED(nextState);
+    }
+
+    IExecutive::IExecutive(QObject *parent) : IExecutive(*new IExecutivePrivate(), parent) {
+    }
+
+    IExecutive::~IExecutive() {
     }
 
     IExecutive::IExecutive(IExecutivePrivate &d, QObject *parent) : ObjectPool(d, parent) {
