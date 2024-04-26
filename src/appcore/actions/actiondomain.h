@@ -5,7 +5,6 @@
 
 #include <QObject>
 #include <QIcon>
-#include <QJsonObject>
 
 #include <CoreApi/actionitem.h>
 #include <CoreApi/actionextension.h>
@@ -95,6 +94,11 @@ namespace Core {
             QString m_data;
         };
 
+        using ShortcutsOverride = std::optional<QList<QKeySequence>>;
+        using IconOverride = std::optional<IconReference>;
+        using ShortcutsFamily = QHash<QString, ShortcutsOverride>;
+        using IconFamily = QHash<QString, IconOverride>;
+
     public:
         void addExtension(const ActionExtension *extension);
         void removeExtension(const ActionExtension *extension);
@@ -108,11 +112,11 @@ namespace Core {
         QByteArray saveLayouts() const;
         bool restoreLayouts(const QByteArray &data);
 
-        QJsonObject saveOverriddenShortcuts() const;
-        bool restoreOverriddenShortcuts(const QJsonObject &object);
+        ShortcutsFamily shortcutsFamily() const;
+        void setShortcutsFamily(const ShortcutsFamily &shortcutFamily);
 
-        QJsonObject saveOverriddenIcons() const;
-        bool restoreOverriddenIcons(const QJsonObject &object);
+        IconFamily iconFamily() const;
+        void setIconFamily(const IconFamily &iconFamily);
 
     public:
         QStringList objectIds() const;
@@ -127,19 +131,18 @@ namespace Core {
         void setLayouts(const QList<ActionLayout> &layouts);
         void resetLayouts();
 
-        std::optional<QList<QKeySequence>> overriddenShortcuts(const QString &objId) const;
-        void setOverriddenShortcuts(const QString &objId,
-                                    const std::optional<QList<QKeySequence>> &shortcuts);
+        ShortcutsOverride shortcuts(const QString &id) const;
+        void setShortcuts(const QString &id, const ShortcutsOverride &shortcuts);
         void resetShortcuts();
 
-        std::optional<IconReference> overriddenIcon(const QString &objId) const;
-        void setOverriddenIcon(const QString &objId, const std::optional<IconReference> &iconRef);
-        inline void setOverriddenIconFile(const QString &objId, const QString &fileName);
-        inline void setOverriddenIconId(const QString &objId, const QString &iconId);
-        void resetIconFiles();
+        IconOverride icon(const QString &id) const;
+        void setIcon(const QString &id, const IconOverride &icon);
+        inline void setIconFromFile(const QString &objId, const QString &fileName);
+        inline void setIconFromId(const QString &objId, const QString &iconId);
+        void resetIcons();
 
-        inline QIcon objectIcon(const QString &theme, const QString &objId) const;
         inline QList<QKeySequence> objectShortcuts(const QString &objId) const;
+        inline QIcon objectIcon(const QString &theme, const QString &objId) const;
 
         bool buildLayouts(const QList<ActionItem *> &items,
                           const ActionItem::MenuFactory &defaultMenuFactory = {}) const;
@@ -152,26 +155,26 @@ namespace Core {
         QScopedPointer<ActionDomainPrivate> d_ptr;
     };
 
-    inline void ActionDomain::setOverriddenIconFile(const QString &objId, const QString &fileName) {
-        setOverriddenIcon(objId, IconReference{fileName, true});
+    inline void ActionDomain::setIconFromFile(const QString &objId, const QString &fileName) {
+        setIcon(objId, IconReference{fileName, true});
     }
 
-    inline void ActionDomain::setOverriddenIconId(const QString &objId, const QString &iconId) {
-        setOverriddenIcon(objId, IconReference{iconId, false});
-    }
-
-    inline QIcon ActionDomain::objectIcon(const QString &theme, const QString &objId) const {
-        if (auto o = overriddenIcon(objId); o) {
-            return o->fromFile() ? QIcon(o->data()) : icon(theme, o->data());
-        }
-        return icon(theme, objId);
+    inline void ActionDomain::setIconFromId(const QString &objId, const QString &iconId) {
+        setIcon(objId, IconReference{iconId, false});
     }
 
     inline QList<QKeySequence> ActionDomain::objectShortcuts(const QString &objId) const {
-        if (auto o = overriddenShortcuts(objId); o) {
+        if (auto o = shortcuts(objId); o) {
             return o.value();
         }
         return objectInfo(objId).shortcuts();
+    }
+
+    inline QIcon ActionDomain::objectIcon(const QString &theme, const QString &objId) const {
+        if (auto o = icon(objId); o) {
+            return o->fromFile() ? QIcon(o->data()) : icon(theme, o->data());
+        }
+        return icon(theme, objId);
     }
 
 }

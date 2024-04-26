@@ -773,94 +773,23 @@ namespace Core {
         }
         return true;
     }
-    QJsonObject ActionDomain::saveOverriddenShortcuts() const {
+    ActionDomain::ShortcutsFamily ActionDomain::shortcutsFamily() const {
         Q_D(const ActionDomain);
-        QJsonObject rootObj;
-        for (auto it = d->overriddenShortcuts.begin(); it != d->overriddenShortcuts.end(); ++it) {
-            const auto &key = it.key();
-
-            auto it2 = d->objectInfoMap.find(key);
-            if (it2 == d->objectInfoMap.end())
-                continue;
-            if (it2->type() != ActionObjectInfo::Action || it2->mode() != ActionObjectInfo::Plain)
-                continue;
-
-            QJsonValue value = QJsonValue::Null;
-            if (const auto &val = it.value()) {
-                QJsonArray arr;
-                for (const auto &subItem : val.value()) {
-                    arr.push_back(subItem.toString());
-                }
-                value = arr;
-            }
-            rootObj.insert(key, value);
-        }
-        return rootObj;
+        return d->overriddenShortcuts;
     }
-    bool ActionDomain::restoreOverriddenShortcuts(const QJsonObject &object) {
+    void ActionDomain::setShortcutsFamily(const ShortcutsFamily &shortcutFamily) {
         Q_D(ActionDomain);
-        QHash<QString, std::optional<QList<QKeySequence>>> result;
-        for (auto it = object.begin(); it != object.end(); ++it) {
-            const auto &key = it.key();
-            auto it2 = d->objectInfoMap.find(key);
-            if (it2 == d->objectInfoMap.end())
-                continue;
-            if (it2->type() != ActionObjectInfo::Action || it2->mode() != ActionObjectInfo::Plain)
-                continue;
-
-            const auto &value = it.value();
-            if (value.isNull()) {
-                result.insert(key, {});
-                continue;
-            }
-            auto arr = value.toObject();
-            QList<QKeySequence> shortcuts;
-            shortcuts.reserve(arr.size());
-            for (const auto &item : std::as_const(arr)) {
-                QKeySequence ks = QKeySequence::fromString(item.toString());
-                if (!ks.isEmpty()) {
-                    shortcuts.append(ks);
-                }
-            }
-            result.insert(key, shortcuts);
-        }
-        return false;
+        d->overriddenShortcuts = shortcutFamily;
     }
-    QJsonObject ActionDomain::saveOverriddenIcons() const {
+    ActionDomain::IconFamily ActionDomain::iconFamily() const {
         Q_D(const ActionDomain);
-        QJsonObject rootObj;
-        for (auto it = d->overriddenIcons.begin(); it != d->overriddenIcons.end(); ++it) {
-            const auto &key = it.key();
-            QJsonValue value = QJsonValue::Null;
-            if (const auto &val = it.value()) {
-                QJsonObject obj;
-                obj.insert(QStringLiteral("fromFile"), val->fromFile());
-                obj.insert(QStringLiteral("data"), val->data());
-                value = obj;
-            }
-            rootObj.insert(key, value);
-        }
-        return rootObj;
+        return d->overriddenIcons;
     }
-    bool ActionDomain::restoreOverriddenIcons(const QJsonObject &object) {
+    void ActionDomain::setIconFamily(const IconFamily &iconFamily) {
         Q_D(ActionDomain);
-        QHash<QString, std::optional<IconReference>> result;
-        for (auto it = object.begin(); it != object.end(); ++it) {
-            const auto &key = it.key();
-            const auto &value = it.value();
-            if (value.isNull()) {
-                result.insert(key, {});
-                continue;
-            }
-            auto obj = value.toObject();
-            result.insert(key, IconReference{
-                                   obj.value(QStringLiteral("data")).toString(),
-                                   obj.value(QStringLiteral("fromFile")).toBool(),
-                               });
-        }
-        d->overriddenIcons = result;
-        return true;
+        d->overriddenIcons = iconFamily;
     }
+
     void ActionDomain::addExtension(const ActionExtension *extension) {
         Q_D(ActionDomain);
 
@@ -1129,13 +1058,12 @@ namespace Core {
         d->layouts.reset();
         d->flushLayouts();
     }
-    std::optional<QList<QKeySequence>>
-        ActionDomain::overriddenShortcuts(const QString &objId) const {
+    ActionDomain::ShortcutsOverride ActionDomain::shortcuts(const QString &objId) const {
         Q_D(const ActionDomain);
         return d->overriddenShortcuts.value(objId);
     }
-    void ActionDomain::setOverriddenShortcuts(const QString &objId,
-                                              const std::optional<QList<QKeySequence>> &shortcuts) {
+    void ActionDomain::setShortcuts(const QString &objId,
+                                    const std::optional<QList<QKeySequence>> &shortcuts) {
         Q_D(ActionDomain);
         d->overriddenShortcuts.insert(objId, shortcuts);
     }
@@ -1143,13 +1071,11 @@ namespace Core {
         Q_D(ActionDomain);
         d->overriddenShortcuts.clear();
     }
-    std::optional<ActionDomain::IconReference>
-        ActionDomain::overriddenIcon(const QString &objId) const {
+    ActionDomain::IconOverride ActionDomain::icon(const QString &objId) const {
         Q_D(const ActionDomain);
         return d->overriddenIcons.value(objId);
     }
-    void ActionDomain::setOverriddenIcon(const QString &objId,
-                                         const std::optional<IconReference> &iconRef) {
+    void ActionDomain::setIcon(const QString &objId, const std::optional<IconReference> &iconRef) {
         Q_D(ActionDomain);
         if (iconRef && iconRef->fromFile()) {
             QFileInfo info(iconRef->data());
@@ -1158,7 +1084,7 @@ namespace Core {
         }
         d->overriddenIcons.insert(objId, iconRef);
     }
-    void ActionDomain::resetIconFiles() {
+    void ActionDomain::resetIcons() {
         Q_D(ActionDomain);
         d->overriddenIcons.clear();
     }

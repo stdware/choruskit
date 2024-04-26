@@ -72,9 +72,6 @@ namespace Core {
         ~IExecutive();
 
         IExecutive(IExecutivePrivate &d, QObject *parent = nullptr);
-
-        template <class T1>
-        friend class IExecutiveRegistry;
     };
 
     template <class HostType>

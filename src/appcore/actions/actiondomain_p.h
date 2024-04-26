@@ -73,8 +73,8 @@ namespace Core {
         mutable IconChange iconChange;
         mutable IconStorage iconStorage;
 
-        QHash<QString, std::optional<QList<QKeySequence>>> overriddenShortcuts;
-        QHash<QString, std::optional<ActionDomain::IconReference>> overriddenIcons;
+        ActionDomain::ShortcutsFamily overriddenShortcuts;
+        ActionDomain::IconFamily overriddenIcons;
 
         QScopedPointer<QWidgetAction> sharedStretchWidgetAction;
         QScopedPointer<ActionItem> sharedMenuItem;
