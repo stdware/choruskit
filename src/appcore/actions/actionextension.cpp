@@ -3,6 +3,8 @@
 
 #include <QtCore/QCoreApplication>
 
+#include <QMCore/qmcoreappextension.h>
+
 namespace Core {
 
     QString ActionObjectInfo::id() const {
@@ -47,16 +49,18 @@ namespace Core {
         return ActionExtensionPrivate::get(ext)->objectData[idx].categories;
     }
 
-    QString ActionObjectInfo::translatedText(const QByteArray &text) {
-        return QCoreApplication::translate("ChorusKit::ActionText", text);
+    QString ActionObjectInfo::translatedText(const QByteArray &text, bool *ok) {
+        return QMCoreAppExtension::translate("ChorusKit::ActionText", text, nullptr, -1, ok);
     }
 
-    QString ActionObjectInfo::translatedCommandClass(const QByteArray &commandClass) {
-        return QCoreApplication::translate("ChorusKit::ActionCommandClass", commandClass);
+    QString ActionObjectInfo::translatedCommandClass(const QByteArray &commandClass, bool *ok) {
+        return QMCoreAppExtension::translate("ChorusKit::ActionCommandClass", commandClass, nullptr,
+                                             -1, ok);
     }
 
-    QString ActionObjectInfo::translatedCategory(const QByteArray &category) {
-        return QCoreApplication::translate("ChorusKit::ActionCategory", category);
+    QString ActionObjectInfo::translatedCategory(const QByteArray &category, bool *ok) {
+        return QMCoreAppExtension::translate("ChorusKit::ActionCategory", category, nullptr, -1,
+                                             ok);
     }
 
     QString ActionLayoutInfo::id() const {
@@ -159,5 +163,4 @@ namespace Core {
         result.idx = index;
         return result;
     }
-
 }

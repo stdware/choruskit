@@ -43,9 +43,9 @@ namespace Core {
         QList<QKeySequence> shortcuts() const;
         QByteArrayList categories() const;
 
-        static QString translatedText(const QByteArray &text);
-        static QString translatedCommandClass(const QByteArray &commandClass);
-        static QString translatedCategory(const QByteArray &category);
+        static QString translatedText(const QByteArray &text, bool *ok = nullptr);
+        static QString translatedCommandClass(const QByteArray &commandClass, bool *ok = nullptr);
+        static QString translatedCategory(const QByteArray &category, bool *ok = nullptr);
 
     protected:
         const ActionExtension *ext;
