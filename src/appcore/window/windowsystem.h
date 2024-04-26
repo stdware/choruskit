@@ -4,7 +4,6 @@
 #include <QObject>
 
 #include <CoreApi/iwindow.h>
-#include <CoreApi/iwindowaddon.h>
 
 class QSplitter;
 

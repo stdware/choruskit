@@ -19,7 +19,6 @@
 #include <QMWidgets/qmshortcutcontext.h>
 
 #include <CoreApi/iwindow.h>
-#include <CoreApi/iwindowaddon.h>
 
 #include <CoreApi/private/iexecutive_p.h>
 
@@ -47,7 +46,6 @@ namespace Core {
         void load(bool enableDelayed) override;
         void quit() override;
 
-        QString id;
         bool closeAsExit;
 
         QObject *winFilter;

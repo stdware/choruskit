@@ -436,18 +436,8 @@ namespace Core {
     void IWindowPrivate::load(bool enableDelayed) {
         Q_Q(IWindow);
 
-        auto winMgr = ICoreBase::instance()->windowSystem();
-        auto d = winMgr->d_func();
-        d->iWindows.append(q);
-
-        // Get quit control
-        // qApp->setQuitOnLastWindowClosed(false);
-
         // Create window
         auto win = q->createWindow(nullptr);
-
-        // Add to indexes
-        d->windowMap.insert(win, q);
 
         win->setAttribute(Qt::WA_DeleteOnClose);
         connect(qApp, &QApplication::aboutToQuit, win,
@@ -461,36 +451,23 @@ namespace Core {
 
         IExecutivePrivate::load(enableDelayed);
 
-        Q_EMIT winMgr->windowCreated(q);
-
         win->show();
     }
 
     void IWindowPrivate::quit() {
         Q_Q(IWindow);
 
-        stopDelayedTimer();
-
         auto w = q->window();
         if (!w->isHidden())
             w->hide();
 
-        changeLoadState(IExecutive::Exiting);
-
-        ICoreBase::instance()->windowSystem()->d_func()->windowExit(q);
-
-        // Delete addOns
-        for (auto it2 = addOns.rbegin(); it2 != addOns.rend(); ++it2) {
-            auto &addOn = *it2;
-            delete addOn;
-        }
-
         delete shortcutCtx;
         shortcutCtx = nullptr;
 
-        changeLoadState(IExecutive::Deleted);
+        IExecutivePrivate::quit();
 
         q->setWindow(nullptr);
+        q->deleteLater();
     }
 
     bool IWindow::closeAsExit() const {
@@ -501,11 +478,6 @@ namespace Core {
     void IWindow::setCloseAsExit(bool on) {
         Q_D(IWindow);
         d->closeAsExit = on;
-    }
-
-    QString IWindow::id() const {
-        Q_D(const IWindow);
-        return d->id;
     }
 
     void IWindow::addWidget(const QString &id, QWidget *w) {
@@ -663,18 +635,14 @@ namespace Core {
         d->dragFileHandlerMap.remove(suffix.toLower());
     }
 
-    IWindow::IWindow(const QString &id, QObject *parent)
-        : IWindow(*new IWindowPrivate(), id, parent) {
+    IWindow::IWindow(QObject *parent) : IWindow(*new IWindowPrivate(), parent) {
     }
 
     IWindow::~IWindow() {
     }
 
-    IWindow::IWindow(IWindowPrivate &d, const QString &id, QObject *parent)
-        : IExecutive(d, parent) {
+    IWindow::IWindow(IWindowPrivate &d, QObject *parent) : IExecutive(d, parent) {
         d.q_ptr = this;
-        d.id = id;
-
         d.init();
     }
 

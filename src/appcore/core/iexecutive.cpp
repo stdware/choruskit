@@ -46,6 +46,8 @@ namespace Core {
     }
 
     void IExecutivePrivate::load(bool enableDelayed) {
+        Q_Q(IExecutive);
+
         // Setup
         changeLoadState(IExecutive::Starting);
 
@@ -77,6 +79,8 @@ namespace Core {
             connect(delayedInitializeTimer, &QTimer::timeout, this,
                     &IExecutivePrivate::nextDelayedInitialize);
             delayedInitializeTimer->start();
+        } else {
+            Q_EMIT q->initializationDone();
         }
     }
 
@@ -145,6 +149,13 @@ namespace Core {
         return d->state;
     }
 
+    void IExecutive::quit() {
+        Q_D(IExecutive);
+        if (d->state != Running)
+            return;
+        d->quit();
+    }
+
     void IExecutive::attachImpl(IExecutiveAddOn *addOn) {
         Q_D(IExecutive);
         if (d->state >= Starting)
@@ -161,13 +172,6 @@ namespace Core {
             addOn->d_func()->host = this;
         }
         d->load(enableDelayed);
-    }
-
-    void IExecutive::quitImpl() {
-        Q_D(IExecutive);
-        if (d->state != Running)
-            return;
-        d->quit();
     }
 
     void IExecutive::nextLoadingState(State nextState) {

@@ -38,7 +38,9 @@ namespace Core {
     class CKAPPCORE_EXPORT IWindow : public IExecutive, public WindowElementsAdaptor {
         Q_OBJECT
     public:
-        explicit IWindow(const QString &id, QObject *parent = nullptr);
+        using AddOnType = IWindowAddOn;
+        
+        explicit IWindow(QObject *parent = nullptr);
         ~IWindow();
 
         inline bool isEffectivelyClosed() const;
@@ -47,8 +49,6 @@ namespace Core {
         void setCloseAsExit(bool on);
 
     public:
-        QString id() const;
-
         void addWidget(const QString &id, QWidget *w);
         void removeWidget(const QString &id);
         QWidget *widget(const QString &id) const;
@@ -90,7 +90,7 @@ namespace Core {
         virtual QWidget *createWindow(QWidget *parent) const = 0;
 
     protected:
-        IWindow(IWindowPrivate &d, const QString &id, QObject *parent = nullptr);
+        IWindow(IWindowPrivate &d, QObject *parent = nullptr);
         QScopedPointer<IWindowPrivate> d_ptr;
 
         Q_DECLARE_PRIVATE(IWindow)
@@ -107,9 +107,6 @@ namespace Core {
 
         template <class T>
         inline Q_DECL_CONSTEXPR const T *cast() const;
-
-        template <class T, class... Args>
-        static inline T *create(Args &&...args);
     };
 
     inline bool IWindow::isEffectivelyClosed() const {
@@ -132,14 +129,6 @@ namespace Core {
     inline Q_DECL_CONSTEXPR const T *IWindow::cast() const {
         static_assert(std::is_base_of<IWindow, T>::value, "T should inherit from Core::IWindow");
         return static_cast<T *>(this);
-    }
-
-    template <class T, class... Args>
-    inline T *IWindow::create(Args &&...arguments) {
-        static_assert(std::is_base_of<IWindow, T>::value, "T should inherit from Core::IWindow");
-        auto p = new T(arguments...);
-        p->load();
-        return p;
     }
 
 }

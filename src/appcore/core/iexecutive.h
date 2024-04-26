@@ -40,6 +40,8 @@ namespace Core {
         Q_OBJECT
         Q_DECLARE_PRIVATE(IExecutive)
     public:
+        using AddOnType = IExecutiveAddOn;
+
         explicit IExecutive(QObject *parent = nullptr);
         ~IExecutive();
 
@@ -55,6 +57,8 @@ namespace Core {
         Q_ENUM(State)
 
         State state() const;
+        
+        void quit();
 
     Q_SIGNALS:
         void initializationDone();
@@ -63,13 +67,45 @@ namespace Core {
     protected:
         void attachImpl(IExecutiveAddOn *addOn);
         void loadImpl(bool enableDelayed = true);
-        void quitImpl();
 
     protected:
         virtual void nextLoadingState(State nextState);
 
     protected:
         IExecutive(IExecutivePrivate &d, QObject *parent = nullptr);
+
+        template <class T1>
+        friend class IExecutiveRegistry;
+    };
+
+    template <class HostType>
+    class IExecutiveRegistry {
+    public:
+        using AddOnType = typename HostType::AddOnType;
+        using AddOnFactory = std::function<IExecutiveAddOn *(QObject *)>;
+
+    public:
+        IExecutiveRegistry() {
+        }
+
+        template <class T>
+        void attach() {
+            static_assert(std::is_base_of<AddOnType, T>::value, "T should inherit from ...");
+            factories.append([](QObject *parent) { return new HostType(parent); });
+        }
+
+        template <class... Args>
+        HostType *create(Args &&...args) const {
+            auto p = new HostType(args...);
+            for (const auto &fac : factories) {
+                p->attachImpl(fac(nullptr));
+            }
+            p->loadImpl();
+            return p;
+        }
+
+    protected:
+        QList<AddOnFactory> factories;
     };
 
 }
