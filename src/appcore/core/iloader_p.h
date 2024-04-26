@@ -2,10 +2,11 @@
 #define ILOADER_P_H
 
 #include <CoreApi/iloader.h>
+#include <CoreApi/private/objectpool_p.h>
 
 namespace Core {
 
-    class ILoaderPrivate : public QObject {
+    class ILoaderPrivate : public ObjectPoolPrivate {
         Q_DECLARE_PUBLIC(ILoader)
     public:
         ILoaderPrivate();
@@ -15,8 +16,6 @@ namespace Core {
 
         static bool readJson(const QString &filename, QJsonObject *out);
         static bool writeJson(const QString &filename, const QJsonObject &in);
-
-        ILoader *q_ptr;
 
         QString globalSettingsPath;
         QString settingsPath;

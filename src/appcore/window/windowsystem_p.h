@@ -49,8 +49,6 @@ namespace Core {
 
         WindowSystem *q_ptr;
 
-        QHash<QString, QMChronoMap<const QMetaObject *, WindowSystem::AddOnFactory>> addOnFactories;
-
         QMChronoSet<IWindow *> iWindows;
         QHash<QWidget *, IWindow *> windowMap;
 

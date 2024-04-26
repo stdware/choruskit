@@ -2,7 +2,6 @@
 #include "iwindow_p.h"
 
 #include "icorebase.h"
-#include "iwindowaddon_p.h"
 #include "windowsystem_p.h"
 
 #include <QDebug>
@@ -293,8 +292,10 @@ namespace Core {
                         }
 
                         if (event->type() == QEvent::DragEnter) {
-                            if ((!dirs.isEmpty() && d->dragFileHandlerMap.contains("/")) ||
-                                (!files.isEmpty() && d->dragFileHandlerMap.contains("*"))) {
+                            if ((!dirs.isEmpty() &&
+                                 d->dragFileHandlerMap.contains(QStringLiteral("/"))) ||
+                                (!files.isEmpty() &&
+                                 d->dragFileHandlerMap.contains(QStringLiteral("*")))) {
                                 e->acceptProposedAction();
                             } else {
                                 for (auto it = files.begin(); it != files.end(); ++it) {
@@ -313,7 +314,7 @@ namespace Core {
 
                             // Handle directories
                             if (!dirs.isEmpty()) {
-                                auto it = d->dragFileHandlerMap.find("/");
+                                auto it = d->dragFileHandlerMap.find(QStringLiteral("/"));
                                 if (it != d->dragFileHandlerMap.end()) {
                                     for (const auto &dir : qAsConst(dirs)) {
                                         it->func(dir.absoluteFilePath());
@@ -341,7 +342,7 @@ namespace Core {
 
                             // Handle unhandled files
                             if (!files.isEmpty()) {
-                                auto it = d->dragFileHandlerMap.find("*");
+                                auto it = d->dragFileHandlerMap.find(QStringLiteral("*"));
                                 if (it != d->dragFileHandlerMap.end()) {
                                     for (const auto &fileList : qAsConst(files)) {
                                         for (const auto &file : fileList) {
@@ -366,7 +367,7 @@ namespace Core {
 
                 case QEvent::Close:
                     if (d->closeAsExit && event->isAccepted()) {
-                        d->windowExit_helper();
+                        d->quit();
                     }
                     break;
                 default:
@@ -387,188 +388,109 @@ namespace Core {
         friend class IWindowPrivate;
     };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+    IWindowAddOnPrivate::IWindowAddOnPrivate() {
+    }
+
+    void IWindowAddOnPrivate::init() {
+    }
+
+    IWindowAddOn::IWindowAddOn(QObject *parent) : IWindowAddOn(*new IWindowAddOnPrivate(), parent) {
+    }
+
+    IWindowAddOn::~IWindowAddOn() {
+    }
+
+    IWindow *IWindowAddOn::windowHandle() const {
+        Q_D(const IWindowAddOn);
+        return static_cast<IWindow *>(d->host);
+    }
+
+    IWindowAddOn::IWindowAddOn(IWindowAddOnPrivate &d, QObject *parent)
+        : IExecutiveAddOn(*new IWindowAddOnPrivate(), parent) {
+        d.init();
+    }
+
     IWindowPrivate::IWindowPrivate() {
         closeAsExit = true;
     }
 
     IWindowPrivate::~IWindowPrivate() {
-        tryStopDelayedTimer();
     }
 
     void IWindowPrivate::init() {
     }
 
-    void IWindowPrivate::changeLoadState(IWindow::State state) {
-        Q_Q(IWindow);
-        q->nextLoadingState(state);
-        this->state = state;
-        Q_EMIT q->loadingStateChanged(state);
-    }
-
-    void IWindowPrivate::setWindow(QWidget *w, WindowSystemPrivate *d) {
+    void IWindowPrivate::load(bool enableDelayed) {
         Q_Q(IWindow);
 
-        q->setWindow(w);
-
-        shortcutCtx = new QMShortcutContext(this);
-
-        winFilter = new WindowEventFilter(this, w);
-
-        // Default shortcut context
-        q->addShortcutContext(w, IWindow::Stable);
-
-        // Setup window
-        changeLoadState(IWindow::WindowSetup);
-
-        // Call all add-ons
-        auto facs = d->addOnFactories.value(id);
-        for (auto it = facs.begin(); it != facs.end(); ++it) {
-            const auto &mo = it.key();
-            const auto &fac = it.value();
-
-            IWindowAddOn *addOn = nullptr;
-            if (fac) {
-                addOn = fac(this);
-            } else {
-                addOn = qobject_cast<IWindowAddOn *>(mo->newInstance());
-            }
-
-            if (!addOn) {
-                myWarning(__func__)
-                    << "window add-on factory creates null instance:" << mo->className();
-                continue;
-            }
-
-            addOn->d_ptr->iWin = q;
-            addOns.push_back(addOn);
-        }
-
-        // Initialize
-        for (auto &addOn : qAsConst(addOns)) {
-            // Call 1
-            addOn->initialize();
-        }
-
-        changeLoadState(IWindow::Initialized);
-
-        // ExtensionsInitialized
-        for (auto it2 = addOns.rbegin(); it2 != addOns.rend(); ++it2) {
-            auto &addOn = *it2;
-            // Call 2
-            addOn->extensionsInitialized();
-        }
-
-        // Add-ons finished
-        changeLoadState(IWindow::Running);
-
-        // Delayed initialize
-        delayedInitializeQueue = addOns;
-
-        delayedInitializeTimer = new QTimer();
-        delayedInitializeTimer->setInterval(DELAYED_INITIALIZE_INTERVAL);
-        delayedInitializeTimer->setSingleShot(true);
-        connect(delayedInitializeTimer, &QTimer::timeout, this,
-                &IWindowPrivate::nextDelayedInitialize);
-        delayedInitializeTimer->start();
-    }
-
-    void IWindowPrivate::deleteAllAddOns() {
-        for (auto it2 = addOns.rbegin(); it2 != addOns.rend(); ++it2) {
-            auto &addOn = *it2;
-            // Call 1
-            delete addOn;
-        }
-    }
-
-    void IWindowPrivate::tryStopDelayedTimer() {
-        // Stop delayed initializations
-        if (delayedInitializeTimer) {
-            if (delayedInitializeTimer->isActive()) {
-                delayedInitializeTimer->stop();
-            }
-            delete delayedInitializeTimer;
-            delayedInitializeTimer = nullptr;
-        }
-    }
-
-    void IWindowPrivate::nextDelayedInitialize() {
-        Q_Q(IWindow);
-
-        while (!delayedInitializeQueue.empty()) {
-            auto addOn = delayedInitializeQueue.front();
-            delayedInitializeQueue.pop_front();
-
-            bool delay = addOn->delayedInitialize();
-            if (delay)
-                break; // do next delayedInitialize after a delay
-        }
-        if (delayedInitializeQueue.empty()) {
-            delete delayedInitializeTimer;
-            delayedInitializeTimer = nullptr;
-            Q_EMIT q->initializationDone();
-        } else {
-            delayedInitializeTimer->start();
-        }
-    }
-
-    void IWindowPrivate::windowExit_helper() {
-        Q_Q(IWindow);
-
-        tryStopDelayedTimer();
-
-        auto w = q->window();
-        if (!w->isHidden())
-            w->hide();
-
-        changeLoadState(IWindow::Exiting);
-
-        ICoreBase::instance()->windowSystem()->d_func()->windowExit(q);
-
-        delete shortcutCtx;
-        shortcutCtx = nullptr;
-
-        // Delete addOns
-        deleteAllAddOns();
-
-        changeLoadState(IWindow::Deleted);
-
-        q->setWindow(nullptr);
-        delete q;
-    }
-
-    void IWindow::load() {
         auto winMgr = ICoreBase::instance()->windowSystem();
         auto d = winMgr->d_func();
-        d->iWindows.append(this);
+        d->iWindows.append(q);
 
         // Get quit control
         // qApp->setQuitOnLastWindowClosed(false);
 
         // Create window
-        auto win = createWindow(nullptr);
+        auto win = q->createWindow(nullptr);
 
         // Add to indexes
-        d->windowMap.insert(win, this);
+        d->windowMap.insert(win, q);
 
         win->setAttribute(Qt::WA_DeleteOnClose);
         connect(qApp, &QApplication::aboutToQuit, win,
                 &QWidget::close); // Ensure closing window when quit
 
-        d_func()->setWindow(win, d);
+        q->setWindow(win);
+        shortcutCtx = new QMShortcutContext(this);
+        winFilter = new WindowEventFilter(this, win);
 
-        Q_EMIT winMgr->windowCreated(this);
+        q->addShortcutContext(win, IWindow::Stable); // Default shortcut context
+
+        IExecutivePrivate::load(enableDelayed);
+
+        Q_EMIT winMgr->windowCreated(q);
 
         win->show();
     }
 
-    void IWindow::exit() {
-        Q_D(IWindow);
-        d->windowExit_helper();
-    }
+    void IWindowPrivate::quit() {
+        Q_Q(IWindow);
 
-    IWindow::State IWindow::state() const {
-        Q_D(const IWindow);
-        return d->state;
+        stopDelayedTimer();
+
+        auto w = q->window();
+        if (!w->isHidden())
+            w->hide();
+
+        changeLoadState(IExecutive::Exiting);
+
+        ICoreBase::instance()->windowSystem()->d_func()->windowExit(q);
+
+        // Delete addOns
+        for (auto it2 = addOns.rbegin(); it2 != addOns.rend(); ++it2) {
+            auto &addOn = *it2;
+            delete addOn;
+        }
+
+        delete shortcutCtx;
+        shortcutCtx = nullptr;
+
+        changeLoadState(IExecutive::Deleted);
+
+        q->setWindow(nullptr);
     }
 
     bool IWindow::closeAsExit() const {
@@ -748,10 +670,8 @@ namespace Core {
     IWindow::~IWindow() {
     }
 
-    void IWindow::nextLoadingState(Core::IWindow::State nextState){Q_UNUSED(nextState)}
-
     IWindow::IWindow(IWindowPrivate &d, const QString &id, QObject *parent)
-        : ObjectPool(parent), d_ptr(&d) {
+        : IExecutive(d, parent) {
         d.q_ptr = this;
         d.id = id;
 

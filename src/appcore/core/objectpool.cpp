@@ -10,30 +10,36 @@ namespace Core {
 
 #define myWarning(func) (qWarning().nospace() << "Core::ObjectPool::" << (func) << "():").space()
 
-    ObjectPoolPrivate::ObjectPoolPrivate(ObjectPool *q) : q(q) {
+    ObjectPoolPrivate::ObjectPoolPrivate() {
     }
 
-    ObjectPoolPrivate::~ObjectPoolPrivate() {
+    ObjectPoolPrivate::~ObjectPoolPrivate() = default;
+
+    void ObjectPoolPrivate::init() {
     }
 
     void ObjectPoolPrivate::objectAdded(const QString &id, QObject *obj) {
+        Q_Q(ObjectPool);
         Q_EMIT q->objectAdded(id, obj);
         connect(obj, &QObject::destroyed, this, &ObjectPoolPrivate::_q_objectDestroyed);
     }
 
     void ObjectPoolPrivate::aboutToRemoveObject(const QString &id, QObject *obj) {
+        Q_Q(ObjectPool);
         disconnect(obj, &QObject::destroyed, this, &ObjectPoolPrivate::_q_objectDestroyed);
         Q_EMIT q->aboutToRemoveObject(id, obj);
     }
 
     void ObjectPoolPrivate::_q_objectDestroyed() {
+        Q_Q(ObjectPool);
         q->removeObject(sender());
     }
 
-    ObjectPool::ObjectPool(QObject *parent) : QObject(parent), d(new ObjectPoolPrivate(this)) {
+    ObjectPool::ObjectPool(QObject *parent) : ObjectPool(*new ObjectPoolPrivate(), parent) {
     }
 
     ObjectPool::~ObjectPool() {
+        Q_D(ObjectPool);
 #ifndef DISABLE_WARNING_OBJECTS_LEFT
         if (!d->objects.empty()) {
             qDebug() << "There are" << d->objects.size() << "objects left in the object pool.";
@@ -44,7 +50,6 @@ namespace Core {
                      << QList<QObject *>(d->objects.begin(), d->objects.end());
         }
 #endif
-        delete d;
     }
 
     void ObjectPool::addObject(QObject *obj) {
@@ -52,6 +57,7 @@ namespace Core {
     }
 
     void ObjectPool::addObject(const QString &id, QObject *obj) {
+        Q_D(ObjectPool);
         if (!obj) {
             myWarning(__func__) << "trying to add null object";
             return;
@@ -75,13 +81,8 @@ namespace Core {
         d->objectAdded(id, obj);
     }
 
-    void ObjectPool::addObjects(const QString &id, const QList<QObject *> &objs) {
-        for (const auto &obj : objs) {
-            addObject(id, obj);
-        }
-    }
-
     void ObjectPool::removeObject(QObject *obj) {
+        Q_D(ObjectPool);
         QString id;
         {
             QReadLocker locker(&d->objectListLock);
@@ -123,6 +124,7 @@ namespace Core {
     }
 
     void ObjectPool::removeObjects(const QString &id) {
+        Q_D(ObjectPool);
         QList<QObject *> objs;
         {
             QReadLocker locker(&d->objectListLock);
@@ -148,14 +150,17 @@ namespace Core {
     }
 
     QList<QObject *> ObjectPool::allObjects() const {
+        Q_D(const ObjectPool);
         return d->objectIndexes.keys();
     }
 
     QReadWriteLock *ObjectPool::listLock() const {
+        Q_D(const ObjectPool);
         return &d->objectListLock;
     }
 
     QList<QObject *> ObjectPool::getObjects(const QString &id) const {
+        Q_D(const ObjectPool);
         QReadLocker locker(&d->objectListLock);
         auto it2 = d->objectMap.find(id);
         if (it2 != d->objectMap.end()) {
@@ -165,12 +170,18 @@ namespace Core {
     }
 
     QObject *ObjectPool::getFirstObject(const QString &id) const {
+        Q_D(const ObjectPool);
         QReadLocker locker(&d->objectListLock);
         auto it2 = d->objectMap.find(id);
         if (it2 != d->objectMap.end()) {
             return it2->isEmpty() ? nullptr : *it2->begin();
         }
         return nullptr;
+    }
+
+    ObjectPool::ObjectPool(ObjectPoolPrivate &d, QObject *parent) : d_ptr(&d), QObject(parent) {
+        d.q_ptr = this;
+        d.init();
     }
 
 }

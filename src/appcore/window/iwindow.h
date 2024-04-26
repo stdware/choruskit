@@ -2,6 +2,7 @@
 #define IWINDOW_H
 
 #include <CoreApi/objectpool.h>
+#include <CoreApi/iexecutive.h>
 #include <CoreApi/actionitem.h>
 #include <CoreApi/windowelementsadaptor.h>
 
@@ -11,28 +12,35 @@ namespace Core {
         class CorePlugin;
     }
 
+    class IWindow;
     class IWindowPrivate;
+    class IWindowAddOn;
+    class IWindowAddOnPrivate;
 
-    class CKAPPCORE_EXPORT IWindow : public ObjectPool, public WindowElementsAdaptor {
+    class CKAPPCORE_EXPORT IWindowAddOn : public IExecutiveAddOn {
+        Q_OBJECT
+        Q_DECLARE_PRIVATE(IWindowAddOn)
+    public:
+        explicit IWindowAddOn(QObject *parent = nullptr);
+        ~IWindowAddOn();
+
+        IWindow *windowHandle() const;
+
+    protected:
+        IWindowAddOn(IWindowAddOnPrivate &d, QObject *parent = nullptr);
+
+        friend class IWindow;
+        friend class IWindowPrivate;
+        friend class WindowSystem;
+        friend class WindowSystemPrivate;
+    };
+
+    class CKAPPCORE_EXPORT IWindow : public IExecutive, public WindowElementsAdaptor {
         Q_OBJECT
     public:
         explicit IWindow(const QString &id, QObject *parent = nullptr);
         ~IWindow();
 
-        enum State {
-            Invalid,
-            WindowSetup,
-            Initialized,
-            Running,
-            Exiting,
-            Deleted,
-        };
-        Q_ENUM(State)
-
-        void load();
-        void exit();
-
-        State state() const;
         inline bool isEffectivelyClosed() const;
 
         bool closeAsExit() const;
@@ -78,12 +86,8 @@ namespace Core {
         void widgetAdded(const QString &id, QWidget *w);
         void aboutToRemoveWidget(const QString &id, QWidget *w);
 
-        void initializationDone();
-        void loadingStateChanged(State state);
-
     protected:
         virtual QWidget *createWindow(QWidget *parent) const = 0;
-        virtual void nextLoadingState(State nextState);
 
     protected:
         IWindow(IWindowPrivate &d, const QString &id, QObject *parent = nullptr);

@@ -13,6 +13,7 @@ namespace Core {
 
     class CKAPPCORE_EXPORT ObjectPool : public QObject {
         Q_OBJECT
+        Q_DECLARE_PRIVATE(ObjectPool)
     public:
         explicit ObjectPool(QObject *parent = nullptr);
         ~ObjectPool();
@@ -20,7 +21,11 @@ namespace Core {
     public:
         void addObject(QObject *obj);
         void addObject(const QString &id, QObject *obj);
-        void addObjects(const QString &id, const QList<QObject *> &objs);
+        inline void addObjects(const QString &id, const QList<QObject *> &objs) {
+            for (const auto &obj : objs) {
+                addObject(id, obj);
+            }
+        }
         void removeObject(QObject *obj);
         void removeObjects(const QString &id);
         QList<QObject *> allObjects() const;
@@ -29,7 +34,7 @@ namespace Core {
         QList<QObject *> getObjects(const QString &id) const;
 
         template <typename T, typename Predicate>
-        QList<T *> getObjects(Predicate predicate) {
+        QList<T *> getObjects(Predicate predicate) const {
             QReadLocker lock(listLock());
             QList<T *> results;
             QList<QObject *> all = allObjects();
@@ -67,7 +72,7 @@ namespace Core {
         }
 
         template <typename T, typename Predicate>
-        T *getFirstObject(Predicate predicate) {
+        T *getFirstObject(Predicate predicate) const {
             QReadLocker lock(listLock());
             QList<QObject *> all = allObjects();
             foreach (QObject *obj, all) {
@@ -82,10 +87,10 @@ namespace Core {
         void objectAdded(const QString &id, QObject *obj);
         void aboutToRemoveObject(const QString &id, QObject *obj);
 
-    private:
-        ObjectPoolPrivate *d;
+    protected:
+        ObjectPool(ObjectPoolPrivate &d, QObject *parent = nullptr);
 
-        friend class ObjectPoolPrivate;
+        QScopedPointer<ObjectPoolPrivate> d_ptr;
     };
 
 }

@@ -8,11 +8,14 @@
 namespace Core {
 
     class ObjectPoolPrivate : public QObject {
+        Q_DECLARE_PUBLIC(ObjectPool)
     public:
-        ObjectPoolPrivate(ObjectPool *q);
+        ObjectPoolPrivate();
         ~ObjectPoolPrivate();
 
-        ObjectPool *q;
+        void init();
+
+        ObjectPool *q_ptr;
 
         // all objects
         std::list<QObject *> objects;
@@ -29,19 +32,6 @@ namespace Core {
         QHash<QObject *, Index> objectIndexes;
 
         mutable QReadWriteLock objectListLock;
-
-        QHash<QString, QVariant> globalAttributeMap;
-
-        mutable QReadWriteLock globalAttributeLock;
-
-        struct Checkable {
-            QString id;
-            QObject *obj;
-            bool reverse;
-        };
-
-        QHash<QObject *, Checkable> checkableMap1;
-        QHash<QString, Checkable> checkableMap2;
 
         void objectAdded(const QString &id, QObject *obj);
         void aboutToRemoveObject(const QString &id, QObject *obj);

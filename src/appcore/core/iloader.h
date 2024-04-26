@@ -14,7 +14,6 @@ namespace Core {
     class CKAPPCORE_EXPORT ILoader : public ObjectPool {
         Q_OBJECT
         Q_DECLARE_PRIVATE(ILoader);
-
     public:
         explicit ILoader(QObject *parent = nullptr);
         ~ILoader();
@@ -22,8 +21,6 @@ namespace Core {
         static ILoader *instance();
 
         static QDateTime startTime();
-
-        static QJsonObject *tempSettings();
 
     public:
         QString settingsPath(QSettings::Scope scope) const;
@@ -33,11 +30,6 @@ namespace Core {
         void writeSettings() const;
 
         QJsonObject *settings(QSettings::Scope scope = QSettings::UserScope);
-
-    protected:
-        ILoader(ILoaderPrivate &d, QObject *parent = nullptr);
-
-        QScopedPointer<ILoaderPrivate> d_ptr;
     };
 
 }

@@ -174,36 +174,6 @@ namespace Core {
         m_instance = nullptr;
     }
 
-    bool WindowSystem::addAddOn(const QString &id, const QMetaObject *metaObject,
-                                const WindowSystem::AddOnFactory &factory) {
-        Q_D(WindowSystem);
-        if (!metaObject) {
-            myWarning(__func__) << "trying to add null meta object";
-            return false;
-        }
-
-        d->addOnFactories[id].append(metaObject, factory);
-        return true;
-    }
-
-    bool WindowSystem::removeAddOn(const QString &id, const QMetaObject *metaObject) {
-        Q_D(WindowSystem);
-        if (!metaObject) {
-            myWarning(__func__) << "trying to remove null factory";
-            return false;
-        }
-
-        auto it = d->addOnFactories.find(id);
-        if (it == d->addOnFactories.end() || !it->remove(metaObject)) {
-            return false;
-        }
-
-        if (it->isEmpty()) {
-            d->addOnFactories.erase(it);
-        }
-        return true;
-    }
-
     IWindow *WindowSystem::findWindow(QWidget *window) const {
         Q_D(const WindowSystem);
         if (!window)

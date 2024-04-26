@@ -21,11 +21,22 @@
 #include <CoreApi/iwindow.h>
 #include <CoreApi/iwindowaddon.h>
 
+#include <CoreApi/private/iexecutive_p.h>
+
 namespace Core {
 
     class WindowSystemPrivate;
 
-    class CKAPPCORE_EXPORT IWindowPrivate : public QObject {
+    class IWindowAddOnPrivate : public IExecutiveAddOnPrivate {
+        Q_DECLARE_PUBLIC(IWindowAddOn)
+    public:
+        IWindowAddOnPrivate();
+        ~IWindowAddOnPrivate();
+
+        void init();
+    };
+
+    class CKAPPCORE_EXPORT IWindowPrivate : public IExecutivePrivate {
         Q_DECLARE_PUBLIC(IWindow)
     public:
         IWindowPrivate();
@@ -33,21 +44,16 @@ namespace Core {
 
         void init();
 
-        void changeLoadState(IWindow::State state);
-        void setWindow(QWidget *w, WindowSystemPrivate *d);
-
-        IWindow *q_ptr;
+        void load(bool enableDelayed) override;
+        void quit() override;
 
         QString id;
-        IWindow::State state;
         bool closeAsExit;
 
         QObject *winFilter;
 
         QMShortcutContext *shortcutCtx;
         QMChronoMap<QString, ActionItem *> actionItemMap;
-
-        std::list<IWindowAddOn *> addOns;
 
         QHash<QString, QWidget *> widgetMap;
 
@@ -56,16 +62,6 @@ namespace Core {
             int max;
         };
         QHash<QString, DragFileHandler> dragFileHandlerMap;
-
-        void deleteAllAddOns();
-
-        QTimer *delayedInitializeTimer;
-        std::list<IWindowAddOn *> delayedInitializeQueue;
-
-        void tryStopDelayedTimer();
-        void nextDelayedInitialize();
-
-        void windowExit_helper();
 
     private:
         friend class WindowSystem;

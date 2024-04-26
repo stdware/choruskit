@@ -19,19 +19,6 @@ namespace Core {
         ~WindowSystem();
 
     public:
-        using AddOnFactory = std::function<IWindowAddOn *(QObject *)>;
-
-        bool addAddOn(const QString &id, const QMetaObject *metaObject,
-                      const AddOnFactory &factory = {});
-        bool removeAddOn(const QString &id, const QMetaObject *metaObject);
-
-        template <class T>
-        inline void addAddOn(const QString &id);
-        template <class T>
-        inline void addAddOn(const QStringList &ids);
-        template <class T>
-        inline void removeAddOn(const QString &id);
-
         IWindow *findWindow(QWidget *window) const;
 
         int count() const;
@@ -59,28 +46,6 @@ namespace Core {
         friend class IWindow;
         friend class IWindowPrivate;
     };
-
-    template <class T>
-    inline void WindowSystem::addAddOn(const QString &id) {
-        static_assert(std::is_base_of<IWindowAddOn, T>::value,
-                      "T should inherit from Core::IWindowAddOn");
-        addAddOn(id, &T::staticMetaObject, [](QObject *parent) { return new T(parent); });
-    }
-
-    template <class T>
-    inline void WindowSystem::addAddOn(const QStringList &ids) {
-        static_assert(std::is_base_of<IWindowAddOn, T>::value,
-                      "T should inherit from Core::IWindowAddOn");
-        for (const auto &id : ids)
-            addAddOn(id, &T::staticMetaObject, [](QObject *parent) { return new T(parent); });
-    }
-
-    template <class T>
-    inline void WindowSystem::removeAddOn(const QString &id) {
-        static_assert(std::is_base_of<IWindowAddOn, T>::value,
-                      "T should inherit from Core::IWindowAddOn");
-        removeAddOn(id, &T::staticMetaObject);
-    }
 
 }
 

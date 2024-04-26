@@ -9,15 +9,12 @@
 
 namespace Core {
 
-    Q_GLOBAL_STATIC(QJsonObject, m_tempSettings)
-
     ILoaderPrivate::ILoaderPrivate() {
         settingsUnread = true;
         settingsNeedWrite = false;
     }
 
-    ILoaderPrivate::~ILoaderPrivate() {
-    }
+    ILoaderPrivate::~ILoaderPrivate() = default;
 
     void ILoaderPrivate::init() {
     }
@@ -61,14 +58,15 @@ namespace Core {
 
     ILoader *m_instance = nullptr;
 
-    Q_GLOBAL_STATIC_WITH_ARGS(QDateTime, m_atime, (QDateTime::currentDateTime()));
+    ILoader::ILoader(QObject *parent) : ObjectPool(*new ILoaderPrivate(), parent) {
+        Q_D(ILoader);
+        d->init();
 
-    ILoader::ILoader(QObject *parent) : ILoader(*new ILoaderPrivate(), parent) {
         m_instance = this;
 
         // Must initialize `m_atime`
         qDebug().noquote() << "ILoader: initialize at"
-                           << m_atime->toString("yyyy/MM/dd hh:mm:ss:zzz");
+                           << startTime().toString("yyyy/MM/dd hh:mm:ss:zzz");
 
         connect(this, &ILoader::objectAdded, this, [&](const QString &id, QObject *obj) {
             qDebug().nospace() << "ILoader: object added (" << id << ", " << obj << ")"; //
@@ -93,11 +91,8 @@ namespace Core {
     }
 
     QDateTime ILoader::startTime() {
-        return *m_atime;
-    }
-
-    QJsonObject *ILoader::tempSettings() {
-        return m_tempSettings;
+        static QDateTime t(QDateTime::currentDateTime());
+        return t;
     }
 
     QString ILoader::settingsPath(QSettings::Scope scope) const {
@@ -144,9 +139,9 @@ namespace Core {
             ILoaderPrivate::writeJson(d->settingsPath, d->userSettings);
         }
 
-        //        if (!d->globalSettingsPath.isEmpty()) {
-        //            ILoaderPrivate::writeJson(d->globalSettingsPath, d->globalSettings);
-        //        }
+        // if (!d->globalSettingsPath.isEmpty()) {
+        //     ILoaderPrivate::writeJson(d->globalSettingsPath, d->globalSettings);
+        // }
 
         d->settingsNeedWrite = false;
     }
@@ -176,11 +171,6 @@ namespace Core {
         }
 
         return res;
-    }
-
-    ILoader::ILoader(ILoaderPrivate &d, QObject *parent) : ObjectPool(parent), d_ptr(&d) {
-        d.q_ptr = this;
-        d.init();
     }
 
 }
