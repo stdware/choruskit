@@ -777,9 +777,9 @@ namespace Core {
         Q_D(const ActionDomain);
         return d->overriddenShortcuts;
     }
-    void ActionDomain::setShortcutsFamily(const ShortcutsFamily &shortcutFamily) {
+    void ActionDomain::setShortcutsFamily(const ShortcutsFamily &shortcutsFamily) {
         Q_D(ActionDomain);
-        d->overriddenShortcuts = shortcutFamily;
+        d->overriddenShortcuts = shortcutsFamily;
     }
     ActionDomain::IconFamily ActionDomain::iconFamily() const {
         Q_D(const ActionDomain);

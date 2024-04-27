@@ -113,7 +113,7 @@ namespace Core {
         bool restoreLayouts(const QByteArray &data);
 
         ShortcutsFamily shortcutsFamily() const;
-        void setShortcutsFamily(const ShortcutsFamily &shortcutFamily);
+        void setShortcutsFamily(const ShortcutsFamily &shortcutsFamily);
 
         IconFamily iconFamily() const;
         void setIconFamily(const IconFamily &iconFamily);
