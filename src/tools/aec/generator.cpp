@@ -75,7 +75,7 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
         fprintf(out, "            // shortcuts\n");
         fprintf(out, "            {\n");
         for (const auto &subItem : std::as_const(item.shortcutTokens)) {
-            fprintf(out, "                QKeySequence(\"%s\"),\n",
+            fprintf(out, "                QKeySequence(QStringLiteral(\"%s\")),\n",
                     subItem.trimmed().toLocal8Bit().data());
         }
         fprintf(out, "            },\n");
