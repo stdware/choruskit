@@ -13,15 +13,15 @@ namespace Core {
 
     class ActionDomain;
 
-    class ActionCatalogueData;
+    class ActionCatalogData;
 
-    class CKAPPCORE_EXPORT ActionCatalogue {
+    class CKAPPCORE_EXPORT ActionCatalog {
     public:
-        ActionCatalogue();
-        ActionCatalogue(const QByteArray &name);
-        ActionCatalogue(const ActionCatalogue &other);
-        ActionCatalogue &operator=(const ActionCatalogue &other);
-        ~ActionCatalogue();
+        ActionCatalog();
+        ActionCatalog(const QByteArray &name);
+        ActionCatalog(const ActionCatalog &other);
+        ActionCatalog &operator=(const ActionCatalog &other);
+        ~ActionCatalog();
 
     public:
         QByteArray name() const;
@@ -30,13 +30,13 @@ namespace Core {
         QString id() const;
         void setId(const QString &id);
 
-        QList<ActionCatalogue> children() const;
-        void setChildren(const QList<ActionCatalogue> &children);
+        QList<ActionCatalog> children() const;
+        void setChildren(const QList<ActionCatalog> &children);
 
         int indexOfChild(const QByteArray &name) const;
 
     protected:
-        QSharedDataPointer<ActionCatalogueData> d;
+        QSharedDataPointer<ActionCatalogData> d;
 
         friend class ActionDomain;
     };
@@ -121,7 +121,7 @@ namespace Core {
     public:
         QStringList objectIds() const;
         ActionObjectInfo objectInfo(const QString &objId) const;
-        ActionCatalogue catalogue() const;
+        ActionCatalog catalog() const;
 
         QStringList iconThemes() const;
         QStringList iconIds(const QString &theme);

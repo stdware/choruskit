@@ -15,11 +15,11 @@ QT_SPECIALIZE_STD_HASH_TO_CALL_QHASH_BY_CREF(QStringList)
 
 namespace Core {
 
-    class ActionCatalogueData : public QSharedData {
+    class ActionCatalogData : public QSharedData {
     public:
         QByteArray name;
         QString id;
-        QList<ActionCatalogue> children;
+        QList<ActionCatalog> children;
         QHash<QByteArray, int> indexes;
     };
 
@@ -44,10 +44,10 @@ namespace Core {
         QMChronoMap<QString, const ActionExtension *> extensions; // hash -> ext
         QMChronoMap<QString, ActionObjectInfo> objectInfoMap;     // id -> obj
         QSet<QByteArrayList> objectCategories;
-        mutable std::optional<ActionCatalogue> catalogue;
+        mutable std::optional<ActionCatalog> catalog;
         mutable std::optional<QList<ActionLayout>> layouts;
 
-        void flushCatalogue() const;
+        void flushCatalog() const;
         void flushLayouts() const;
 
         // Icons

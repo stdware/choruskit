@@ -170,37 +170,37 @@ namespace Core {
         }
     };
 
-    ActionCatalogue::ActionCatalogue() : d(new ActionCatalogueData()) {
+    ActionCatalog::ActionCatalog() : d(new ActionCatalogData()) {
     }
-    ActionCatalogue::ActionCatalogue(const QByteArray &name) : ActionCatalogue() {
+    ActionCatalog::ActionCatalog(const QByteArray &name) : ActionCatalog() {
         d->name = name;
     }
-    ActionCatalogue::ActionCatalogue(const ActionCatalogue &other) = default;
-    ActionCatalogue &ActionCatalogue::operator=(const ActionCatalogue &other) = default;
-    ActionCatalogue::~ActionCatalogue() = default;
-    QByteArray ActionCatalogue::name() const {
+    ActionCatalog::ActionCatalog(const ActionCatalog &other) = default;
+    ActionCatalog &ActionCatalog::operator=(const ActionCatalog &other) = default;
+    ActionCatalog::~ActionCatalog() = default;
+    QByteArray ActionCatalog::name() const {
         return d->name;
     }
-    void ActionCatalogue::setName(const QByteArray &name) {
+    void ActionCatalog::setName(const QByteArray &name) {
         d->name = name;
     }
-    QString ActionCatalogue::id() const {
+    QString ActionCatalog::id() const {
         return d->id;
     }
-    void ActionCatalogue::setId(const QString &id) {
+    void ActionCatalog::setId(const QString &id) {
         d->id = id;
     }
-    QList<ActionCatalogue> ActionCatalogue::children() const {
+    QList<ActionCatalog> ActionCatalog::children() const {
         return d->children;
     }
-    void ActionCatalogue::setChildren(const QList<ActionCatalogue> &children) {
+    void ActionCatalog::setChildren(const QList<ActionCatalog> &children) {
         QHash<QByteArray, int> indexes;
         indexes.reserve(children.size());
         for (int i = 0; i < children.size(); ++i) {
             const auto &item = children.at(i);
             if (indexes.contains(item.name())) {
                 qWarning().noquote().nospace()
-                    << "Core::ActionCatalogue::setChildren(): duplicated child name "
+                    << "Core::ActionCatalog::setChildren(): duplicated child name "
                     << item.name();
                 return;
             }
@@ -209,7 +209,7 @@ namespace Core {
         d->children = children;
         d->indexes = indexes;
     }
-    int ActionCatalogue::indexOfChild(const QByteArray &name) const {
+    int ActionCatalog::indexOfChild(const QByteArray &name) const {
         return d->indexes.value(name, -1);
     }
 
@@ -255,22 +255,22 @@ namespace Core {
     ActionDomainPrivate::~ActionDomainPrivate() = default;
     void ActionDomainPrivate::init() {
     }
-    void ActionDomainPrivate::flushCatalogue() const {
-        if (catalogue)
+    void ActionDomainPrivate::flushCatalog() const {
+        if (catalog)
             return;
 
         struct TreeNode {
             QByteArray name;
             QString id;
             QMChronoMap<QByteArray, int> children;
-            ActionCatalogue toCatalogue(const QVector<TreeNode> &heap) const {
-                ActionCatalogue res;
+            ActionCatalog toCatalog(const QVector<TreeNode> &heap) const {
+                ActionCatalog res;
                 res.setName(name);
                 res.setId(id);
-                QList<ActionCatalogue> children1;
+                QList<ActionCatalog> children1;
                 children1.reserve(children.size());
                 for (const auto &childIdx : children) {
-                    children1.append(heap.at(childIdx).toCatalogue(heap));
+                    children1.append(heap.at(childIdx).toCatalog(heap));
                 }
                 res.setChildren(children1);
                 return res;
@@ -296,7 +296,7 @@ namespace Core {
             }
             p->id = item.id();
         }
-        catalogue = root->toCatalogue(heap);
+        catalog = root->toCatalog(heap);
     }
 
     class LayoutsHelper {
@@ -520,7 +520,7 @@ namespace Core {
 
                 // Read file
                 if (!xml.loadData(data)) {
-                    fprintf(stdout, "Core::ActionCatalogue::restoreLayouts(): invalid format\n");
+                    fprintf(stdout, "Core::ActionCatalog::restoreLayouts(): invalid format\n");
                     return {};
                 }
 
@@ -528,7 +528,7 @@ namespace Core {
                 const auto &root = xml.root;
                 if (const auto &rootName = root.name; rootName != QStringLiteral("actionDomain")) {
                     fprintf(stdout,
-                            "Core::ActionCatalogue::restoreLayouts(): unknown root element tag "
+                            "Core::ActionCatalog::restoreLayouts(): unknown root element tag "
                             "\"%s\"\n",
                             rootName.toLatin1().data());
                     return {};
@@ -830,7 +830,7 @@ namespace Core {
         d->objectCategories += objectCategories;
 
         d->extensions.append(extension->hash(), extension);
-        d->catalogue.reset();
+        d->catalog.reset();
         d->layouts.reset();
     }
     void ActionDomain::removeExtension(const ActionExtension *extension) {
@@ -841,7 +841,7 @@ namespace Core {
             d->objectCategories.remove(obj.categories());
         }
         d->extensions.remove(extension->hash());
-        d->catalogue.reset();
+        d->catalog.reset();
         d->layouts.reset();
     }
     void ActionDomain::addIcon(const QString &theme, const QString &id, const QString &fileName) {
@@ -911,10 +911,10 @@ namespace Core {
             return {};
         return it.value();
     }
-    ActionCatalogue ActionDomain::catalogue() const {
+    ActionCatalog ActionDomain::catalog() const {
         Q_D(const ActionDomain);
-        d->flushCatalogue();
-        return d->catalogue.value();
+        d->flushCatalog();
+        return d->catalog.value();
     }
     QStringList ActionDomain::iconThemes() const {
         Q_D(const ActionDomain);
