@@ -1,6 +1,6 @@
 # ChorusKit
 
-ChorusKit is a plugin framework derived from Qt Creator for OpenVPI SVS applications.
+ChorusKit is a plugin framework derived from Qt Creator for SVS applications.
 
 ## Dependencies
 
