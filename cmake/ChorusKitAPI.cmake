@@ -4,7 +4,7 @@ if(NOT TARGET qmsetup::library)
     find_package(qmsetup REQUIRED)
 endif()
 
-qm_import(Filesystem Preprocess Deploy)
+qm_import(Filesystem Preprocess Deploy private/Generate)
 
 if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})

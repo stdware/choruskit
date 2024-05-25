@@ -139,6 +139,9 @@ namespace Core {
         }
     }
 
+    IExecutive::~IExecutive() {
+    }
+
     IExecutive::State IExecutive::state() const {
         Q_D(const IExecutive);
         return d->state;
@@ -175,9 +178,6 @@ namespace Core {
     }
 
     IExecutive::IExecutive(QObject *parent) : IExecutive(*new IExecutivePrivate(), parent) {
-    }
-
-    IExecutive::~IExecutive() {
     }
 
     IExecutive::IExecutive(IExecutivePrivate &d, QObject *parent) : ObjectPool(d, parent) {

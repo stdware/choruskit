@@ -476,6 +476,9 @@ namespace Core {
         q->deleteLater();
     }
 
+    IWindow::~IWindow() {
+    }
+
     bool IWindow::closeAsExit() const {
         Q_D(const IWindow);
         return d->closeAsExit;
@@ -644,9 +647,6 @@ namespace Core {
     }
 
     IWindow::IWindow(QObject *parent) : IWindow(*new IWindowPrivate(), parent) {
-    }
-
-    IWindow::~IWindow() {
     }
 
     IWindow::IWindow(IWindowPrivate &d, QObject *parent) : IExecutive(d, parent) {

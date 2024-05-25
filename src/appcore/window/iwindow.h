@@ -37,6 +37,8 @@ namespace Core {
         Q_DECLARE_PRIVATE(IWindow)
     public:
         using AddOnType = IWindowAddOn;
+        
+        ~IWindow();
 
         inline bool isEffectivelyClosed() const;
 
@@ -86,8 +88,6 @@ namespace Core {
 
     protected:
         explicit IWindow(QObject *parent = nullptr);
-        ~IWindow();
-
         IWindow(IWindowPrivate &d, QObject *parent = nullptr);
 
         friend class ICore;

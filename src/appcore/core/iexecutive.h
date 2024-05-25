@@ -52,6 +52,8 @@ namespace Core {
         };
         Q_ENUM(State)
 
+        ~IExecutive();
+
         State state() const;
 
         void quit();
@@ -69,8 +71,6 @@ namespace Core {
 
     protected:
         explicit IExecutive(QObject *parent = nullptr);
-        ~IExecutive();
-
         IExecutive(IExecutivePrivate &d, QObject *parent = nullptr);
     };
 
