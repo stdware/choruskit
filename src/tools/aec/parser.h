@@ -5,9 +5,23 @@
 #include <QtCore/QHash>
 
 struct ActionObjectInfoMessage {
+    enum Type {
+        Action,
+        Group,
+        Menu,
+        ExpandedMenu,
+        Separator,
+        Stretch,
+    };
+    enum Mode {
+        Plain,
+        Unique,
+        Widget,
+        TopLevel,
+    };
     QString id;
-    QString typeToken;
-    QString modeToken;
+    Type type;
+    Mode mode;
     QString text;
     QString commandClass;
     QStringList shortcutTokens;
@@ -15,11 +29,14 @@ struct ActionObjectInfoMessage {
 
     // Metadata
     QString tag;
+
+    static QString typeToString(Type type);
+    static QString modeToString(Mode mode);
 };
 
 struct ActionLayoutEntryMessage {
     QString id;
-    QString typeToken;
+    ActionObjectInfoMessage::Type type;
     QVector<int> childIndexes;
 };
 

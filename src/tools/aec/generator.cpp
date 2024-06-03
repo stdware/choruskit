@@ -59,9 +59,11 @@ static void generateObjects(FILE *out, const QVector<ActionObjectInfoMessage> &o
         fprintf(out, "            QStringLiteral(\"%s\"),\n",
                 escapeString(item.id.toLocal8Bit()).data());
         fprintf(out, "            // type\n");
-        fprintf(out, "            ActionObjectInfo::%s,\n", item.typeToken.toLocal8Bit().data());
+        fprintf(out, "            ActionObjectInfo::%s,\n",
+                ActionObjectInfoMessage::typeToString(item.type).toLocal8Bit().data());
         fprintf(out, "            // shape\n");
-        fprintf(out, "            ActionObjectInfo::%s,\n", item.modeToken.toLocal8Bit().data());
+        fprintf(out, "            ActionObjectInfo::%s,\n",
+                ActionObjectInfoMessage::modeToString(item.mode).toLocal8Bit().data());
         fprintf(out, "            // text\n");
         fprintf(out, "            QByteArrayLiteral(\"%s\"),\n",
                 escapeString(item.text.toLocal8Bit()).data());
@@ -103,7 +105,8 @@ static void generateLayouts(FILE *out, const QVector<ActionLayoutEntryMessage> &
                     escapeString(subItem.id.toLocal8Bit()).data());
         }
         fprintf(out, "            // type\n");
-        fprintf(out, "            ActionLayoutInfo::%s,\n", subItem.typeToken.toLocal8Bit().data());
+        fprintf(out, "            ActionLayoutInfo::%s,\n",
+                ActionObjectInfoMessage::typeToString(subItem.type).toLocal8Bit().data());
         fprintf(out, "            // childIndexes\n");
         fprintf(out, "            {%s},\n",
                 joinNumbers(subItem.childIndexes, QStringLiteral(", ")).toLocal8Bit().data());
@@ -182,16 +185,16 @@ static void generateExtraInformation(FILE *out, const QVector<ActionObjectInfoMe
     QVector<ActionObjectInfoMessage> topLevels;
 
     for (const auto &item : objects) {
-        if (item.typeToken == QStringLiteral("Action")) {
-            if (item.modeToken == QStringLiteral("Plain")) {
+        if (item.type == ActionObjectInfoMessage::Action) {
+            if (item.mode == ActionObjectInfoMessage::Plain) {
                 actions.append(item);
             } else {
                 widgets.append(item);
             }
-        } else if (item.typeToken == QStringLiteral("Group")) {
+        } else if (item.type == ActionObjectInfoMessage::Group) {
             groups.append(item);
-        } else if (item.typeToken == QStringLiteral("Menu")) {
-            if (item.modeToken == QStringLiteral("Plain")) {
+        } else if (item.type == ActionObjectInfoMessage::Menu) {
+            if (item.mode == ActionObjectInfoMessage::Plain) {
                 menus.append(item);
             } else {
                 topLevels.append(item);

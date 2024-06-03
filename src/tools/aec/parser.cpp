@@ -11,6 +11,50 @@
 
 #include <qmxmladaptor.h>
 
+QString ActionObjectInfoMessage::typeToString(Type type) {
+    QString res;
+    switch (type) {
+        case Action:
+            res = QStringLiteral("Action");
+            break;
+        case Group:
+            res = QStringLiteral("Group");
+            break;
+        case Menu:
+            res = QStringLiteral("Menu");
+            break;
+        case ExpandedMenu:
+            res = QStringLiteral("ExpandedMenu");
+            break;
+        case Separator:
+            res = QStringLiteral("Separator");
+            break;
+        case Stretch:
+            res = QStringLiteral("Stretch");
+            break;
+    }
+    return res;
+}
+
+QString ActionObjectInfoMessage::modeToString(Mode mode) {
+    QString res;
+    switch (mode) {
+        case Plain:
+            res = QStringLiteral("Plain");
+            break;
+        case Unique:
+            res = QStringLiteral("Unique");
+            break;
+        case TopLevel:
+            res = QStringLiteral("TopLevel");
+            break;
+        case Widget:
+            res = QStringLiteral("Widget");
+            break;
+    }
+    return res;
+}
+
 void error(const char *msg);
 
 static QString calculateContentSha256(const QByteArray &data) {
@@ -347,36 +391,34 @@ struct ParserPrivate {
                              const char *field) const {
         const auto &name = e.name;
         if (name == QStringLiteral("action")) {
-            info.modeToken = QStringLiteral("Plain");
-            info.typeToken = QStringLiteral("Action");
+            info.mode = ActionObjectInfoMessage::Plain;
+            info.type = ActionObjectInfoMessage::Action;
             auto mode = resolve(e.properties.value(QStringLiteral("mode")));
             if (mode == QStringLiteral("widget")) {
-                info.modeToken = QStringLiteral("Widget");
+                info.mode = ActionObjectInfoMessage::Widget;
             }
         } else if (name == QStringLiteral("widget")) {
-            info.modeToken = QStringLiteral("Plain");
-            info.typeToken = QStringLiteral("Action");
-            info.modeToken = QStringLiteral("Widget");
+            info.type = ActionObjectInfoMessage::Action;
+            info.mode = ActionObjectInfoMessage::Widget;
         } else if (name == QStringLiteral("group")) {
-            info.modeToken = QStringLiteral("Unique");
-            info.typeToken = QStringLiteral("Group");
-
+            info.mode = ActionObjectInfoMessage::Unique;
+            info.type = ActionObjectInfoMessage::Group;
             auto mode = resolve(e.properties.value(QStringLiteral("mode")));
             if (mode == QStringLiteral("unique")) {
-                info.modeToken = QStringLiteral("Unique");
+                info.mode = ActionObjectInfoMessage::Unique;
             }
         } else if (name == QStringLiteral("menuBar") || name == QStringLiteral("toolBar")) {
-            info.modeToken = QStringLiteral("TopLevel");
-            info.typeToken = QStringLiteral("Menu");
+            info.mode = ActionObjectInfoMessage::TopLevel;
+            info.type = ActionObjectInfoMessage::Menu;
         } else if (name == QStringLiteral("menu")) {
-            info.modeToken = QStringLiteral("Unique");
-            info.typeToken = QStringLiteral("Menu");
+            info.mode = ActionObjectInfoMessage::Unique;
+            info.type = ActionObjectInfoMessage::Menu;
 
             auto mode = resolve(e.properties.value(QStringLiteral("mode")));
             if (mode == QStringLiteral("plain")) {
-                info.modeToken = QStringLiteral("Plain");
+                info.mode = ActionObjectInfoMessage::Plain;
             } else if (mode == QStringLiteral("top")) {
-                info.modeToken = QStringLiteral("TopLevel");
+                info.mode = ActionObjectInfoMessage::TopLevel;
             }
         } else {
             fprintf(stderr, "%s: %s: unknown %s object tag \"%s\"\n",
@@ -459,12 +501,12 @@ struct ParserPrivate {
         int entryIndex = entries.size();
         if (e->name == QStringLiteral("separator")) {
             checkChildren("separator");
-            entry.typeToken = QStringLiteral("Separator");
+            entry.type = ActionObjectInfoMessage::Separator;
             entries.append(entry);
             return entryIndex;
         } else if (e->name == QStringLiteral("stretch")) {
             checkChildren("stretch");
-            entry.typeToken = QStringLiteral("Stretch");
+            entry.type = ActionObjectInfoMessage::Stretch;
             entries.append(entry);
             return entryIndex;
         }
@@ -480,21 +522,21 @@ struct ParserPrivate {
             std::exit(1);
         }
         entry.id = id;
-        entry.typeToken = info.typeToken;
+        entry.type = info.type;
 
-        if (info.typeToken == QStringLiteral("Action")) {
-            entry.typeToken = QStringLiteral("Action");
+        if (info.type == ActionObjectInfoMessage::Action) {
+            entry.type = ActionObjectInfoMessage::Action;
             checkChildren(QString(R"("%1")").arg(id).toLatin1());
             entries.append(entry);
             return entryIndex;
-        } else if (info.typeToken == QStringLiteral("Menu")) {
+        } else if (info.type == ActionObjectInfoMessage::Menu) {
             if (resolve(e->properties.value(QStringLiteral("flat"))) == QStringLiteral("true")) {
-                entry.typeToken = QStringLiteral("ExpandedMenu");
+                entry.type = ActionObjectInfoMessage::ExpandedMenu;
             } else {
-                entry.typeToken = QStringLiteral("Menu");
+                entry.type = ActionObjectInfoMessage::Menu;
             }
         } else {
-            entry.typeToken = QStringLiteral("Group");
+            entry.type = ActionObjectInfoMessage::Group;
         }
 
         QString seq;
@@ -518,7 +560,7 @@ struct ParserPrivate {
             entries.append(entry); // Make a placeholder
         } else if (auto it = seqs.find(seq); it == seqs.end()) {
             // Cannot declare Non-plain menu's layout more than once
-            if (info.modeToken != QStringLiteral("Plain")) {
+            if (info.mode != ActionObjectInfoMessage::Plain) {
                 if (e->children.isEmpty()) {
                     entries.append(entry);
                     return entryIndex;
@@ -535,9 +577,9 @@ struct ParserPrivate {
             seqs.append(seq, entryIndex);
             entries.append(entry); // Make a placeholder
         } else {
-            auto typeToken = entry.typeToken;
+            auto type = entry.type;
             entry = entries.at(it.value());
-            entry.typeToken = typeToken;
+            entry.type = type;
             entries.append(entry);
             return entryIndex;
         }
@@ -625,9 +667,9 @@ struct ParserPrivate {
             ActionLayoutEntryMessage entry;
             int entryIndex = entries.size();
             if (e.name == QStringLiteral("separator")) {
-                entry.typeToken = QStringLiteral("Separator");
+                entry.type = ActionObjectInfoMessage::Separator;
             } else if (e.name == QStringLiteral("stretch")) {
-                entry.typeToken = QStringLiteral("Stretch");
+                entry.type = ActionObjectInfoMessage::Stretch;
             } else {
                 auto &info = findOrInsertObjectInfo(&e, parserConfig.defaultCategory, "routine");
                 auto id = info.id;
@@ -638,19 +680,19 @@ struct ParserPrivate {
                     std::exit(1);
                 }
                 entry.id = id;
-                entry.typeToken = info.typeToken;
+                entry.type = info.type;
 
-                if (info.typeToken == QStringLiteral("Action")) {
-                    entry.typeToken = QStringLiteral("Action");
-                } else if (info.typeToken == QStringLiteral("Menu")) {
+                if (info.type == ActionObjectInfoMessage::Action) {
+                    entry.type = ActionObjectInfoMessage::Action;
+                } else if (info.type == ActionObjectInfoMessage::Menu) {
                     if (resolve(e.properties.value(QStringLiteral("flat"))) ==
                         QStringLiteral("true")) {
-                        entry.typeToken = QStringLiteral("ExpandedMenu");
+                        entry.type = ActionObjectInfoMessage::ExpandedMenu;
                     } else {
-                        entry.typeToken = QStringLiteral("Menu");
+                        entry.type = ActionObjectInfoMessage::Menu;
                     }
                 } else {
-                    entry.typeToken = QStringLiteral("Group");
+                    entry.type = ActionObjectInfoMessage::Group;
                 }
 
                 int idx = -1;
@@ -665,9 +707,9 @@ struct ParserPrivate {
                 }
 
                 if (idx >= 0) {
-                    auto typeToken = entry.typeToken;
+                    auto type = entry.type;
                     entry = entries.at(idx);
-                    entry.typeToken = typeToken;
+                    entry.type = type;
                 }
             }
             entries.append(entry);
