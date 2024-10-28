@@ -4,7 +4,7 @@
 
 namespace Core {
 
-    static const QChar m_modifiedIdentifier[] = {0x25cf};
+    static const QChar m_modifiedIdentifier[] = {QChar(0x25cf)};
 
     class WindowElementsAdaptorPrivate {
     public:

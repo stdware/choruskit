@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QMetaProperty>
 #include <QQueue>
+#include <QStringView>
 
 #include <qmxmladaptor.h>
 
@@ -29,7 +30,7 @@ namespace Core {
             int lastIndex = 0;
             while ((index = s.indexOf(reg, index, &match)) != -1) {
                 hasMatch = true;
-                result += s.midRef(lastIndex, index - lastIndex);
+                result += QStringView(s).mid(lastIndex, index - lastIndex);
 
                 const auto &name = match.captured(1);
                 QString val;
@@ -44,7 +45,7 @@ namespace Core {
                 index += match.captured(0).size();
                 lastIndex = index;
             }
-            result += s.midRef(lastIndex);
+            result += QStringView(s).mid(lastIndex);
             s = result;
         } while (hasMatch);
         s.replace(QStringLiteral("$$"), QStringLiteral("$"));

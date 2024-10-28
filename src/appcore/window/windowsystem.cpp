@@ -4,7 +4,6 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDebug>
-#include <QDesktopWidget>
 #include <QPointer>
 #include <QScreen>
 #include <QSplitter>
@@ -240,7 +239,7 @@ namespace Core {
         bool isDialog = w->parentWidget() && (w->windowFlags() & Qt::Dialog);
         if (winRect.size().isEmpty() || isMax) {
             // Adjust sizes
-            w->resize(fallback.isValid() ? fallback : (QApplication::desktop()->size() * 0.75));
+            w->resize(fallback.isValid() ? fallback : (QApplication::primaryScreen()->size() * 0.75));
             if (!isDialog) {
                 QMView::centralizeWindow(w);
             }
