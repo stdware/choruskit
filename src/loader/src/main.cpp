@@ -14,7 +14,7 @@
 #include <extensionsystem/pluginmanager.h>
 #include <extensionsystem/pluginspec.h>
 
-#include <singleapplication.h>
+#include <SingleApplication>
 
 #include "loaderspec.h"
 #include "loaderutils.h"

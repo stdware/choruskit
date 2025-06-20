@@ -4,7 +4,7 @@ project(SingleApplication LANGUAGES CXX DESCRIPTION "Replacement for QtSingleApp
 
 set(CMAKE_AUTOMOC ON)
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME} OBJECT
     singleapplication.h
     singleapplication.cpp
     singleapplication_p.h
