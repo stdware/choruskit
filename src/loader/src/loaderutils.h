@@ -2,6 +2,7 @@
 #define CHORUSKIT_LOADERUTILS_H
 
 #include <QtCore/QObject>
+#include <QtGui/QScreen>
 
 namespace Loader {
 
@@ -10,6 +11,14 @@ namespace Loader {
         return 72;
 #else
         return 96;
+#endif
+    }
+
+    inline double screenDpi(const QScreen *screen) {
+#if QT_VERSION_MAJOR < 6
+        return screen->logicalDotsPerInch() / unitDpi();
+#else
+        return screen->devicePixelRatio();
 #endif
     }
 

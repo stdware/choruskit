@@ -38,12 +38,6 @@ namespace Loader {
             }
         }
 
-        // resizable
-        it = objDoc.find("resizable");
-        if (it != objDoc.end() && it.value().isBool()) {
-            resizable = it.value().toBool();
-        }
-
         // splashSettings
         it = objDoc.find("splashSettings");
         if (it != objDoc.end() && it.value().isObject()) {

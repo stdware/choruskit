@@ -24,7 +24,6 @@ namespace Loader {
     struct SplashConfig {
         QString splashImage;
         SplashSettings splashSettings;
-        bool resizable;
         QList<int> splashSize;
 
         bool load(const QString &filename);

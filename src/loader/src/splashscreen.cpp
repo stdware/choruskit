@@ -1,5 +1,7 @@
 #include "SplashScreen.h"
 
+#include <utility>
+
 #include <QtCore/QDateTime>
 #include <QtCore/QDebug>
 #include <QtGui/QPainter>
@@ -14,7 +16,7 @@
 
 namespace Loader {
 
-    static QImage generateTextImage(int width = 800, int height = 200) {
+    static QImage generateTextImage(const QString &text, int width = 800, int height = 200) {
         QImage image(width, height, QImage::Format_ARGB32);
         image.fill(Qt::gray);
 
@@ -24,12 +26,9 @@ namespace Loader {
         QFont font = painter.font();
         font.setPixelSize(100);
         painter.setFont(font);
-
-        QString appName = qApp->applicationName();
-
         painter.setPen(Qt::white);
-        QRect textRect = painter.boundingRect(image.rect(), Qt::AlignCenter, appName);
-        painter.drawText(textRect, Qt::AlignCenter, appName);
+        QRect textRect = painter.boundingRect(image.rect(), Qt::AlignCenter, text);
+        painter.drawText(textRect, Qt::AlignCenter, text);
         painter.end();
 
         return image;
@@ -70,7 +69,7 @@ namespace Loader {
         splashImage = QImage(splashImagePath);
 
         if (splashImage.isNull()) {
-            splashImage = generateTextImage();
+            splashImage = generateTextImage(qApp->applicationName());
             splashSize = splashImage.size();
         }
 
@@ -79,18 +78,15 @@ namespace Loader {
         }
 
         // Setup splash
-        double ratio = screen()->logicalDotsPerInch() / Loader::unitDpi() * 0.8;
-        if (configFile.resizable) {
-            splashSize *= ratio;
-        }
-
         QPixmap pixmap;
         if (splashImagePath.endsWith(".svg", Qt::CaseInsensitive)) {
-            pixmap = QIcon(splashImagePath).pixmap(splashSize);
+            pixmap = QIcon(splashImagePath).pixmap(splashSize * screen()->devicePixelRatio());
         } else {
             pixmap = QPixmap::fromImage(
-                splashImage.scaled(splashSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                splashImage.scaled(splashSize * screen()->devicePixelRatio(), Qt::KeepAspectRatio,
+                                   Qt::SmoothTransformation));
         }
+        pixmap.setDevicePixelRatio(screen()->devicePixelRatio());
         setPixmap(pixmap);
 
         for (auto it = configFile.splashSettings.texts.begin();
@@ -104,13 +100,6 @@ namespace Loader {
             attr.fontColor = Loader::parseColor(item.fontColor);
             attr.maxWidth = item.maxWidth > 0 ? item.maxWidth : attr.maxWidth;
             attr.text = item.text;
-
-            if (configFile.resizable) {
-                attr.pos *= ratio;
-                attr.fontSize *= ratio;
-                attr.maxWidth *= ratio;
-            }
-
             setTextAttribute(it.key(), attr);
         }
     }
@@ -140,13 +129,11 @@ namespace Loader {
         }
 
         // Draw texts
-        for (const auto &item : qAsConst(m_texts)) {
+        for (const auto &item : std::as_const(m_texts)) {
             const Attribute &attr = item;
 
             QFont font = Loader::systemDefaultFont();
-            font.setPixelSize(attr.fontSize
-                              //* screen()->logicalDotsPerInch() / QMOs::unitDpi()
-            );
+            font.setPixelSize(attr.fontSize);
             QFontMetrics fm(font);
 
             QPoint pos(attr.pos);

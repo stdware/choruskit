@@ -14,7 +14,7 @@ namespace Loader {
         struct Attribute {
             QPoint pos;
             QPair<int, int> anchor = {1, 1};
-            int fontSize = 15;
+            int fontSize = 12;
             QColor fontColor;
             int maxWidth = 0;
             QString text;
