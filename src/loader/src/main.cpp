@@ -1,35 +1,34 @@
-#include <QApplication>
-#include <QDir>
-#include <QLoggingCategory>
-#include <QMainWindow>
-#include <QMessageBox>
-#include <QProcess>
-#include <QTextStream>
+#include <utility>
+#include <optional>
 
-#include <QMCore/qmsystem.h>
-#include <QMWidgets/qmappextension.h>
-#include <QMWidgets/qmdecoratorv2.h>
-#include <QMWidgets/private/qmcss_p.h>
+#include <QtCore/QDir>
+#include <QtCore/QProcess>
+#include <QtCore/QTextStream>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QSettings>
+#include <QtGui/QScreen>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMessageBox>
 
 #include <extensionsystem/pluginmanager.h>
 #include <extensionsystem/pluginspec.h>
 
 #include <singleapplication.h>
 
-#include "config/loadconfig.h"
-#include "splash/SplashScreen.h"
+#include "loaderspec.h"
+#include "loaderutils.h"
+#include "splashscreen.h"
 
-#include "loaderconfig.h"
-
-using Loader::LoadConfig;
-using Loader::LoaderConfiguration;
+using Loader::LoaderSpec;
 using Loader::SplashScreen;
 
-#define CONFIG_USE_NATIVE_MESSAGEBOX
-
-Q_LOGGING_CATEGORY(loaderLog, "apploader")
-
 using namespace ExtensionSystem;
+
+// Use native messageBox to display message, instead of QMessageBox
+#define CKLOADER_USE_NATIVE_MESSAGEBOX
+
+static Q_LOGGING_CATEGORY(ckLoader, "ckLoader");
 
 static const SingleApplication::Options opts = SingleApplication::ExcludeAppPath |    //
                                                SingleApplication::ExcludeAppVersion | //
@@ -54,8 +53,7 @@ static const char ALLOW_ROOT_OPTION[] = "--allow-root";
 
 // Global variables
 static QSplashScreen *g_splash = nullptr;
-
-static LoaderConfiguration *g_loadConfig = nullptr;
+static LoaderSpec *g_loadSpec = nullptr;
 
 // Format as <pre> HTML
 static inline QString toHtml(const QString &t) {
@@ -94,7 +92,7 @@ static inline void formatOption(QTextStream &str, const QStringList &opts, const
 }
 
 void displayError(const QString &t, int exitCode = -1) {
-#ifndef CONFIG_USE_NATIVE_MESSAGEBOX
+#ifndef CKLOADER_USE_NATIVE_MESSAGEBOX
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Critical);
     msgbox.setWindowTitle(qApp->applicationName());
@@ -108,13 +106,13 @@ void displayError(const QString &t, int exitCode = -1) {
     if (g_splash) {
         g_splash->close();
     }
-    qAppExt->showMessage(nullptr, QMAppExtension::Critical, qApp->applicationName(), t);
+    Loader::systemMessageBox(nullptr, Loader::Critical, qApp->applicationName(), t);
 #endif
     std::exit(exitCode);
 }
 
 static inline void displayHelpText(const QString &t) {
-#ifndef CONFIG_USE_NATIVE_MESSAGEBOX
+#ifndef CKLOADER_USE_NATIVE_MESSAGEBOX
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Information);
     msgbox.setWindowTitle(qApp->applicationName());
@@ -128,7 +126,7 @@ static inline void displayHelpText(const QString &t) {
     if (g_splash) {
         g_splash->close();
     }
-    qAppExt->showMessage(nullptr, QMAppExtension::Information, qApp->applicationName(), t);
+    Loader::systemMessageBox(nullptr, Loader::Information, qApp->applicationName(), t);
 #endif
 
     std::exit(0);
@@ -154,10 +152,10 @@ static inline void printHelp() {
     formatOption(str, {HELP_OPTION1, HELP_OPTION2}, {}, "Display this help");
     formatOption(str, {VERSION_OPTION1, VERSION_OPTION2}, {}, "Display application version");
 
-    for (const auto &item : qAsConst(g_loadConfig->extraArguments)) {
+    for (const auto &item : std::as_const(g_loadSpec->extraArguments)) {
         formatOption(str, item.options, item.param, item.description);
     }
-    if (!g_loadConfig->allowRoot) {
+    if (!g_loadSpec->allowRoot) {
         formatOption(str, {ALLOW_ROOT_OPTION}, {}, "Allow running with root privilege");
     }
 
@@ -208,7 +206,7 @@ namespace {
             QMutableStringListIterator it(arguments);
             while (it.hasNext()) {
                 const QString &arg = it.next();
-                if (!g_loadConfig->allowRoot && arg == QLatin1String(ALLOW_ROOT_OPTION)) {
+                if (!g_loadSpec->allowRoot && arg == QLatin1String(ALLOW_ROOT_OPTION)) {
                     it.remove();
                     allowRoot = true;
                 } else if (arg == QLatin1String(PLUGIN_PATH_OPTION)) {
@@ -228,114 +226,25 @@ namespace {
         }
     };
 
-    class SplashConfigLoader {
-    public:
-        SplashConfigLoader() {
-        }
-
-        void load(const QString &fileName, SplashScreen *splash) {
-            QString configDir = QM::PathFindDirPath(fileName);
-
-            // Load configuration
-            LoadConfig configFile;
-            if (configFile.load(fileName)) {
-                if (!configFile.splashImage.isEmpty()) {
-                    QString path = configFile.splashImage;
-                    if (QDir::isRelativePath(path)) {
-                        path = configDir + "/" + path;
-                    }
-                    splashImagePath = path;
-                }
-                if (configFile.splashSize.size() == 2) {
-                    splashSize = QSize(configFile.splashSize.front(), configFile.splashSize.back());
-                }
-                for (const auto &file : qAsConst(configFile.resourceFiles)) {
-                    if (QDir::isRelativePath(file)) {
-                        resourcesFiles.append(configDir + "/" + file);
-                    } else {
-                        resourcesFiles.append(file);
-                    }
-                }
-            }
-
-            splashImage = QImage(splashImagePath);
-            // splashImage = QImage();
-            if (splashImage.isNull()) {
-                splashImagePath = ":/A60.jpg";
-                splashImage = QImage(splashImagePath);
-                splashSize = splashImage.size();
-            }
-
-            if (splashSize.isEmpty()) {
-                splashSize = splashImage.size();
-            }
-
-            // Setup splash
-            double ratio = splash->screen()->logicalDotsPerInch() / QM::unitDpi() * 0.8;
-            if (configFile.resizable) {
-                splashSize *= ratio;
-            }
-
-            QPixmap pixmap;
-            if (splashImagePath.endsWith(".svg", Qt::CaseInsensitive)) {
-                pixmap = QIcon(splashImagePath).pixmap(splashSize);
-            } else {
-                pixmap = QPixmap::fromImage(splashImage.scaled(splashSize, Qt::IgnoreAspectRatio,
-                                                               Qt::SmoothTransformation));
-            }
-            splash->setPixmap(pixmap);
-
-            for (auto it = configFile.splashSettings.texts.begin();
-                 it != configFile.splashSettings.texts.end(); ++it) {
-                const auto &item = it.value();
-                SplashScreen::Attribute attr;
-                attr.pos = item.pos.size() == 2 ? QPoint(item.pos[0], item.pos[1]) : attr.pos;
-                attr.anchor = item.anchor.size() == 2 ? qMakePair(item.anchor[0], item.anchor[1])
-                                                      : attr.anchor;
-                attr.fontSize = item.fontSize > 0 ? item.fontSize : attr.fontSize;
-                attr.fontColor = QMCss::parseColor(item.fontColor);
-                attr.maxWidth = item.maxWidth > 0 ? item.maxWidth : attr.maxWidth;
-                attr.text = item.text;
-
-                if (configFile.resizable) {
-                    attr.pos *= ratio;
-                    attr.fontSize *= ratio;
-                    attr.maxWidth *= ratio;
-                }
-
-                splash->setTextAttribute(it.key(), attr);
-            }
-        }
-
-    private:
-        QString splashImagePath;
-        QImage splashImage;
-        QSize splashSize;
-        QStringList resourcesFiles; // Unused
-    };
-
 }
 
-int main_entry(LoaderConfiguration *loadConfig) {
-    Q_INIT_RESOURCE(ckloader_res);
-
-    QString workingDir = QDir::currentPath();
+int __main__(LoaderSpec *loadSpec) {
+    g_loadSpec = loadSpec;
 
     // Global instances must be created
     QApplication &a = *qApp;
-    QMAppExtension &host = *qAppExt;
-
-    g_loadConfig = loadConfig;
 
     // Settings path fallback
-    if (loadConfig->userSettingsPath.isEmpty()) {
-        loadConfig->userSettingsPath = host.appDataDir();
+    if (loadSpec->userSettingsPath.isEmpty()) {
+        loadSpec->userSettingsPath = Loader::systemAppDataPath();
     }
 
-    if (loadConfig->systemSettingsPath.isEmpty()) {
-        loadConfig->systemSettingsPath = host.appShareDir();
+    if (loadSpec->systemSettingsPath.isEmpty()) {
+        loadSpec->systemSettingsPath =
+            QDir::cleanPath(qApp->applicationDirPath() + "/../share/" + qApp->applicationName());
     }
 
+    QString workingDir = QDir::currentPath();
     QStringList arguments = a.arguments();
     ArgumentParser argsParser;
 
@@ -344,8 +253,8 @@ int main_entry(LoaderConfiguration *loadConfig) {
         argsParser.parse(arguments);
 
         // Root privilege detection
-        if (!g_loadConfig->allowRoot && !argsParser.allowRoot && !argsParser.showHelp &&
-            QM::isUserRoot()) {
+        if (!g_loadSpec->allowRoot && !argsParser.allowRoot && !argsParser.showHelp &&
+            Loader::isUserRoot()) {
             QString msg =
                 QCoreApplication::translate(
                     "Application", "You're trying to start %1 as the %2, which is "
@@ -357,45 +266,40 @@ int main_entry(LoaderConfiguration *loadConfig) {
                          QCoreApplication::translate("Application", "Root")
 #endif
                     );
-            qAppExt->showMessage(nullptr, QMAppExtension::Warning, qApp->applicationName(), msg);
+            Loader::systemMessageBox(nullptr, Loader::Warning, qApp->applicationName(), msg);
             return false;
         }
 
-
         // If you need to show help, we simply ignore this error and continue loading plugins
         int code = -1;
-        if (!loadConfig->preprocessArguments(arguments, &code) && !argsParser.showHelp) {
+        if (!loadSpec->preprocessArguments(arguments, &code) && !argsParser.showHelp) {
             return code;
         }
     }
 
     PluginManager pluginManager;
-    pluginManager.setPluginIID(loadConfig->pluginIID);
-    pluginManager.setSettings( //
-        new QSettings(
-            QString("%1/%2.plugins.ini").arg(loadConfig->userSettingsPath, qApp->applicationName()),
-            QSettings::IniFormat));
-    pluginManager.setGlobalSettings( //
-        new QSettings(QString("%1/%2.plugins.ini")
-                          .arg(loadConfig->systemSettingsPath, qApp->applicationName()),
-                      QSettings::IniFormat));
+    pluginManager.setPluginIID(loadSpec->pluginIID);
+    pluginManager.setSettings(new QSettings(
+        QString("%1/%2.plugins.ini").arg(loadSpec->userSettingsPath, qApp->applicationName()),
+        QSettings::IniFormat));
+    pluginManager.setGlobalSettings(new QSettings(
+        QString("%1/%2.plugins.ini").arg(loadSpec->systemSettingsPath, qApp->applicationName()),
+        QSettings::IniFormat));
 
     SplashScreen splash;
     g_splash = &splash;
-    loadConfig->splashWillShow(&splash);
+    loadSpec->splashWillShow(&splash);
 
-    SplashConfigLoader configFileLoader;
-    configFileLoader.load(loadConfig->splashSettingPath, &splash);
-
+    splash.applyConfig(loadSpec->splashConfigPath);
     splash.show();
 
-    // Don't know why drawing text blocks so much time, so we show splash first and then show texts
+    // QFontDatabase needs a lot of time to initialize, so we show splash first and then show texts
     splash.showTexts();
 
     // Update loader text
     splash.showMessage(QCoreApplication::translate("Application", "Searching plugins..."));
 
-    QStringList pluginPaths = loadConfig->pluginPaths + argsParser.customPluginPaths;
+    QStringList pluginPaths = loadSpec->pluginPaths + argsParser.customPluginPaths;
     pluginManager.setPluginPaths(pluginPaths);
 
     // Parse arguments again
@@ -417,8 +321,8 @@ int main_entry(LoaderConfiguration *loadConfig) {
     // Load plugins
     const auto plugins = PluginManager::plugins();
     PluginSpec *coreplugin = nullptr;
-    for (auto spec : qAsConst(plugins)) {
-        if (spec->name() == loadConfig->coreName) {
+    for (auto spec : std::as_const(plugins)) {
+        if (spec->name() == loadSpec->coreName) {
             coreplugin = spec;
             break;
         }
@@ -465,27 +369,30 @@ int main_entry(LoaderConfiguration *loadConfig) {
         return 0;
     }
 
-    // Init single handle
-    SingleApplication single(qApp, true, opts);
-    if (!single.isPrimary()) {
-        qCDebug(loaderLog) << "primary instance already running. PID:" << single.primaryPid();
+    std::optional<SingleApplication> singleApp;
+    if (loadSpec->single) {
+        // Initialize singleton handle
+        singleApp.emplace(qApp, true, opts);
+        if (auto &single = *singleApp; !single.isPrimary()) {
+            qCDebug(ckLoader) << "primary instance already running. PID:" << single.primaryPid();
 
-        // This eventually needs moved into the NotepadNextApplication to keep
-        // sending/receiving logic in the same place
-        QByteArray buffer;
-        QDataStream stream(&buffer, QIODevice::WriteOnly);
+            // This eventually needs moved into the NotepadNextApplication to keep
+            // sending/receiving logic in the same place
+            QByteArray buffer;
+            QDataStream stream(&buffer, QIODevice::WriteOnly);
 
-        stream << PluginManager::serializedArguments();
-        single.sendMessage(buffer);
+            stream << PluginManager::serializedArguments();
+            single.sendMessage(buffer);
 
-        qCDebug(loaderLog) << "secondary instance closing...";
+            qCDebug(ckLoader) << "secondary instance closing...";
 
-        return 0;
-    } else {
-        qCDebug(loaderLog) << "primary instance initializing...";
+            return 0;
+        } else {
+            qCDebug(ckLoader) << "primary instance initializing...";
+        }
     }
 
-    loadConfig->beforeLoadPlugins();
+    loadSpec->beforeLoadPlugins();
 
     // Update loader text
     splash.showMessage(QCoreApplication::translate("Application", "Loading plugins..."));
@@ -497,18 +404,20 @@ int main_entry(LoaderConfiguration *loadConfig) {
         return 1;
     }
 
-    loadConfig->afterLoadPlugins();
+    loadSpec->afterLoadPlugins();
 
-    // Set up remote arguments handler
-    QObject::connect(&single, &SingleApplication::receivedMessage,
-                     [&](quint32 instanceId, QByteArray message) {
-                         QDataStream stream(&message, QIODevice::ReadOnly);
-                         QString msg;
-                         stream >> msg;
-                         qCDebug(loaderLog).noquote().nospace()
-                             << " remote message from " << instanceId << ", " << msg;
-                         pluginManager.remoteArguments(msg, nullptr);
-                     });
+    if (singleApp.has_value()) {
+        // Set up remote arguments handler
+        QObject::connect(&singleApp.value(), &SingleApplication::receivedMessage,
+                         [&](quint32 instanceId, QByteArray message) {
+                             QDataStream stream(&message, QIODevice::ReadOnly);
+                             QString msg;
+                             stream >> msg;
+                             qCDebug(ckLoader).noquote().nospace()
+                                 << " remote message from " << instanceId << ", " << msg;
+                             pluginManager.remoteArguments(msg, nullptr);
+                         });
+    }
 
     // shutdown plugin manager on the exit
     QObject::connect(&a, &QApplication::aboutToQuit, &pluginManager, &PluginManager::shutdown);

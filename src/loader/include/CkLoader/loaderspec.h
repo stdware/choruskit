@@ -1,0 +1,74 @@
+#ifndef CHORUSKIT_LOADERSPEC_H
+#define CHORUSKIT_LOADERSPEC_H
+
+#include <QPair>
+#include <QSplashScreen>
+#include <QStringList>
+
+namespace Loader {
+
+    class LoaderSpec {
+    public:
+        /// Whether to allow only a single process instance
+        bool single;
+
+        /// Add an \a --allow-root option, display warning and exit if running
+        /// as \c Root/Administrator without setting this option
+        bool allowRoot;
+
+        /// Core plugin name, default to \c Core
+        QString coreName;
+
+        /// Plugin Interface ID
+        QString pluginIID;
+
+        /// Default plugin searching paths
+        QStringList pluginPaths;
+
+        /// Splash configuration file path
+        QString splashConfigPath;
+
+        struct Argument {
+            QStringList options;
+            QString param;
+            QString description;
+        };
+        /// Other options to display in help text
+        QList<Argument> extraArguments;
+
+        /// Plugin manager user settings directory
+        QString userSettingsPath;
+
+        /// Plugin manager global settings directory
+        QString systemSettingsPath;
+
+        /// Parse extra options and do some initializations
+        virtual bool preprocessArguments(QStringList &arguments, int *code = nullptr);
+
+        /// Show text on splash, you may need to save the splash pointer to use
+        /// it later
+        virtual void splashWillShow(QSplashScreen *screen);
+
+        /// Do something before loading all plugins
+        virtual void beforeLoadPlugins();
+
+        /// Do something after loading all plugins
+        virtual void afterLoadPlugins();
+
+        /// Load plugins and run application
+        /// \note Create `QApplication` instance before calling it (Important!!!)
+        int run();
+
+    public:
+        /// Display error message and exit with \a exitCode
+        static void displayError(const QString &err, int exitCode = -1);
+
+    public:
+        inline LoaderSpec() : single(true), allowRoot(true), coreName("Core") {
+        }
+        virtual ~LoaderSpec() = default;
+    };
+
+}
+
+#endif // CHORUSKIT_LOADERSPEC_H

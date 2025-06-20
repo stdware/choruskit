@@ -1,9 +1,5 @@
 qm_import(Preprocess)
 
-if(NOT TARGET qtmediate::Core)
-    find_package(qtmediate REQUIRED)
-endif()
-
 set(CHORUSKIT_PROJECT_DESCRIPTION "ChorusKit Framework Library")
 set(CHORUSKIT_PROJECT_COPYRIGHT "Copyright 2019-2023 OpenVPI")
 set(CHORUSKIT_GENERATED_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include)
@@ -46,7 +42,7 @@ macro(choruskit_add_library _target _type)
 
     # Set global definitions
     qm_export_defines(${_target} ${_prefix_option})
-
+    
     # Configure target
     qm_configure_target(${_target} ${FUNC_UNPARSED_ARGUMENTS})
 
@@ -107,51 +103,26 @@ endmacro()
 # ----------------------------------
 add_subdirectory(3rdparty)
 
-add_subdirectory(appcore)
+# add_subdirectory(appcore)
 
 add_subdirectory(loader)
-
-add_subdirectory(tools)
 
 # ----------------------------------
 # Install
 # ----------------------------------
 if(CHORUSKIT_INSTALL)
-    # Add install target
-    set(_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${CHORUSKIT_INSTALL_NAME})
-
-    # Add version file
-    write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/${CHORUSKIT_INSTALL_NAME}ConfigVersion.cmake"
+    qm_basic_install(
+        NAME ${CHORUSKIT_INSTALL_NAME}
         VERSION ${PROJECT_VERSION}
-        COMPATIBILITY AnyNewerVersion
-    )
-
-    # Add configuration file
-    configure_package_config_file(
-        ${CMAKE_CURRENT_LIST_DIR}/${CHORUSKIT_INSTALL_NAME}Config.cmake.in
-        "${CMAKE_CURRENT_BINARY_DIR}/${CHORUSKIT_INSTALL_NAME}Config.cmake"
-        INSTALL_DESTINATION ${_install_dir}
-        NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    )
-
-    # Install cmake files
-    install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/${CHORUSKIT_INSTALL_NAME}Config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/${CHORUSKIT_INSTALL_NAME}ConfigVersion.cmake"
-        DESTINATION ${_install_dir}
-    )
-
-    # Install cmake targets files
-    install(EXPORT ${CHORUSKIT_INSTALL_NAME}Targets
-        FILE "${CHORUSKIT_INSTALL_NAME}Targets.cmake"
+        INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${CHORUSKIT_INSTALL_NAME}
+        CONFIG_TEMPLATE "${CMAKE_CURRENT_LIST_DIR}/${CHORUSKIT_INSTALL_NAME}Config.cmake.in"
         NAMESPACE ${CHORUSKIT_INSTALL_NAME}::
-        DESTINATION ${_install_dir}
+        EXPORT ${CHORUSKIT_INSTALL_NAME}Targets
+        WRITE_CONFIG_OPTIONS NO_CHECK_REQUIRED_COMPONENTS_MACRO
     )
 
     # Install cmake modules
     install(DIRECTORY ../cmake/
         DESTINATION ${_install_dir}/cmake
-        PATTERN "__pycache__" EXCLUDE
     )
 endif()

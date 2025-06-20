@@ -1,39 +1,29 @@
-#ifndef LOADCONFIG_H
-#define LOADCONFIG_H
+#ifndef CHORUSKIT_SPLASHCONFIG_H
+#define CHORUSKIT_SPLASHCONFIG_H
 
 #include <QStringList>
-
-#include "qjsonstream.h"
+#include <QMap>
 
 namespace Loader {
 
     struct SplashText {
-        QAS_JSON(SplashText)
-
         QList<int> pos;
         QList<int> anchor;
-        int fontSize;
+        int fontSize = 0;
         QString fontColor;
-        int maxWidth;
+        int maxWidth = 0;
 
         QString text;
-
-        SplashText();
     };
 
     struct SplashSettings {
-        QAS_JSON(SplashSettings)
-
         QList<int> size;
         QMap<QString, SplashText> texts;
     };
 
-    struct LoadConfig {
-        QAS_JSON(LoadConfig)
-
+    struct SplashConfig {
         QString splashImage;
         SplashSettings splashSettings;
-        QStringList resourceFiles;
         bool resizable;
         QList<int> splashSize;
 
@@ -42,4 +32,4 @@ namespace Loader {
 
 }
 
-#endif // LOADCONFIG_H
+#endif // CHORUSKIT_SPLASHCONFIG_H

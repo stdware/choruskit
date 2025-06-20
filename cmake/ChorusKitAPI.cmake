@@ -4,18 +4,10 @@ if(NOT TARGET qmsetup::library)
     find_package(qmsetup REQUIRED)
 endif()
 
-qm_import(Filesystem Preprocess Deploy private/Generate)
+qm_import(Filesystem Preprocess Deploy)
 
 if(NOT DEFINED CK_CMAKE_MODULES_DIR)
     set(CK_CMAKE_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR})
-endif()
-
-if(NOT CK_CKAEC_EXECUTABLE)
-    if(TARGET ChorusKit::ckaec)
-        get_target_property(CK_CKAEC_EXECUTABLE ChorusKit::ckaec LOCATION)
-    else()
-        message(FATAL_ERROR "ChorusKitApi: tool \"ckaec\" not found!")
-    endif()
 endif()
 
 #[[
@@ -28,8 +20,19 @@ endif()
         CK_APPLICATION_DESCRIPTION
         CK_APPLICATION_VERSION
         CK_APPLICATION_VENDOR
-        CK_DEV_START_YEAR
+        
         CK_CMAKE_SOURCE_DIR (not suggested)
+        CK_REPO_ROOT_DIR
+
+        CK_DEV_START_YEAR
+        CK_BUILDINFO_PREFIX
+
+        CK_ENABLE_CONSOLE
+        CK_ENABLE_INSTALL
+        CK_ENABLE_DEVEL
+        CK_WIN_APPLOCAL_DEPS
+        CK_SYNC_INCLUDE_FORCE
+
 ]] #
 macro(ck_init_buildsystem)
     # Check platform, only Windows/Macintosh/Linux is supported
@@ -69,6 +72,11 @@ macro(ck_init_buildsystem)
     # Whether to install developer files
     if(NOT DEFINED CK_ENABLE_DEVEL)
         set(CK_ENABLE_DEVEL off)
+    endif()
+
+    # Whether to set FORCE option to sync_include
+    if(NOT DEFINED CK_SYNC_INCLUDE_FORCE)
+        set(CK_SYNC_INCLUDE_FORCE off)
     endif()
 
     # Root directory
@@ -193,8 +201,8 @@ macro(ck_init_buildsystem)
     add_custom_target(ChorusKit_CopySharedFiles)
 
     # Used ChorusKit Metadata Keys:
-    # APPLICATION_PLUGINS
-    # APPLICATION_LIBRARIES
+    #     APPLICATION_PLUGINS
+    #     APPLICATION_LIBRARIES
 endmacro()
 
 #[[
@@ -724,7 +732,7 @@ function(ck_sync_include _target)
     set(_dir)
     qm_set_value(_dir FUNC_DIRECTORY .)
 
-    set(_install_options)
+    set(_sync_options)
 
     set(_scope PUBLIC)
     get_target_property(_type ${_target} TYPE)
@@ -745,13 +753,17 @@ function(ck_sync_include _target)
             "$<INSTALL_INTERFACE:${CK_INSTALL_INCLUDE_DIR}>"
         )
 
-        set(_install_options
+        set(_sync_options
             INSTALL_DIR "${CK_INSTALL_INCLUDE_DIR}/${_inc_name}"
         )
     endif()
 
+    if (CK_SYNC_INCLUDE_FORCE)
+        list(APPEND _sync_options FORCE)
+    endif()
+
     # Generate a standard include directory in build directory
-    qm_sync_include(${_dir} "${CK_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options}
+    qm_sync_include(${_dir} "${CK_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_sync_options}
         ${FUNC_OPTIONS}
     )
 endfunction()
@@ -799,7 +811,7 @@ function(ck_add_attached_files _target)
         list(APPEND _options VERBOSE)
     endif()
 
-    foreach(_src ${_result})
+    foreach(_src IN LISTS _result)
         list(POP_BACK _src _dest)
 
         qm_add_copy_command(${_target}
@@ -867,7 +879,7 @@ function(ck_add_shared_files)
         list(APPEND _options VERBOSE)
     endif()
 
-    foreach(_src ${_result})
+    foreach(_src IN LISTS _result)
         list(POP_BACK _src _dest)
 
         qm_add_copy_command(${_target}
@@ -876,76 +888,6 @@ function(ck_add_shared_files)
             ${_options}
         )
     endforeach()
-endfunction()
-
-#[[
-Add an action extension generating target.
-
-    ck_add_action_extension(<OUT> <manifest>
-        [IDENTIFIER <identifier>]
-        [DEFINES    <defines>...]
-        [DEPENDS    <dependencies>...]
-    )
-]] #
-function(ck_add_action_extension _outfiles _manifest)
-    set(options)
-    set(oneValueArgs IDENTIFIER)
-    set(multiValueArgs DEFINES DEPENDS)
-    cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    # helper macro to set up a moc rule
-    function(_create_command _infile _outfile _options _depends)
-        # Pass the parameters in a file.  Set the working directory to
-        # be that containing the parameters file and reference it by
-        # just the file name.  This is necessary because the moc tool on
-        # MinGW builds does not seem to handle spaces in the path to the
-        # file given with the @ syntax.
-        get_filename_component(_outfile_name "${_outfile}" NAME)
-        get_filename_component(_outfile_dir "${_outfile}" PATH)
-
-        if(_outfile_dir)
-            set(_working_dir WORKING_DIRECTORY ${_outfile_dir})
-        endif()
-
-        set(_cmd ${CK_CKAEC_EXECUTABLE} ${_options} -o "${_outfile}" "${_infile}")
-
-        if(WIN32)
-            # Add Qt Core to PATH
-            get_target_property(_loc Qt${QT_VERSION_MAJOR}::Core IMPORTED_LOCATION_RELEASE)
-            get_filename_component(_dir ${_loc} DIRECTORY)
-            set(_cmd COMMAND set "Path=${_dir}\;%Path%\;" COMMAND ${_cmd})
-        else()
-            set(_cmd COMMAND ${_cmd})
-        endif()
-
-        add_custom_command(OUTPUT ${_outfile}
-            ${_cmd}
-            DEPENDS ${_infile} ${_depends}
-            ${_working_dir}
-            VERBATIM
-        )
-    endfunction()
-
-    set(_options)
-
-    if(FUNC_IDENTIFIER)
-        list(APPEND _options -i ${FUNC_IDENTIFIER})
-    endif()
-
-    if(FUNC_DEFINES)
-        foreach(_item IN LISTS FUNC_DEFINES)
-            list(APPEND _options -D${_item})
-        endforeach()
-    endif()
-
-    set(_outfile)
-    get_filename_component(_manifest ${_manifest} ABSOLUTE)
-    qm_make_output_file(${_manifest} ckaec_ cpp _outfile)
-
-    # Create command
-    _create_command(${_manifest} ${_outfile} "${_options}" "${FUNC_DEPENDS}")
-
-    set(${_outfiles} ${_outfile} PARENT_SCOPE)
 endfunction()
 
 # ----------------------------------
@@ -1090,7 +1032,7 @@ function(_ck_parse_copy_args _args _result _error)
 
     set(_list)
 
-    foreach(_item ${_args})
+    foreach(_item IN LISTS _args)
         if(${_item} STREQUAL SRC)
             if(${_status} STREQUAL NONE)
                 set(_src)

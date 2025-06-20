@@ -6,10 +6,9 @@ project(ChorusKit VERSION 0.0.0.1 LANGUAGES CXX)
 # Build Options
 # ----------------------------------
 option(CHORUSKIT_BUILD_TRANSLATIONS "Build translations" ON)
-option(CHORUSKIT_BUILD_TESTS "Build test cases" ON)
+option(CHORUSKIT_BUILD_TESTS "Build test cases" OFF)
 option(CHORUSKIT_BUILD_DOCUMENTATIONS "Build documentations" OFF)
 option(CHORUSKIT_INSTALL "Install library" ON)
-option(CHORUSKIT_VCPKG_TOOLS_HINT "Install executables to tools directory" OFF)
 
 # ----------------------------------
 # CMake Settings

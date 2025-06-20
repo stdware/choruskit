@@ -1,5 +1,5 @@
-#ifndef SPLASHSCREEN_H
-#define SPLASHSCREEN_H
+#ifndef CHORUSKIT_SPLASHSCREEN_H
+#define CHORUSKIT_SPLASHSCREEN_H
 
 #include <QSplashScreen>
 
@@ -13,15 +13,14 @@ namespace Loader {
 
         struct Attribute {
             QPoint pos;
-            QPair<int, int> anchor{1, 1};
-            int fontSize;
+            QPair<int, int> anchor = {1, 1};
+            int fontSize = 15;
             QColor fontColor;
-            int maxWidth;
+            int maxWidth = 0;
             QString text;
-
-            Attribute() : fontSize(15), maxWidth(0) {
-            }
         };
+
+        void applyConfig(const QString &fileName);
 
     public:
         void setTextAttribute(const QString &id, const Attribute &attr);
@@ -49,4 +48,4 @@ namespace Loader {
 
 }
 
-#endif // SPLASHSCREEN_H
+#endif // CHORUSKIT_SPLASHSCREEN_H
