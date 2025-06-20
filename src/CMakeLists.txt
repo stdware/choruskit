@@ -42,7 +42,7 @@ macro(choruskit_add_library _target _type)
 
     # Set global definitions
     qm_export_defines(${_target} ${_prefix_option})
-    
+
     # Configure target
     qm_configure_target(${_target} ${FUNC_UNPARSED_ARGUMENTS})
 
@@ -104,13 +104,15 @@ endmacro()
 add_subdirectory(3rdparty)
 
 # add_subdirectory(appcore)
-
 add_subdirectory(loader)
 
 # ----------------------------------
 # Install
 # ----------------------------------
 if(CHORUSKIT_INSTALL)
+    # Add install target
+    set(_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/${CHORUSKIT_INSTALL_NAME})
+
     qm_basic_install(
         NAME ${CHORUSKIT_INSTALL_NAME}
         VERSION ${PROJECT_VERSION}

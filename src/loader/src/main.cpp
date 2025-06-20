@@ -244,6 +244,15 @@ int __main__(LoaderSpec *loadSpec) {
             QDir::cleanPath(qApp->applicationDirPath() + "/../share/" + qApp->applicationName());
     }
 
+    if (!QFileInfo(loadSpec->userSettingsPath).isDir() &&
+        !QDir().mkpath(loadSpec->userSettingsPath)) {
+        QString msg = QCoreApplication::translate("Application",
+                                                  "Failed to create user settings directory: %1")
+                          .arg(loadSpec->userSettingsPath);
+        Loader::systemMessageBox(nullptr, Loader::Warning, qApp->applicationName(), msg);
+        return -1;
+    }
+
     QString workingDir = QDir::currentPath();
     QStringList arguments = a.arguments();
     ArgumentParser argsParser;
@@ -267,7 +276,7 @@ int __main__(LoaderSpec *loadSpec) {
 #endif
                     );
             Loader::systemMessageBox(nullptr, Loader::Warning, qApp->applicationName(), msg);
-            return false;
+            return 0;
         }
 
         // If you need to show help, we simply ignore this error and continue loading plugins
