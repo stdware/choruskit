@@ -30,7 +30,8 @@ using namespace ExtensionSystem;
 
 static Q_LOGGING_CATEGORY(ckLoader, "ckLoader");
 
-static const SingleApplication::Options opts = SingleApplication::ExcludeAppPath |    //
+static const SingleApplication::Options opts = SingleApplication::User |              //
+                                               SingleApplication::ExcludeAppPath |    //
                                                SingleApplication::ExcludeAppVersion | //
                                                SingleApplication::SecondaryNotification;
 
@@ -338,7 +339,7 @@ int __main__(LoaderSpec *loadSpec) {
     }
 
     // Check core plugin
-    const auto &loadCorePlugin = [](PluginSpec *coreplugin, QString &reason) {
+    const auto &checkCorePlugin = [](PluginSpec *coreplugin, QString &reason) {
         if (!coreplugin) {
             reason = QCoreApplication::translate("Application", "Could not find Core plugin!");
             return false;
@@ -355,7 +356,7 @@ int __main__(LoaderSpec *loadSpec) {
         return true;
     };
 
-    if (QString reason; !loadCorePlugin(coreplugin, reason)) {
+    if (QString reason; !checkCorePlugin(coreplugin, reason)) {
         // Ignore errors if need to show help
         if (argsParser.showHelp) {
             printHelp();
@@ -378,11 +379,11 @@ int __main__(LoaderSpec *loadSpec) {
         return 0;
     }
 
-    std::optional<SingleApplication> singleApp;
+    std::optional<SingleApplication> singleHook;
     if (loadSpec->single) {
         // Initialize singleton handle
-        singleApp.emplace(qApp, true, opts);
-        if (auto &single = *singleApp; !single.isPrimary()) {
+        singleHook.emplace(qApp, true, opts);
+        if (auto &single = *singleHook; !single.isPrimary()) {
             qCDebug(ckLoader) << "primary instance already running. PID:" << single.primaryPid();
 
             // This eventually needs moved into the NotepadNextApplication to keep
@@ -406,7 +407,7 @@ int __main__(LoaderSpec *loadSpec) {
     // Update loader text
     splash.showMessage(QCoreApplication::translate("Application", "Loading plugins..."));
 
-    // Initialize all plugins
+    // Load all plugins
     PluginManager::loadPlugins();
     if (coreplugin->hasError()) {
         displayError(msgCoreLoadFailure(coreplugin->errorString()));
@@ -415,9 +416,9 @@ int __main__(LoaderSpec *loadSpec) {
 
     loadSpec->afterLoadPlugins();
 
-    if (singleApp.has_value()) {
+    if (singleHook.has_value()) {
         // Set up remote arguments handler
-        QObject::connect(&singleApp.value(), &SingleApplication::receivedMessage,
+        QObject::connect(&singleHook.value(), &SingleApplication::receivedMessage,
                          [&](quint32 instanceId, QByteArray message) {
                              QDataStream stream(&message, QIODevice::ReadOnly);
                              QString msg;
