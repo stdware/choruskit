@@ -151,7 +151,8 @@ namespace Core {
     QList<ISettingPage *> SettingCatalog::allPages() const {
         Q_D(const SettingCatalog);
         QList<ISettingPage *> res;
-        for (const auto &page : d->pages) {
+        for (const auto &pair : d->pages) {
+            auto &page = pair.second;
             res.append(page);
             res.append(page->allPages());
         }

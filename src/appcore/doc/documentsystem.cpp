@@ -15,18 +15,11 @@
 #include <QScreen>
 #include <QTimer>
 
-#include <QMCore/qmsystem.h>
-#include <QMCore/qmbatch.h>
-#include <QMCore/qmcoreappextension.h>
-
 #include "idocument_p.h"
 
 namespace Core {
 
-#define myWarning(func)                                                                            \
-    (qWarning().nospace() << "Core::DocumentSystem::"                                              \
-                          << "():")                                                                \
-        .space()
+#define myWarning(func) (qWarning().nospace() << "Core::DocumentSystem::" << "():").space()
 
     static const char settingCategoryC[] = "DocumentSystem";
 
@@ -49,7 +42,17 @@ namespace Core {
     void DocumentSystemPrivate::init() {
         readSettings();
 
-        QM::mkDir(DocumentSystem::logBaseDir());
+        QDir().mkpath(DocumentSystem::logBaseDir());
+    }
+
+    static QStringList jsonArrayToStrList(const QJsonArray &arr, bool considerNum = false) {
+        QStringList res;
+        for (const auto &item : arr)
+            if (item.isString())
+                res.append(item.toString());
+            else if (item.isDouble() && considerNum)
+                res.append(QString::number(item.toDouble()));
+        return res;
     }
 
     void DocumentSystemPrivate::readSettings() {
@@ -59,9 +62,9 @@ namespace Core {
 
         auto recentObj = obj.value(recentGroupC).toObject();
         QStringList recentFiles =
-            QM::jsonArrayToStrList(recentObj.value(QLatin1String(filesKeyC)).toArray());
+            jsonArrayToStrList(recentObj.value(QLatin1String(filesKeyC)).toArray());
         QStringList recentDirs =
-            QM::jsonArrayToStrList(recentObj.value(QLatin1String(dirKeyC)).toArray());
+            jsonArrayToStrList(recentObj.value(QLatin1String(dirKeyC)).toArray());
 
         // clean non-existing files
         m_recentFiles.clear();
@@ -139,8 +142,17 @@ namespace Core {
         m_instance = nullptr;
     }
 
+    static QString &getLogBaseDir() {
+        static QString logBaseDir = QDir::tempPath() + "/logs";
+        return logBaseDir;
+    }
+
     QString DocumentSystem::logBaseDir() {
-        return QString("%1/logs").arg(qAppExt->tempDir());
+        return getLogBaseDir();
+    }
+
+    void DocumentSystem::setLogBaseDir(const QString &dir) {
+        getLogBaseDir() = dir;
     }
 
     bool DocumentSystem::addDocType(DocumentSpec *doc) {
@@ -157,7 +169,7 @@ namespace Core {
         d->docSpecs.append(doc->id(), doc);
 
         for (const auto &ext : doc->supportedExtensions()) {
-            d->extensionsMap[ext].append(doc);
+            d->extensionsMap[ext].append(doc, 0);
         }
 
         return true;
@@ -188,7 +200,7 @@ namespace Core {
             if (it2 == d->extensionsMap.end())
                 continue;
             it2->remove(doc);
-            if (it2->isEmpty())
+            if (it2->empty())
                 d->extensionsMap.erase(it2);
         }
 
@@ -222,7 +234,7 @@ namespace Core {
 
     QList<DocumentSpec *> DocumentSystem::supportedDocTypes(const QString &suffix) const {
         Q_D(const DocumentSystem);
-        return d->extensionsMap.value(suffix, {}).values_qlist();
+        return d->extensionsMap.value(suffix, {}).keys_qlist();
     }
 
     QStringList DocumentSystem::supportedExtensions() const {
@@ -361,7 +373,7 @@ namespace Core {
             title.isEmpty() ? QApplication::translate("Core::DocumentSystem", "Open File") : title,
             path.isEmpty() ? d->openFileLastVisitDir : path, filters, selectedFilter);
         if (!res.isEmpty()) {
-            d->openFileLastVisitDir = QM::PathFindDirPath(res);
+            d->openFileLastVisitDir = QFileInfo(res).absolutePath();
         }
         return res;
     }
@@ -375,7 +387,7 @@ namespace Core {
             title.isEmpty() ? QApplication::translate("Core::DocumentSystem", "Open Files") : title,
             path.isEmpty() ? d->openFileLastVisitDir : path, filters, selectedFilter);
         if (!res.isEmpty()) {
-            d->openFileLastVisitDir = QM::PathFindDirPath(res.first());
+            d->openFileLastVisitDir = QFileInfo(res.first()).absolutePath();
         }
         return res;
     }
@@ -389,7 +401,7 @@ namespace Core {
                             : title,
             path.isEmpty() ? d->openDirLastVisitDir : path);
         if (!res.isEmpty()) {
-            d->openDirLastVisitDir = QM::PathFindDirPath(res);
+            d->openDirLastVisitDir = QFileInfo(res).absolutePath();
         }
         return res;
     }
@@ -403,7 +415,7 @@ namespace Core {
             title.isEmpty() ? QApplication::translate("Core::DocumentSystem", "Save File") : title,
             path.isEmpty() ? d->saveFileLastVisitDir : path, filter, selectedFilter);
         if (!res.isEmpty()) {
-            d->saveFileLastVisitDir = QM::PathFindDirPath(res);
+            d->saveFileLastVisitDir = QFileInfo(res).absolutePath();
         }
         return res;
     }
@@ -423,8 +435,8 @@ namespace Core {
 
         QString absoluteFilePath = document->filePath();
         const QFileInfo fi(absoluteFilePath);
-        QString path =
-            QM::isPathRelative(pathIn) ? d->saveFileLastVisitDir : QM::PathFindDirPath(pathIn);
+        QString path = QDir::isRelativePath(pathIn) ? d->saveFileLastVisitDir
+                                                    : QFileInfo(pathIn).absolutePath();
         QString fileName;
         if (absoluteFilePath.isEmpty()) {
             fileName = document->suggestedFileName();
@@ -432,7 +444,7 @@ namespace Core {
             if (!defaultPath.isEmpty())
                 path = defaultPath;
             if (fileName.isEmpty() && !pathIn.isEmpty())
-                fileName = QM::PathFindFileName(pathIn);
+                fileName = QFileInfo(pathIn).fileName();
         } else {
             path = fi.absolutePath();
             fileName = fi.fileName();

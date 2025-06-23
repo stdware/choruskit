@@ -6,8 +6,6 @@
 #include <QFileInfo>
 #include <QSettings>
 
-#include <QMCore/qmsystem.h>
-
 #include "icorebase.h"
 
 namespace Core {

@@ -216,7 +216,7 @@ namespace Core {
         }
 
         QList<QKeySequence> keys;
-        QMChronoSet<QKeySequence> duplicatedKeys;
+        QList<QKeySequence> duplicatedKeys;
         for (const auto &sh : action->shortcuts()) {
             if (sh.isEmpty())
                 continue;
@@ -236,8 +236,7 @@ namespace Core {
         data->keys = keys;
 
         if (!duplicatedKeys.isEmpty()) {
-            myWarning(__func__) << "duplicated shortcuts detected" << action
-                                << duplicatedKeys.values_qlist();
+            myWarning(__func__) << "duplicated shortcuts detected" << action << duplicatedKeys;
         }
     }
 
@@ -269,102 +268,6 @@ namespace Core {
     bool WindowEventFilter::eventFilter(QObject *obj, QEvent *event) {
         if (obj == w) {
             switch (event->type()) {
-                case QEvent::DragEnter:
-                case QEvent::Drop: {
-                    auto e = static_cast<QDropEvent *>(event);
-                    const QMimeData *mime = e->mimeData();
-                    if (mime->hasUrls()) {
-                        QFileInfoList dirs;
-                        QHash<QString, QFileInfoList> files;
-                        for (const auto &url : mime->urls()) {
-                            if (url.isLocalFile()) {
-                                auto info = QFileInfo(url.toLocalFile());
-                                if (info.isDir()) {
-                                    dirs.append(info);
-                                    continue;
-                                }
-                                if (info.isFile()) {
-                                    auto suffix = info.completeSuffix().toLower();
-                                    files[suffix].append(info);
-                                    continue;
-                                }
-                            }
-                        }
-
-                        if (event->type() == QEvent::DragEnter) {
-                            if ((!dirs.isEmpty() &&
-                                 d->dragFileHandlerMap.contains(QStringLiteral("/"))) ||
-                                (!files.isEmpty() &&
-                                 d->dragFileHandlerMap.contains(QStringLiteral("*")))) {
-                                e->acceptProposedAction();
-                            } else {
-                                for (auto it = files.begin(); it != files.end(); ++it) {
-                                    auto it2 = d->dragFileHandlerMap.find(it.key());
-                                    if (it2 == d->dragFileHandlerMap.end()) {
-                                        continue;
-                                    }
-                                    if (it2->max == 0 || it2->max >= it->size()) {
-                                        e->acceptProposedAction();
-                                        break;
-                                    }
-                                }
-                            }
-                        } else {
-                            bool accept = false;
-
-                            // Handle directories
-                            if (!dirs.isEmpty()) {
-                                auto it = d->dragFileHandlerMap.find(QStringLiteral("/"));
-                                if (it != d->dragFileHandlerMap.end()) {
-                                    for (const auto &dir : qAsConst(dirs)) {
-                                        it->func(dir.absoluteFilePath());
-                                    }
-                                    accept = true;
-                                }
-                            }
-
-                            // Handle files
-                            for (auto it = files.begin(); it != files.end();) {
-                                auto it2 = d->dragFileHandlerMap.find(it.key());
-                                if (it2 != d->dragFileHandlerMap.end()) {
-                                    const auto &handler = *it2;
-                                    if (handler.max == 0 || handler.max >= it->size()) {
-                                        for (const auto &file : qAsConst(it.value())) {
-                                            handler.func(file.absoluteFilePath());
-                                        }
-                                        accept = true;
-                                    }
-                                    it = files.erase(it);
-                                    continue;
-                                }
-                                ++it;
-                            }
-
-                            // Handle unhandled files
-                            if (!files.isEmpty()) {
-                                auto it = d->dragFileHandlerMap.find(QStringLiteral("*"));
-                                if (it != d->dragFileHandlerMap.end()) {
-                                    for (const auto &fileList : qAsConst(files)) {
-                                        for (const auto &file : fileList) {
-                                            it->func(file.absoluteFilePath());
-                                        }
-                                    }
-                                    accept = true;
-                                }
-                            }
-
-                            if (accept) {
-                                e->acceptProposedAction();
-                            }
-                        }
-                    }
-
-                    if (!e->isAccepted()) {
-                        return true;
-                    }
-                    break;
-                }
-
                 case QEvent::Close:
                     if (d->closeAsExit && event->isAccepted()) {
                         d->quit();
@@ -387,17 +290,6 @@ namespace Core {
         friend class IWindow;
         friend class IWindowPrivate;
     };
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -441,15 +333,12 @@ namespace Core {
         // Create window
         auto win = q->createWindow(nullptr);
         win->setAttribute(Qt::WA_DeleteOnClose);
-        
+
         // Ensure closing window when quit
         connect(qApp, &QApplication::aboutToQuit, win, &QWidget::close);
 
         q->setWindow(win);
-        shortcutCtx = new QMShortcutContext(this);
         winFilter = new WindowEventFilter(this, win);
-
-        q->addShortcutContext(win, IWindow::Stable); // Default shortcut context
 
         IExecutivePrivate::load(enableDelayed);
 
@@ -466,9 +355,6 @@ namespace Core {
             w->hide();
 
         ICoreBase::instance()->windowSystem()->d_func()->windowAboutToDestroy(q);
-
-        delete shortcutCtx;
-        shortcutCtx = nullptr;
 
         IExecutivePrivate::quit();
 
@@ -487,163 +373,6 @@ namespace Core {
     void IWindow::setCloseAsExit(bool on) {
         Q_D(IWindow);
         d->closeAsExit = on;
-    }
-
-    void IWindow::addWidget(const QString &id, QWidget *w) {
-        Q_D(IWindow);
-        if (!w) {
-            myWarning(__func__) << "trying to add null widget";
-            return;
-        }
-        if (d->widgetMap.contains(id)) {
-            myWarning(__func__) << "trying to add duplicated widget:" << id;
-            return;
-        }
-        d->widgetMap.insert(id, w);
-        Q_EMIT widgetAdded(id, w);
-    }
-
-    void IWindow::removeWidget(const QString &id) {
-        Q_D(IWindow);
-        auto it = d->widgetMap.find(id);
-        if (it == d->widgetMap.end()) {
-            myWarning(__func__) << "action item does not exist:" << id;
-            return;
-        }
-        auto w = it.value();
-        Q_EMIT aboutToRemoveWidget(id, w);
-        d->widgetMap.erase(it);
-    }
-
-    QWidget *IWindow::widget(const QString &id) const {
-        Q_D(const IWindow);
-        auto it = d->widgetMap.find(id);
-        if (it != d->widgetMap.end()) {
-            return it.value();
-        }
-        return nullptr;
-    }
-
-    QWidgetList IWindow::widgets() const {
-        Q_D(const IWindow);
-        return d->widgetMap.values();
-    }
-
-    void IWindow::addActionItem(ActionItem *item) {
-        Q_D(IWindow);
-        if (!item) {
-            myWarning(__func__) << "trying to add null action item";
-            return;
-        }
-
-        if (d->actionItemMap.contains(item->id())) {
-            myWarning(__func__) << "trying to add duplicated action item:" << item->id();
-            return;
-        }
-        d->actionItemMap.append(item->id(), item);
-
-        switch (item->type()) {
-            case ActionItem::Action: {
-                window()->addAction(item->action());
-                break;
-            }
-            case ActionItem::Standalone: {
-                addShortcutContext(item->standalone(), Stable);
-                break;
-            }
-            default:
-                break;
-        }
-    }
-
-    void IWindow::removeActionItem(Core::ActionItem *item) {
-        if (item == nullptr) {
-            myWarning(__func__) << "trying to remove null item";
-            return;
-        }
-        removeActionItem(item->id());
-    }
-
-    void IWindow::removeActionItem(const QString &id) {
-        Q_D(IWindow);
-        auto it = d->actionItemMap.find(id);
-        if (it == d->actionItemMap.end()) {
-            myWarning(__func__) << "action item does not exist:" << id;
-            return;
-        }
-        auto item = it.value();
-        d->actionItemMap.erase(it);
-
-        switch (item->type()) {
-            case ActionItem::Action: {
-                window()->removeAction(item->action());
-                break;
-            }
-            case ActionItem::Standalone: {
-                removeShortcutContext(item->standalone());
-                break;
-            }
-            default:
-                break;
-        }
-    }
-
-    ActionItem *IWindow::actionItem(const QString &id) const {
-        Q_D(const IWindow);
-        return d->actionItemMap.value(id, nullptr);
-    }
-
-    QList<ActionItem *> IWindow::actionItems() const {
-        Q_D(const IWindow);
-        return d->actionItemMap.values_qlist();
-    }
-
-    void IWindow::addShortcutContext(QWidget *w, ShortcutContextPriority priority) {
-        Q_D(IWindow);
-        auto d1 = d_func();
-        auto d2 = d_ptr.data();
-        d->shortcutCtx->addWidget(w, priority);
-    }
-
-    void IWindow::removeShortcutContext(QWidget *w) {
-        Q_D(IWindow);
-        d->shortcutCtx->removeWidget(w);
-    }
-
-    QList<QWidget *> IWindow::shortcutContexts() const {
-        Q_D(const IWindow);
-        return d->shortcutCtx->widgets();
-    }
-
-    bool IWindow::hasDragFileHandler(const QString &suffix) {
-        Q_D(const IWindow);
-        if (suffix.isEmpty())
-            return false;
-
-        return d->dragFileHandlerMap.contains(suffix.toLower());
-    }
-
-    void IWindow::setDragFileHandler(const QString &suffix,
-                                     const std::function<void(const QString &)> &handler,
-                                     int maxCount) {
-        Q_D(IWindow);
-
-        if (suffix.isEmpty())
-            return;
-
-        if (maxCount < 0) {
-            removeDragFileHandler(suffix);
-            return;
-        }
-        d->dragFileHandlerMap[suffix.toLower()] = {handler, maxCount};
-    }
-
-    void IWindow::removeDragFileHandler(const QString &suffix) {
-        Q_D(IWindow);
-        if (suffix.isEmpty())
-            return;
-
-        d->dragFileHandlerMap.remove(suffix.toLower());
     }
 
     IWindow::IWindow(QObject *parent) : IWindow(*new IWindowPrivate(), parent) {

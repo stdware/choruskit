@@ -1,8 +1,7 @@
 #ifndef DOCUMENTSYSTEM_P_H
 #define DOCUMENTSYSTEM_P_H
 
-#include <QMCore/qmchronomap.h>
-#include <QMCore/qmchronoset.h>
+#include <stdcorelib/linked_map.h>
 
 #include <CoreApi/private/documentwatcher_p.h>
 #include <CoreApi/documentsystem.h>
@@ -22,14 +21,14 @@ namespace Core {
 
         void saveOpenFileSettings() const;
 
-        QMChronoMap<QString, DocumentSpec *> docSpecs;
-        QHash<QString, QMChronoSet<DocumentSpec *>> extensionsMap;
+        stdc::linked_map<QString, DocumentSpec *> docSpecs;
+        QHash<QString, stdc::linked_map<DocumentSpec *, int /*NOT USED*/>> extensionsMap;
         QHash<QString, QString> preferredExtensionIdMap;
 
         QStringList m_recentFiles;
         QStringList m_recentDirs;
 
-        QMChronoMap<IDocument *, QJsonObject> docInfos;
+        stdc::linked_map<IDocument *, QJsonObject> docInfos;
 
         mutable QString openFileLastVisitDir;
         mutable QString openDirLastVisitDir;

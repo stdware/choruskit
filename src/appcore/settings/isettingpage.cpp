@@ -33,7 +33,7 @@ namespace Core {
         return d->title;
     }
 
-    void ISettingPage::setTitle(const QMDisplayString &title) {
+    void ISettingPage::setTitle(const DisplayString &title) {
         Q_D(ISettingPage);
         d->title = title;
 
@@ -45,7 +45,7 @@ namespace Core {
         return d->description;
     }
 
-    void ISettingPage::setDescription(const QMDisplayString &description) {
+    void ISettingPage::setDescription(const DisplayString &description) {
         Q_D(ISettingPage);
         d->description = description;
 
@@ -108,7 +108,8 @@ namespace Core {
     QList<ISettingPage *> ISettingPage::allPages() const {
         Q_D(const ISettingPage);
         QList<ISettingPage *> res;
-        for (const auto &page : d->pages) {
+        for (const auto &pair : d->pages) {
+            auto &page = pair.second;
             res.append(page);
             res.append(page->allPages());
         }

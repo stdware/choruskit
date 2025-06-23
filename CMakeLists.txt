@@ -36,7 +36,7 @@ set(CHORUSKIT_TRANSLATIONS zh_CN zh_TW ja_JP)
 # ----------------------------------
 # Find basic dependencies
 # ----------------------------------
-find_package(qmsetup REQUIRED)
+find_package(qmsetup CONFIG REQUIRED)
 
 qm_import(Filesystem)
 qm_init_directories()

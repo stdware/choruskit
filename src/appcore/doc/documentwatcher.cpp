@@ -9,8 +9,6 @@
 #include <QPushButton>
 #include <QTimer>
 
-#include <QMCore/qmsystem.h>
-
 namespace Core {
 
     DocumentWatcherPrivate::DocumentWatcherPrivate()
@@ -81,7 +79,7 @@ namespace Core {
        (The added file names are guaranteed to be absolute and cleaned.) */
     void DocumentWatcherPrivate::addFileInfo(IDocument *document) {
         // Patch: skip if not exist, until the instance has been set a valid path
-        if (!QM::isFileExist(document->filePath()))
+        if (!QFileInfo(document->filePath()).isFile())
             return;
 
         const QString fixedName =
@@ -625,7 +623,7 @@ namespace Core {
     IDocument *DocumentWatcher::searchDocument(const QString &filePath) const {
         Q_D(const DocumentWatcher);
 
-        if (!QM::isFileExist(filePath))
+        if (!QFileInfo(filePath).isFile())
             return nullptr;
 
         const QString &fixedFrom = fixFileName(filePath, ResolveLinks);

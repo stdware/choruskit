@@ -1,7 +1,7 @@
 #ifndef CKAPPCOREGLOBAL_H
 #define CKAPPCOREGLOBAL_H
 
-#include <QtGlobal>
+#include <QtCore/QtGlobal>
 
 #ifndef CKAPPCORE_EXPORT
 #  ifdef CKAPPCORE_STATIC

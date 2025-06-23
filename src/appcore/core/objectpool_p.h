@@ -1,7 +1,7 @@
 #ifndef OBJECTPOOL_P_H
 #define OBJECTPOOL_P_H
 
-#include <QMCore/qmchronoset.h>
+#include <stdcorelib/linked_map.h>
 
 #include <CoreApi/objectpool.h>
 
@@ -21,7 +21,7 @@ namespace Core {
         std::list<QObject *> objects;
 
         // id -> objects with same id
-        QHash<QString, QMChronoSet<QObject *>> objectMap;
+        QHash<QString, stdc::linked_map<QObject *, int /*NOT USED*/>> objectMap;
 
         struct Index {
             QString id;

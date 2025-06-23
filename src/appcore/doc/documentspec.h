@@ -3,9 +3,7 @@
 
 #include <QObject>
 
-#include <QMCore/qmdisplaystring.h>
-
-#include <CoreApi/ckappcoreglobal.h>
+#include <CoreApi/displaystring.h>
 
 namespace Core {
 
@@ -22,10 +20,10 @@ namespace Core {
         QString id() const;
 
         QString displayName() const;
-        void setDisplayName(const QMDisplayString &displayName);
+        void setDisplayName(const DisplayString &displayName);
 
         QString description() const;
-        void setDescription(const QMDisplayString &description);
+        void setDescription(const DisplayString &description);
 
         QIcon icon() const;
         void setIcon(const QIcon &icon);

@@ -1,7 +1,7 @@
 #ifndef ISETTINGPAGEPRIVATE_H
 #define ISETTINGPAGEPRIVATE_H
 
-#include <QMCore/qmchronomap.h>
+#include <stdcorelib/linked_map.h>
 
 #include <CoreApi/isettingpage.h>
 
@@ -17,11 +17,11 @@ namespace Core {
 
         ISettingPage *q_ptr;
 
-        QMChronoMap<QString, ISettingPage *> pages;
+        stdc::linked_map<QString, ISettingPage *> pages;
 
         QString id;
-        QMDisplayString title;
-        QMDisplayString description;
+        DisplayString title;
+        DisplayString description;
     };
 
 }

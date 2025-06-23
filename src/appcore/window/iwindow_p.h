@@ -14,9 +14,7 @@
 #include <QSet>
 #include <QTimer>
 
-#include <QMCore/qmchronomap.h>
-#include <QMCore/qmchronoset.h>
-#include <QMWidgets/qmshortcutcontext.h>
+#include <stdcorelib/linked_map.h>
 
 #include <CoreApi/iwindow.h>
 
@@ -49,17 +47,7 @@ namespace Core {
         bool closeAsExit;
 
         QObject *winFilter;
-
-        QMShortcutContext *shortcutCtx;
-        QMChronoMap<QString, ActionItem *> actionItemMap;
-
         QHash<QString, QWidget *> widgetMap;
-
-        struct DragFileHandler {
-            std::function<void(const QString &)> func;
-            int max;
-        };
-        QHash<QString, DragFileHandler> dragFileHandlerMap;
 
     private:
         friend class WindowSystem;

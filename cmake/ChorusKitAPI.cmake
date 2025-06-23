@@ -1,7 +1,7 @@
 include_guard(DIRECTORY)
 
 if(NOT TARGET qmsetup::library)
-    find_package(qmsetup REQUIRED)
+    find_package(qmsetup CONFIG REQUIRED)
 endif()
 
 qm_import(Filesystem Preprocess Deploy)

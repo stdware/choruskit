@@ -16,6 +16,7 @@ namespace Core {
         ~DocumentSystem();
 
         static QString logBaseDir();
+        static void setLogBaseDir(const QString &dir);
 
     public:
         bool addDocType(DocumentSpec *doc);

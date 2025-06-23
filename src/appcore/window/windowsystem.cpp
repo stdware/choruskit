@@ -7,10 +7,7 @@
 #include <QPointer>
 #include <QScreen>
 #include <QSplitter>
-
-#include <QMCore/qmbatch.h>
-#include <QMCore/qmsystem.h>
-#include <QMWidgets/qmview.h>
+#include <QJsonArray>
 
 #include "iloader.h"
 
@@ -46,8 +43,31 @@ namespace Core {
         return obj;
     }
 
+    static QList<int> strListToIntList(const QStringList &list) {
+        QList<int> res;
+        for (const auto &item : list) {
+            bool isNum;
+            int num = item.toInt(&isNum);
+            if (!isNum) {
+                return {};
+            }
+            res.append(num);
+        }
+        return res;
+    }
+
+    static QStringList jsonArrayToStrList(const QJsonArray &arr, bool considerNum = false) {
+        QStringList res;
+        for (const auto &item : arr)
+            if (item.isString())
+                res.append(item.toString());
+            else if (item.isDouble() && considerNum)
+                res.append(QString::number(item.toDouble()));
+        return res;
+    }
+
     SplitterSizes SplitterSizes::fromObject(const QJsonObject &obj) {
-        return QM::strListToIntList(QM::jsonArrayToStrList(obj.value("sizes").toArray()));
+        return strListToIntList(jsonArrayToStrList(obj.value("sizes").toArray()));
     }
 
     template <class V, template <class> class Array, class T, class Mapper>
@@ -123,7 +143,7 @@ namespace Core {
     void WindowSystemPrivate::windowCreated(IWindow *iWin) {
         Q_Q(WindowSystem);
         windowMap.insert(iWin->window(), iWin);
-        iWindows.append(iWin);
+        iWindows.append(iWin, 0);
     }
 
     void WindowSystemPrivate::windowAboutToDestroy(IWindow *iWin) {
@@ -159,12 +179,12 @@ namespace Core {
 
     QList<IWindow *> WindowSystem::windows() const {
         Q_D(const WindowSystem);
-        return d->iWindows.values_qlist();
+        return d->iWindows.keys_qlist();
     }
 
     IWindow *WindowSystem::firstWindow() const {
         Q_D(const WindowSystem);
-        return d->iWindows.isEmpty() ? nullptr : *d->iWindows.begin();
+        return d->iWindows.empty() ? nullptr : d->iWindows.begin()->first;
     }
 
     using WindowSizeTrimmers = QHash<QString, WindowSizeTrimmer *>;
@@ -227,8 +247,33 @@ namespace Core {
         bool m_obsolete;
     };
 
-    void WindowSystem::loadGeometry(const QString &id, QWidget *w,
-                                          const QSize &fallback) const {
+    static void centralizeWindow(QWidget *w, QSizeF ratio = QSizeF(-1, -1)) {
+        QSize desktopSize;
+        if (w->parentWidget()) {
+            desktopSize = w->parentWidget()->size();
+        } else {
+            desktopSize = w->screen()->size();
+        }
+
+        int dw = desktopSize.width();
+        int dh = desktopSize.height();
+
+        double rw = ratio.width();
+        double rh = ratio.height();
+
+        QSize size = w->size();
+        if (rw > 0 && rw <= 1) {
+            size.setWidth(dw * rw);
+        }
+        if (rh > 0 && rh <= 1) {
+            size.setHeight(dh * rh);
+        }
+
+        w->setGeometry((dw - size.width()) / 2, (dh - size.height()) / 2, size.width(),
+                       size.height());
+    }
+
+    void WindowSystem::loadGeometry(const QString &id, QWidget *w, const QSize &fallback) const {
         Q_D(const WindowSystem);
 
         auto winProp = d->winGeometries.value(id, {});
@@ -239,9 +284,10 @@ namespace Core {
         bool isDialog = w->parentWidget() && (w->windowFlags() & Qt::Dialog);
         if (winRect.size().isEmpty() || isMax) {
             // Adjust sizes
-            w->resize(fallback.isValid() ? fallback : (QApplication::primaryScreen()->size() * 0.75));
+            w->resize(fallback.isValid() ? fallback
+                                         : (QApplication::primaryScreen()->size() * 0.75));
             if (!isDialog) {
-                QMView::centralizeWindow(w);
+                centralizeWindow(w);
             }
             if (isMax) {
                 w->showMaximized();
@@ -253,7 +299,7 @@ namespace Core {
                 w->setGeometry(winRect);
         }
 
-        double ratio = (w->screen()->logicalDotsPerInch() / QM::unitDpi());
+        double ratio = (w->screen()->devicePixelRatio());
         auto addTrimmer = [&](bool move) {
             if (!isDialog && !isMax) {
                 if (move) {

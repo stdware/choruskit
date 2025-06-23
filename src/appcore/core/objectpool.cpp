@@ -1,6 +1,8 @@
 #include "objectpool.h"
 #include "objectpool_p.h"
 
+#include <utility>
+
 #include <QDebug>
 #include <QMetaMethod>
 
@@ -66,7 +68,7 @@ namespace Core {
         {
             QWriteLocker locker(&d->objectListLock);
             auto &set = d->objectMap[id];
-            if (!set.append(obj).second) {
+            if (!set.append(obj, 0).second) {
                 myWarning(__func__) << "trying to add duplicated object:" << id << obj;
                 return;
             }
@@ -106,7 +108,7 @@ namespace Core {
                 // Remove from map
                 auto &set = it.value();
                 set.remove(obj);
-                if (set.isEmpty()) {
+                if (set.empty()) {
                     d->objectMap.erase(it);
                 }
             }
@@ -132,7 +134,7 @@ namespace Core {
             if (it == d->objectMap.end()) {
                 return;
             }
-            objs = it->values_qlist();
+            objs = it->keys_qlist();
         }
 
         for (const auto &obj : qAsConst(objs)) {
@@ -142,8 +144,8 @@ namespace Core {
         {
             QWriteLocker locker(&d->objectListLock);
             auto it = d->objectMap.find(id);
-            for (const auto &item : qAsConst(it.value())) {
-                d->objectIndexes.remove(item);
+            for (const auto &item : std::as_const(it.value())) {
+                d->objectIndexes.remove(item.first);
             }
             d->objectMap.erase(it);
         }
@@ -164,7 +166,7 @@ namespace Core {
         QReadLocker locker(&d->objectListLock);
         auto it2 = d->objectMap.find(id);
         if (it2 != d->objectMap.end()) {
-            return it2->values_qlist();
+            return it2->keys_qlist();
         }
         return {};
     }
@@ -174,7 +176,7 @@ namespace Core {
         QReadLocker locker(&d->objectListLock);
         auto it2 = d->objectMap.find(id);
         if (it2 != d->objectMap.end()) {
-            return it2->isEmpty() ? nullptr : *it2->begin();
+            return it2->empty() ? nullptr : it2->begin()->first;
         }
         return nullptr;
     }

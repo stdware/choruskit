@@ -1,7 +1,7 @@
 qm_import(Preprocess)
 
 set(CHORUSKIT_PROJECT_DESCRIPTION "ChorusKit Framework Library")
-set(CHORUSKIT_PROJECT_COPYRIGHT "Copyright 2019-2023 OpenVPI")
+set(CHORUSKIT_PROJECT_COPYRIGHT "Copyright 2019-2025 OpenVPI")
 set(CHORUSKIT_GENERATED_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../include)
 set(CHORUSKIT_BUILD_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../etc/include)
 
@@ -103,7 +103,8 @@ endmacro()
 # ----------------------------------
 add_subdirectory(3rdparty)
 
-# add_subdirectory(appcore)
+add_subdirectory(appcore)
+
 add_subdirectory(loader)
 
 # ----------------------------------

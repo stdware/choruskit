@@ -3,9 +3,7 @@
 
 #include <QObject>
 
-#include <QMCore/qmdisplaystring.h>
-
-#include <CoreApi/ckappcoreglobal.h>
+#include <CoreApi/displaystring.h>
 
 namespace Core {
 
@@ -22,10 +20,10 @@ namespace Core {
         QString id() const;
 
         QString title() const;
-        void setTitle(const QMDisplayString &title);
+        void setTitle(const DisplayString &title);
 
         QString description() const;
-        void setDescription(const QMDisplayString &description);
+        void setDescription(const DisplayString &description);
 
         bool addPage(ISettingPage *page);
         bool removePage(ISettingPage *page);
@@ -41,7 +39,9 @@ namespace Core {
         virtual QString sortKeyword() const;
 
         virtual bool matches(const QString &word) const;
-        virtual QWidget *widget() = 0;
+
+        // Abstraction for QtWidgets and QtQuick
+        virtual QObject *widget() = 0;
 
         virtual bool accept() = 0;
         virtual void finish() = 0;

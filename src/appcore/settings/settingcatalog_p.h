@@ -1,7 +1,7 @@
 #ifndef SETTINGCATALOGPRIVATE_H
 #define SETTINGCATALOGPRIVATE_H
 
-#include <QMCore/qmchronomap.h>
+#include <stdcorelib/linked_map.h>
 
 #include <CoreApi/settingcatalog.h>
 
@@ -20,7 +20,7 @@ namespace Core {
         void addPageRecursive(ISettingPage *page);
         void removePageRecursive(ISettingPage *page);
 
-        QMChronoMap<QString, ISettingPage *> pages;
+        stdc::linked_map<QString, ISettingPage *> pages;
         QHash<QString, QSet<ISettingPage *>> allPages;
 
     private:

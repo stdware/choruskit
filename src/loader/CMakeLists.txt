@@ -3,7 +3,7 @@ project(CkLoader
     LANGUAGES CXX
 )
 
-find_package(ExtensionSystem REQUIRED)
+find_package(ExtensionSystem CONFIG REQUIRED)
 
 file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 

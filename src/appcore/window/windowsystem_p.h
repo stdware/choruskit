@@ -4,8 +4,7 @@
 #include <QHash>
 #include <QSet>
 
-#include <QMCore/qmchronomap.h>
-#include <QMCore/qmchronoset.h>
+#include <stdcorelib/linked_map.h>
 
 #include <CoreApi/windowsystem.h>
 
@@ -49,7 +48,7 @@ namespace Core {
 
         WindowSystem *q_ptr;
 
-        QMChronoSet<IWindow *> iWindows;
+        stdc::linked_map<IWindow *, int /*NOT USED*/> iWindows;
         QHash<QWidget *, IWindow *> windowMap;
 
         QHash<QString, WindowGeometry> winGeometries;
