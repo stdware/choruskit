@@ -2,6 +2,7 @@
 #include "documentsystem_p.h"
 
 #include "iloader.h"
+#include "applicationinfo.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -143,7 +144,7 @@ namespace Core {
     }
 
     static QString &getLogBaseDir() {
-        static QString logBaseDir = QDir::tempPath() + "/logs";
+        static QString logBaseDir = ApplicationInfo::tempDir() + "/logs";
         return logBaseDir;
     }
 
