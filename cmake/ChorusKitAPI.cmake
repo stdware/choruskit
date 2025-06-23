@@ -26,6 +26,8 @@ endif()
 
         CK_DEV_START_YEAR
         CK_BUILDINFO_PREFIX
+        CK_CONFIG_HEADER_FILENAME
+        CK_BUILDINFO_HEADER_FILENAME
 
         CK_ENABLE_CONSOLE
         CK_ENABLE_INSTALL
@@ -117,6 +119,14 @@ macro(ck_init_buildsystem)
         set(CK_BUILDINFO_PREFIX ${CK_APPLICATION_NAME})
     endif()
 
+    if(NOT DEFINED CK_CONFIG_HEADER_FILENAME)
+        set(CK_CONFIG_HEADER_FILENAME "choruskit_config.h")
+    endif()
+
+    if(NOT DEFINED CK_BUILDINFO_HEADER_FILENAME)
+        set(CK_BUILDINFO_HEADER_FILENAME "choruskit_buildinfo.h")
+    endif()
+
     # Set windows dependencies deploy variables
     if(NOT DEFINED CK_WIN_APPLOCAL_DEPS)
         set(CK_WIN_APPLOCAL_DEPS off)
@@ -201,8 +211,8 @@ macro(ck_init_buildsystem)
     add_custom_target(ChorusKit_CopySharedFiles)
 
     # Used ChorusKit Metadata Keys:
-    #     APPLICATION_PLUGINS
-    #     APPLICATION_LIBRARIES
+    # APPLICATION_PLUGINS
+    # APPLICATION_LIBRARIES
 endmacro()
 
 #[[
@@ -211,8 +221,8 @@ endmacro()
     ck_finish_buildsystem()
 #]]
 macro(ck_finish_buildsystem)
-    set(_ck_config_file ${CK_BUILD_INCLUDE_DIR}/choruskit_config.h)
-    set(_ck_buildinfo_file ${CK_BUILD_INCLUDE_DIR}/choruskit_buildinfo.h)
+    set(_ck_config_file ${CK_BUILD_INCLUDE_DIR}/${CK_CONFIG_HEADER_FILENAME})
+    set(_ck_buildinfo_file ${CK_BUILD_INCLUDE_DIR}/${CK_BUILDINFO_HEADER_FILENAME})
 
     qm_generate_config(${_ck_config_file})
     qm_generate_build_info(${_ck_buildinfo_file} YEAR TIME PREFIX ${CK_BUILDINFO_PREFIX})
@@ -758,7 +768,7 @@ function(ck_sync_include _target)
         )
     endif()
 
-    if (CK_SYNC_INCLUDE_FORCE)
+    if(CK_SYNC_INCLUDE_FORCE)
         list(APPEND _sync_options FORCE)
     endif()
 

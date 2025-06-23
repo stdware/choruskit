@@ -67,9 +67,15 @@ namespace Core {
         contexts[priority].append(w, 0);
 
         const auto &actions = w->actions();
+
+        stdc::linked_map<QAction *, int /*NOT USED*/> actionsMap;
+        for (const auto &action : actions) {
+            actionsMap.append(action, 0);
+        }
+
         widgets.insert(w, {
                               priority,
-                              decltype(WidgetData::actions)(actions.begin(), actions.end()),
+                              actionsMap,
                           });
 
         // Add widget actions

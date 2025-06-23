@@ -10,7 +10,7 @@ file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 choruskit_add_library(${PROJECT_NAME} STATIC NO_SYNC_INCLUDE AUTOGEN
     SOURCES ${_src}
     LINKS ExtensionSystem::ExtensionSystem
-    LINKS_PRIVATE "$<BUILD_INTERFACE:SingleApplication::SingleApplication>"
+    LINKS_PRIVATE "$<BUILD_INTERFACE:SingleApplication::SingleApplication>" CkAppCore
     INCLUDE_PRIVATE include/CkLoader src
     QT_INCLUDE_PRIVATE Core Gui Widgets
     FEATURES cxx_std_17

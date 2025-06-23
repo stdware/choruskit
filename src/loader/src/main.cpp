@@ -16,14 +16,16 @@
 
 #include <SingleApplication>
 
+#include <CoreApi/applicationinfo.h>
+
 #include "loaderspec.h"
-#include "loaderutils.h"
 #include "splashscreen.h"
 
 using Loader::LoaderSpec;
 using Loader::SplashScreen;
 
 using namespace ExtensionSystem;
+using namespace Core;
 
 // Use native messageBox to display message, instead of QMessageBox
 #define CKLOADER_USE_NATIVE_MESSAGEBOX
@@ -107,7 +109,7 @@ void displayError(const QString &t, int exitCode = -1) {
     if (g_splash) {
         g_splash->close();
     }
-    Loader::systemMessageBox(nullptr, Loader::Critical, qApp->applicationName(), t);
+    ApplicationInfo::messageBox(nullptr, ApplicationInfo::Critical, qApp->applicationName(), t);
 #endif
     std::exit(exitCode);
 }
@@ -127,7 +129,7 @@ static inline void displayHelpText(const QString &t) {
     if (g_splash) {
         g_splash->close();
     }
-    Loader::systemMessageBox(nullptr, Loader::Information, qApp->applicationName(), t);
+    ApplicationInfo::messageBox(nullptr, ApplicationInfo::Information, qApp->applicationName(), t);
 #endif
 
     std::exit(0);
@@ -237,12 +239,11 @@ int __main__(LoaderSpec *loadSpec) {
 
     // Settings path fallback
     if (loadSpec->userSettingsPath.isEmpty()) {
-        loadSpec->userSettingsPath = Loader::systemAppDataPath();
+        loadSpec->userSettingsPath = ApplicationInfo::defaultAppDataDir();
     }
 
     if (loadSpec->systemSettingsPath.isEmpty()) {
-        loadSpec->systemSettingsPath =
-            QDir::cleanPath(qApp->applicationDirPath() + "/../share/" + qApp->applicationName());
+        loadSpec->systemSettingsPath = ApplicationInfo::appShareDir();
     }
 
     if (!QFileInfo(loadSpec->userSettingsPath).isDir() &&
@@ -250,7 +251,8 @@ int __main__(LoaderSpec *loadSpec) {
         QString msg = QCoreApplication::translate("Application",
                                                   "Failed to create user settings directory: %1")
                           .arg(loadSpec->userSettingsPath);
-        Loader::systemMessageBox(nullptr, Loader::Warning, qApp->applicationName(), msg);
+        ApplicationInfo::messageBox(nullptr, ApplicationInfo::Warning, qApp->applicationName(),
+                                    msg);
         return -1;
     }
 
@@ -264,7 +266,7 @@ int __main__(LoaderSpec *loadSpec) {
 
         // Root privilege detection
         if (!g_loadSpec->allowRoot && !argsParser.allowRoot && !argsParser.showHelp &&
-            Loader::isUserRoot()) {
+            ApplicationInfo::isUserRoot()) {
             QString msg =
                 QCoreApplication::translate(
                     "Application", "You're trying to start %1 as the %2, which is "
@@ -276,7 +278,8 @@ int __main__(LoaderSpec *loadSpec) {
                          QCoreApplication::translate("Application", "Root")
 #endif
                     );
-            Loader::systemMessageBox(nullptr, Loader::Warning, qApp->applicationName(), msg);
+            ApplicationInfo::messageBox(nullptr, ApplicationInfo::Warning, qApp->applicationName(),
+                                        msg);
             return 0;
         }
 

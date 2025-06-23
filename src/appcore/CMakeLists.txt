@@ -13,7 +13,7 @@ choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
         Core Widgets Network
     QT_INCLUDE_PRIVATE
         Core Gui Widgets
-    LINKS
+    LINKS_PRIVATE
         stdcorelib::stdcorelib
     INCLUDE_PRIVATE
         *

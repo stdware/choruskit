@@ -138,11 +138,6 @@ namespace Core {
         if (!d->settingsPath.isEmpty()) {
             ILoaderPrivate::writeJson(d->settingsPath, d->userSettings);
         }
-
-        // if (!d->globalSettingsPath.isEmpty()) {
-        //     ILoaderPrivate::writeJson(d->globalSettingsPath, d->globalSettings);
-        // }
-
         d->settingsNeedWrite = false;
     }
 

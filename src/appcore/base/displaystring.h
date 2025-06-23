@@ -1,5 +1,5 @@
-#ifndef DIFFSCOPE_DISPLAYSTRING_H
-#define DIFFSCOPE_DISPLAYSTRING_H
+#ifndef CHORUSKIT_DISPLAYSTRING_H
+#define CHORUSKIT_DISPLAYSTRING_H
 
 #include <QPair>
 #include <QSharedDataPointer>
@@ -66,4 +66,4 @@ namespace Core {
 
 Q_DECLARE_METATYPE(Core::DisplayString)
 
-#endif // DIFFSCOPE_DISPLAYSTRING_H
+#endif // CHORUSKIT_DISPLAYSTRING_H
