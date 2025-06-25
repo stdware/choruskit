@@ -21,10 +21,11 @@ namespace Core {
 
         static ICoreBase *instance();
 
+        // Resource Managers
     public:
-        WindowSystem *windowSystem() const;
-        DocumentSystem *documentSystem() const;
-        SettingCatalog *settingCatalog() const;
+        static WindowSystem *windowSystem();
+        static DocumentSystem *documentSystem();
+        static SettingCatalog *settingCatalog();
 
     protected:
         ICoreBase(ICoreBasePrivate &d, QObject *parent = nullptr);

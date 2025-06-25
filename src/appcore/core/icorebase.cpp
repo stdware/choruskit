@@ -1,9 +1,18 @@
 #include "icorebase.h"
 #include "icorebase_p.h"
 
-#include <QApplication>
+#include <QtCore/QFileInfo>
+#include <QtGui/QGuiApplication>
 
 namespace Core {
+
+#define myWarning (qWarning().nospace() << "Core::ICoreBase::" << __func__ << "():").space()
+
+#define checkInstance                                                                              \
+    if (!m_instance) {                                                                             \
+        myWarning << "Please instantiate the ICoreBase object first";                              \
+        return {};                                                                                 \
+    }
 
     ICoreBasePrivate::ICoreBasePrivate() {
     }
@@ -32,19 +41,19 @@ namespace Core {
         return m_instance;
     }
 
-    WindowSystem *ICoreBase::windowSystem() const {
-        Q_D(const ICoreBase);
-        return d->windowSystem;
+    WindowSystem *ICoreBase::windowSystem() {
+        checkInstance;
+        return m_instance->d_func()->windowSystem;
     }
 
-    DocumentSystem *ICoreBase::documentSystem() const {
-        Q_D(const ICoreBase);
-        return d->documentSystem;
+    DocumentSystem *ICoreBase::documentSystem() {
+        checkInstance;
+        return m_instance->d_func()->documentSystem;
     }
 
-    SettingCatalog *ICoreBase::settingCatalog() const {
-        Q_D(const ICoreBase);
-        return d->settingCatalog;
+    SettingCatalog *ICoreBase::settingCatalog() {
+        checkInstance;
+        return m_instance->d_func()->settingCatalog;
     }
 
     ICoreBase::ICoreBase(ICoreBasePrivate &d, QObject *parent) : QObject(parent), d_ptr(&d) {

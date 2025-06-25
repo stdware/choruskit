@@ -5,7 +5,7 @@
 
 namespace Core {
 
-#define myWarning(func) (qWarning().nospace() << "Core::ISettingPage::" << (func) << "():").space()
+#define myWarning (qWarning().nospace() << "Core::ISettingPage::" << __func__ << "():").space()
 
     ISettingPagePrivate::ISettingPagePrivate() {
     }
@@ -55,11 +55,11 @@ namespace Core {
     bool ISettingPage::addPage(ISettingPage *page) {
         Q_D(ISettingPage);
         if (!page) {
-            myWarning(__func__) << "trying to add null page";
+            myWarning << "trying to add null page";
             return false;
         }
         if (d->pages.contains(page->id())) {
-            myWarning(__func__) << "trying to add duplicated page:" << page->id();
+            myWarning << "trying to add duplicated page:" << page->id();
             return false;
         }
 
@@ -73,7 +73,7 @@ namespace Core {
     bool ISettingPage::removePage(ISettingPage *page) {
         Q_D(ISettingPage);
         if (page == nullptr) {
-            myWarning(__func__) << "trying to remove null page";
+            myWarning << "trying to remove null page";
             return false;
         }
         return removePage(page->id());
@@ -83,7 +83,7 @@ namespace Core {
         Q_D(ISettingPage);
         auto it = d->pages.find(id);
         if (it == d->pages.end()) {
-            myWarning(__func__) << "page does not exist:" << id;
+            myWarning << "page does not exist:" << id;
             return false;
         }
 

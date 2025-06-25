@@ -17,7 +17,7 @@ QT_SPECIALIZE_STD_HASH_TO_CALL_QHASH_BY_CREF(QKeySequence)
 
 namespace Core {
 
-#define myWarning(func) (qWarning().nospace() << "Core::IWindow::" << (func) << "():").space()
+#define myWarning (qWarning().nospace() << "Core::IWindow::" << __func__ << "():").space()
 
     class WindowEventFilter : public QObject {
     public:

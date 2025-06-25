@@ -5,8 +5,7 @@
 
 namespace Core {
 
-#define myWarning(func)                                                                            \
-    (qWarning().nospace() << "Core::SettingCatalog::" << (func) << "():").space()
+#define myWarning (qWarning().nospace() << "Core::SettingCatalog::" << __func__ << "():").space()
 
     SettingCatalogPrivate::SettingCatalogPrivate() {
     }
@@ -91,11 +90,11 @@ namespace Core {
     bool SettingCatalog::addPage(ISettingPage *page) {
         Q_D(SettingCatalog);
         if (!page) {
-            myWarning(__func__) << "trying to add null page";
+            myWarning << "trying to add null page";
             return false;
         }
         if (d->pages.contains(page->id())) {
-            myWarning(__func__) << "trying to add duplicated page:" << page->id();
+            myWarning << "trying to add duplicated page:" << page->id();
             return false;
         }
 
@@ -110,7 +109,7 @@ namespace Core {
     bool SettingCatalog::removePage(ISettingPage *page) {
         Q_D(SettingCatalog);
         if (page == nullptr) {
-            myWarning(__func__) << "trying to remove null page";
+            myWarning << "trying to remove null page";
             return false;
         }
         return removePage(page->id());
@@ -120,7 +119,7 @@ namespace Core {
         Q_D(SettingCatalog);
         auto it = d->pages.find(id);
         if (it == d->pages.end()) {
-            myWarning(__func__) << "page does not exist:" << id;
+            myWarning << "page does not exist:" << id;
             return false;
         }
 

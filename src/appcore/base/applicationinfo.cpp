@@ -10,7 +10,18 @@
 #include <QtCore/QDir>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QCoreApplication>
 #include <QtWidgets/QMessageBox>
+
+#include <QtCore/private/qcoreapplication_p.h>
+
+#ifdef Q_OS_MAC
+#  define OS_LIBRARY_DIR "Frameworks"
+#  define OS_SHARE_DIR   "Resources"
+#else
+#  define OS_LIBRARY_DIR "lib"
+#  define OS_SHARE_DIR   "share"
+#endif
 
 namespace Core {
 
@@ -20,6 +31,52 @@ namespace Core {
         \brief The ApplicationInfo class provides information about the application.
 
         \note Call this class after the QCoreApplication has been created.
+    */
+
+    /*!
+        \enum ApplicationInfo::MessageBoxIcon
+        \brief Message level enumeration.
+
+        \var ApplicationInfo::NoIcon
+        \brief Normal level.
+        \var ApplicationInfo::Information
+        \brief Information level.
+        \var ApplicationInfo::Question
+        \brief Question level.
+        \var ApplicationInfo::Warning
+        \brief Warning level.
+        \var ApplicationInfo::Critical
+        \brief Error level.
+    */
+
+    /*!
+        \enum ApplicationInfo::SystemLocation
+        \brief Application special directories.
+
+        \var ApplicationInfo::Binary
+        \brief The global binary directory.
+        \var ApplicationInfo::Library
+        \brief The global library directory.
+        \var ApplicationInfo::Resources
+        \brief The global resources directory.
+        \var ApplicationInfo::AppData
+        \brief The global application data directory.
+    */
+
+    /*!
+        \enum ApplicationInfo::ApplicationLocation
+        \brief Application special directories.
+
+        \var ApplicationInfo::BuiltinResources
+        \brief The application builtin resources directory.
+        \var ApplicationInfo::BuiltinPlugins
+        \brief The application builtin plugins directory.
+        \var ApplicationInfo::UserConfig
+        \brief The application user config directory.
+        \var ApplicationInfo::RuntimeData
+        \brief The application persistent runtime data directory.
+        \var ApplicationInfo::TempData
+        \brief The application temporary data directory.
     */
 
     static QString getDefaultAppDataDir() {
@@ -89,10 +146,8 @@ namespace Core {
         }
     };
 
-    Q_GLOBAL_STATIC(ApplicationInfoData, appInfo);
-
     /*!
-        \fn int  ApplicationInfo::unitDpi()
+        \fn int ApplicationInfo::unitDpi()
 
         Returns the system unit dpi value.
 
@@ -211,13 +266,145 @@ namespace Core {
     }
 
     /*!
-        Returns the standard AppData location.
+        Returns the system location.
 
-        \li On Windows, returns <tt>\%UserProfile\%/AppData</tt>
-        \li On Mac/Linux, returns <tt>\%HOME\%/.config</tt>
     */
-    QString ApplicationInfo::defaultAppDataDir() {
-        return getDefaultAppDataDir();
+    QString ApplicationInfo::systemLocation(SystemLocation location) {
+        QString res;
+        switch (location) {
+            case Binary:
+                res = QCoreApplication::applicationDirPath();
+                break;
+            case Library:
+                res = appUpperDir() + "/" OS_LIBRARY_DIR;
+                break;
+            case Resources:
+                res = appUpperDir() + "/" OS_SHARE_DIR;
+                break;
+            case AppData:
+                res = getDefaultAppDataDir();
+                break;
+            default:
+                break;
+        }
+        return res;
+    }
+
+    /*!
+        Returns the application location.
+    */
+    QString ApplicationInfo::applicationLocation(ApplicationLocation location) {
+        QString res;
+        switch (location) {
+            case BuiltinResources:
+                res = systemLocation(Resources)
+#ifndef Q_OS_MAC
+                      + "/" + QCoreApplication::applicationName()
+#endif
+                    ;
+                break;
+            case BuiltinPlugins:
+#ifdef Q_OS_MAC
+                res = appUpperDir() + "/Plugins";
+#else
+                res = systemLocation(Library) + "/" + QCoreApplication::applicationName() +
+                      "/plugins";
+#endif
+                break;
+            case UserConfig:
+                res = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/" +
+                      QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName();
+                break;
+            case RuntimeData:
+                res = systemLocation(AppData) + "/" + QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName();
+                break;
+            case TempData:
+                res = QDir::tempPath() + "/" + QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName();
+                break;
+            default:
+                break;
+        }
+        return res;
+    }
+
+    static void replacePercentN(QString *result, int n) {
+        if (n >= 0) {
+            int percentPos = 0;
+            int len = 0;
+            while ((percentPos = result->indexOf(QLatin1Char('%'), percentPos + len)) != -1) {
+                len = 1;
+                if (percentPos + len == result->length())
+                    break;
+                QString fmt;
+                if (result->at(percentPos + len) == QLatin1Char('L')) {
+                    ++len;
+                    if (percentPos + len == result->length())
+                        break;
+                    fmt = QLatin1String("%L1");
+                } else {
+                    fmt = QLatin1String("%1");
+                }
+                if (result->at(percentPos + len) == QLatin1Char('n')) {
+                    fmt = fmt.arg(n);
+                    ++len;
+                    result->replace(percentPos, len, fmt);
+                    len = fmt.length();
+                }
+            }
+        }
+    }
+
+    static QString tryTranslate(const char *context, const char *sourceText,
+                                const char *disambiguation, int n, bool *ok) {
+        if (ok)
+            *ok = false;
+
+        QString result;
+        if (!sourceText) {
+            return result;
+        }
+
+        class HackedApplication : public QCoreApplication {
+        public:
+            inline QCoreApplicationPrivate *d_func() {
+                return static_cast<QCoreApplicationPrivate *>(d_ptr.data());
+            }
+        };
+
+        auto self = QCoreApplication::instance();
+        if (self) {
+            QCoreApplicationPrivate *d = static_cast<HackedApplication *>(self)->d_func();
+            QReadLocker locker(&d->translateMutex);
+            if (!d->translators.isEmpty()) {
+                QList<QTranslator *>::ConstIterator it;
+                QTranslator *translationFile;
+                for (it = d->translators.constBegin(); it != d->translators.constEnd(); ++it) {
+                    translationFile = *it;
+                    result = translationFile->translate(context, sourceText, disambiguation, n);
+                    if (!result.isNull())
+                        break;
+                }
+            }
+        }
+
+        if (result.isNull()) {
+            result = QString::fromUtf8(sourceText);
+        } else if (ok) {
+            *ok = true;
+        }
+        replacePercentN(&result, n);
+        return result;
+    }
+
+    /*!
+        Returns the translation text for \a sourceText, along with the success flag.
+    */
+    QString ApplicationInfo::translate(const char *context, const char *sourceText,
+                                       const char *disambiguation, int n, bool *ok) {
+        return tryTranslate(context, sourceText, disambiguation, n, ok);
     }
 
     /*!
@@ -227,16 +414,6 @@ namespace Core {
         \li On Windows, the default path is
        <tt>\%UserProfile\%/AppData/Local/\%ORG\%/\%AppName\%</tt>
      */
-    QString ApplicationInfo::appDataDir() {
-        return appInfo->appDataDir;
-    }
-
-    /*!
-        Sets the application data directory.
-    */
-    void ApplicationInfo::setAppDataDir(const QString &dir) {
-        appInfo->appDataDir = dir;
-    }
 
     /*!
         Returns user data directory.
@@ -244,16 +421,6 @@ namespace Core {
         \li On Mac/Linux, the default path is <tt>\%HOME\%/Documents/\%ORG\%/\%AppName\%</tt>
         \li On Windows, the default path is <tt>\%UserProfile\%/Documents/\%ORG\%/\%AppName\%</tt>
      */
-    QString ApplicationInfo::userDataDir() {
-        return appInfo->userDataDir;
-    }
-
-    /*!
-        Sets the user data directory.
-    */
-    void ApplicationInfo::setUserDataDir(const QString &dir) {
-        appInfo->userDataDir = dir;
-    }
 
     /*!
         Returns the application temporary directory.
@@ -261,16 +428,6 @@ namespace Core {
         \li On Mac/Linux, the default path is <tt>\%TMPDIR\%</tt>
         \li On Windows, the default path is <tt>\%TEMP\%</tt>
     */
-    QString ApplicationInfo::tempDir() {
-        return appInfo->tempDir;
-    }
-
-    /*!
-        Sets the application temporary directory.
-    */
-    void ApplicationInfo::setTempDir(const QString &dir) {
-        appInfo->tempDir = dir;
-    }
 
     /*!
         Returns the library directory.
@@ -278,16 +435,6 @@ namespace Core {
         \li On Mac/Linux, the default path is <tt>\%AppPath\%/../Frameworks</tt>
         \li On Windows, the default path is <tt>\%AppPath\%/../lib</tt>
     */
-    QString ApplicationInfo::libDir() {
-        return appInfo->libDir;
-    }
-
-    /*!
-        Sets the library directory.
-    */
-    void ApplicationInfo::setLibDir(const QString &dir) {
-        appInfo->libDir = dir;
-    }
 
     /*!
         Returns the share directory.
@@ -295,16 +442,6 @@ namespace Core {
         \li On Mac, the default path is <tt>\%AppPath\%/../Resources</tt>
         \li On Windows/Linux, the default path is <tt>\%AppPath\%/../share</tt>
     */
-    QString ApplicationInfo::shareDir() {
-        return appInfo->shareDir;
-    }
-
-    /*!
-        Sets the share directory.
-    */
-    void ApplicationInfo::setShareDir(const QString &dir) {
-        appInfo->shareDir = dir;
-    }
 
     /*!
         Returns the application's share directory.
@@ -312,16 +449,6 @@ namespace Core {
         \li On Mac, the default path is <tt>\%ShareDir\%</tt>
         \li On Windows/Linux, the default path is <tt>\%ShareDir\%/\%AppName\%</tt>
     */
-    QString ApplicationInfo::appShareDir() {
-        return appInfo->appShareDir;
-    }
-
-    /*!
-        Sets the application's share directory.
-    */
-    void ApplicationInfo::setAppShareDir(const QString &dir) {
-        appInfo->appShareDir = dir;
-    }
 
     /*!
         Returns the application's plugins directory.
@@ -329,15 +456,5 @@ namespace Core {
         \li On Mac, the default path is <tt>\%AppPath\%/../Plugins</tt>
         \li On Windows/Linux, the default path is <tt>\%LibDir\%/\%AppName\%/plugins</tt>
     */
-    QString ApplicationInfo::appPluginsDir() {
-        return appInfo->appPluginsDir;
-    }
-
-    /*!
-        Sets the application's plugins directory.
-    */
-    void ApplicationInfo::setAppPluginsDir(const QString &dir) {
-        appInfo->appPluginsDir = dir;
-    }
 
 }

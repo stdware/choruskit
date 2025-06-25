@@ -32,34 +32,26 @@ namespace Core {
         static void messageBox(QObject *parent, MessageBoxIcon flag, const QString &title,
                                const QString &text);
 
-        static QString defaultAppDataDir();
+        enum SystemLocation {
+            Binary,
+            Library,
+            Resources,
+            AppData,
+        };
+
+        static QString systemLocation(SystemLocation location);
+
+        enum ApplicationLocation {
+            BuiltinResources,
+            BuiltinPlugins,
+            UserConfig,
+            RuntimeData,
+            TempData,
+        };
+
+        static QString applicationLocation(ApplicationLocation directory);
 
     public:
-        static QString appDataDir();
-        static void setAppDataDir(const QString &dir);
-
-        static QString userDataDir();
-        static void setUserDataDir(const QString &dir);
-
-        static QString tempDir();
-        void setTempDir(const QString &dir);
-
-        static QString libDir();
-        void setLibDir(const QString &dir);
-
-        static QString shareDir();
-        void setShareDir(const QString &dir);
-
-        static QString appShareDir();
-        void setAppShareDir(const QString &dir);
-
-        static QString appPluginsDir();
-        void setAppPluginsDir(const QString &dir);
-
-    public:
-        static QString configurationPath(QSettings::Scope scope = QSettings::UserScope);
-        static QString configurationBasePrefix();
-
         static QString translate(const char *context, const char *sourceText,
                                  const char *disambiguation = nullptr, int n = -1,
                                  bool *ok = nullptr);

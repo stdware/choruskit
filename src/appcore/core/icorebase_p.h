@@ -22,6 +22,9 @@ namespace Core{
 
         void init();
 
+        QSettings *settings;
+        QSettings *globalSettings;
+
         WindowSystem *windowSystem;
         DocumentSystem *documentSystem;
         SettingCatalog *settingCatalog;

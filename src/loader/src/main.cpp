@@ -17,6 +17,7 @@
 #include <SingleApplication>
 
 #include <CoreApi/applicationinfo.h>
+#include <CoreApi/plugindatabase.h>
 
 #include "loaderspec.h"
 #include "splashscreen.h"
@@ -104,7 +105,7 @@ void displayError(const QString &t, int exitCode = -1) {
     if (g_splash) {
         g_splash->finish(&msgbox);
     }
-    msgbox.exec();
+    std::ignore = msgbox.exec();
 #else
     if (g_splash) {
         g_splash->close();
@@ -115,7 +116,7 @@ void displayError(const QString &t, int exitCode = -1) {
 }
 
 static inline void displayHelpText(const QString &t) {
-#ifndef CKLOADER_USE_NATIVE_MESSAGEBOX
+#if 1
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Information);
     msgbox.setWindowTitle(qApp->applicationName());
@@ -124,7 +125,7 @@ static inline void displayHelpText(const QString &t) {
     if (g_splash) {
         g_splash->finish(&msgbox);
     }
-    msgbox.exec();
+    std::ignore = msgbox.exec();
 #else
     if (g_splash) {
         g_splash->close();
@@ -239,11 +240,13 @@ int __main__(LoaderSpec *loadSpec) {
 
     // Settings path fallback
     if (loadSpec->userSettingsPath.isEmpty()) {
-        loadSpec->userSettingsPath = ApplicationInfo::defaultAppDataDir();
+        loadSpec->userSettingsPath =
+            ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData);
     }
 
     if (loadSpec->systemSettingsPath.isEmpty()) {
-        loadSpec->systemSettingsPath = ApplicationInfo::appShareDir();
+        loadSpec->systemSettingsPath =
+            ApplicationInfo::applicationLocation(ApplicationInfo::BuiltinResources);
     }
 
     if (!QFileInfo(loadSpec->userSettingsPath).isDir() &&
@@ -299,8 +302,19 @@ int __main__(LoaderSpec *loadSpec) {
         QString("%1/%2.plugins.ini").arg(loadSpec->systemSettingsPath, qApp->applicationName()),
         QSettings::IniFormat));
 
+    // We use JSON format settings for this application instead of Qt Creator's INI format
+    PluginDatabase pluginDatabase;
+    // TODO: change to json format
+    pluginDatabase.setSettings(new QSettings(
+        QString("%1/%2.plugins.json").arg(loadSpec->userSettingsPath, qApp->applicationName()),
+        QSettings::IniFormat));
+    pluginDatabase.setGlobalSettings(new QSettings(
+        QString("%1/%2.plugins.json").arg(loadSpec->systemSettingsPath, qApp->applicationName()),
+        QSettings::IniFormat));
+
     SplashScreen splash;
     g_splash = &splash;
+    pluginDatabase.setSplash(&splash);
     loadSpec->splashWillShow(&splash);
 
     splash.applyConfig(loadSpec->splashConfigPath);

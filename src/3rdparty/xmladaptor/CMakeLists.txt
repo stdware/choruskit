@@ -1,6 +1,6 @@
 project(xmladaptor)
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} STATIC)
 
 file(GLOB _src *.h *.cpp)
 qm_configure_target(${PROJECT_NAME}

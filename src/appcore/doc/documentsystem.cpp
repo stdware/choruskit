@@ -1,7 +1,7 @@
 #include "documentsystem.h"
 #include "documentsystem_p.h"
 
-#include "iloader.h"
+#include "plugindatabase.h"
 #include "applicationinfo.h"
 
 #include <QApplication>
@@ -20,13 +20,12 @@
 
 namespace Core {
 
-#define myWarning(func) (qWarning().nospace() << "Core::DocumentSystem::" << "():").space()
+#define myWarning (qWarning().nospace() << "Core::DocumentSystem::" << __func__ << "():").space()
 
     static const char settingCategoryC[] = "DocumentSystem";
 
-    static const char recentGroupC[] = "RecentFiles";
-    static const char filesKeyC[] = "Files";
-    static const char dirKeyC[] = "Directories";
+    static const char recentFilesC[] = "RecentFiles";
+    static const char recentDirsC[] = "RecentFiles";
 
     static const char lastVisitGroupC[] = "LastVisitDirs";
     static const char openFileLastVisitDirC[] = "OpenFile";
@@ -57,15 +56,11 @@ namespace Core {
     }
 
     void DocumentSystemPrivate::readSettings() {
-        auto s = ILoader::instance()->settings();
+        auto settings = PluginDatabase::settings();
+        settings->beginGroup(QLatin1String(settingCategoryC));
 
-        auto obj = s->value(settingCategoryC).toObject();
-
-        auto recentObj = obj.value(recentGroupC).toObject();
-        QStringList recentFiles =
-            jsonArrayToStrList(recentObj.value(QLatin1String(filesKeyC)).toArray());
-        QStringList recentDirs =
-            jsonArrayToStrList(recentObj.value(QLatin1String(dirKeyC)).toArray());
+        QStringList recentFiles = settings->value(QLatin1String(recentFilesC)).toStringList();
+        QStringList recentDirs = settings->value(QLatin1String(recentDirsC)).toStringList();
 
         // clean non-existing files
         m_recentFiles.clear();
@@ -81,29 +76,25 @@ namespace Core {
                 m_recentDirs.append(fileName);
         }
 
-        auto lastVisitObj = obj.value(lastVisitGroupC).toObject();
-        openFileLastVisitDir = lastVisitObj.value(openFileLastVisitDirC).toString();
-        openDirLastVisitDir = lastVisitObj.value(openDirLastVisitDirC).toString();
-        saveFileLastVisitDir = lastVisitObj.value(saveFileLastVisitDirC).toString();
+        openFileLastVisitDir = settings->value(QLatin1String(openFileLastVisitDirC)).toString();
+        openDirLastVisitDir = settings->value(QLatin1String(openDirLastVisitDirC)).toString();
+        saveFileLastVisitDir = settings->value(QLatin1String(saveFileLastVisitDirC)).toString();
+
+        settings->endGroup();
     }
 
     void DocumentSystemPrivate::saveSettings() const {
-        auto s = ILoader::instance()->settings();
+        auto settings = PluginDatabase::settings();
+        settings->beginGroup(QLatin1String(settingCategoryC));
 
-        QJsonObject obj;
+        settings->setValue(QLatin1String(recentFilesC), m_recentFiles);
+        settings->setValue(QLatin1String(recentDirsC), m_recentDirs);
 
-        QJsonObject recentObj;
-        recentObj.insert(filesKeyC, QJsonArray::fromStringList(m_recentFiles));
-        recentObj.insert(dirKeyC, QJsonArray::fromStringList(m_recentDirs));
-        obj.insert(recentGroupC, recentObj);
+        settings->setValue(QLatin1String(openFileLastVisitDirC), openFileLastVisitDir);
+        settings->setValue(QLatin1String(openDirLastVisitDirC), openDirLastVisitDir);
+        settings->setValue(QLatin1String(saveFileLastVisitDirC), saveFileLastVisitDir);
 
-        QJsonObject lastVisitObj;
-        lastVisitObj.insert(QLatin1String(openFileLastVisitDirC), openFileLastVisitDir);
-        lastVisitObj.insert(QLatin1String(openDirLastVisitDirC), openDirLastVisitDir);
-        lastVisitObj.insert(QLatin1String(saveFileLastVisitDirC), saveFileLastVisitDir);
-        obj.insert(lastVisitGroupC, lastVisitObj);
-
-        s->insert(settingCategoryC, obj);
+        settings->endGroup();
     }
 
     void DocumentSystemPrivate::saveOpenFileSettings() const {
@@ -144,7 +135,8 @@ namespace Core {
     }
 
     static QString &getLogBaseDir() {
-        static QString logBaseDir = ApplicationInfo::tempDir() + "/logs";
+        static QString logBaseDir =
+            ApplicationInfo::applicationLocation(ApplicationInfo::TempData) + "/logs";
         return logBaseDir;
     }
 
@@ -159,11 +151,11 @@ namespace Core {
     bool DocumentSystem::addDocType(DocumentSpec *doc) {
         Q_D(DocumentSystem);
         if (!doc) {
-            myWarning(__func__) << "trying to add null document";
+            myWarning << "trying to add null document";
             return false;
         }
         if (d->docSpecs.contains(doc->id())) {
-            myWarning(__func__) << "trying to add duplicated document:" << doc->id();
+            myWarning << "trying to add duplicated document:" << doc->id();
             return false;
         }
         doc->setParent(this);
@@ -178,7 +170,7 @@ namespace Core {
 
     bool DocumentSystem::removeDocType(DocumentSpec *doc) {
         if (doc == nullptr) {
-            myWarning(__func__) << "trying to remove null document";
+            myWarning << "trying to remove null document";
             return false;
         }
         return removeDocType(doc->id());
@@ -188,7 +180,7 @@ namespace Core {
         Q_D(DocumentSystem);
         auto it = d->docSpecs.find(id);
         if (it == d->docSpecs.end()) {
-            myWarning(__func__) << "document does not exist:" << id;
+            myWarning << "document does not exist:" << id;
             return false;
         }
 

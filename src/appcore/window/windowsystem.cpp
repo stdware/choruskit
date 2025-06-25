@@ -8,18 +8,13 @@
 #include <QScreen>
 #include <QSplitter>
 #include <QJsonArray>
+#include <QJsonObject>
 
-#include "iloader.h"
+#include "plugindatabase.h"
 
 namespace Core {
 
 #define myWarning(func) (qWarning().nospace() << "Core::WindowSystem::" << (func) << "():").space()
-
-    static const char settingCatalogC[] = "WindowSystem";
-
-    static const char winGeometryGroupC[] = "WindowGeometry";
-
-    static const char splitterSizesGroupC[] = "SplitterSizes";
 
     WindowGeometry WindowGeometry::fromObject(const QJsonObject &obj) {
         QRect winRect;
@@ -97,13 +92,19 @@ namespace Core {
         readSettings();
     }
 
+    static const char settingCatalogC[] = "WindowSystem";
+
+    static const char winGeometryGroupC[] = "WindowGeometry";
+
+    static const char splitterSizesGroupC[] = "SplitterSizes";
+
     void WindowSystemPrivate::readSettings() {
         winGeometries.clear();
 
-        auto settings = ILoader::instance()->settings();
-        auto obj = settings->value(settingCatalogC).toObject();
+        auto settings = PluginDatabase::settings();
+        settings->beginGroup(QLatin1String(settingCatalogC));
 
-        auto winPropsObj = obj.value(winGeometryGroupC).toObject();
+        auto winPropsObj = settings->value(winGeometryGroupC).toJsonObject();
         for (auto it = winPropsObj.begin(); it != winPropsObj.end(); ++it) {
             if (!it->isObject()) {
                 continue;
@@ -111,18 +112,18 @@ namespace Core {
             winGeometries.insert(it.key(), WindowGeometry::fromObject(it->toObject()));
         }
 
-        auto spPropsObj = obj.value(splitterSizesGroupC).toObject();
+        auto spPropsObj = settings->value(splitterSizesGroupC).toJsonObject();
         for (auto it = spPropsObj.begin(); it != spPropsObj.end(); ++it) {
             if (!it->isObject()) {
                 continue;
             }
             splitterSizes.insert(it.key(), SplitterSizes::fromObject(it->toObject()));
         }
+
+        settings->endGroup();
     }
 
     void WindowSystemPrivate::saveSettings() const {
-        auto settings = ILoader::instance()->settings();
-
         QJsonObject winPropsObj;
         for (auto it = winGeometries.begin(); it != winGeometries.end(); ++it) {
             winPropsObj.insert(it.key(), it->toObject());
@@ -133,11 +134,13 @@ namespace Core {
             spPropsObj.insert(it.key(), it->toObject());
         }
 
-        QJsonObject obj;
-        obj.insert(winGeometryGroupC, winPropsObj);
-        obj.insert(splitterSizesGroupC, spPropsObj);
+        auto settings = PluginDatabase::settings();
+        settings->beginGroup(QLatin1String(settingCatalogC));
 
-        settings->insert(settingCatalogC, obj);
+        settings->setValue(QLatin1String(winGeometryGroupC), winPropsObj);
+        settings->setValue(QLatin1String(splitterSizesGroupC), spPropsObj);
+        
+        settings->endGroup();
     }
 
     void WindowSystemPrivate::windowCreated(IWindow *iWin) {

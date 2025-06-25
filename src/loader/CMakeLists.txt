@@ -3,9 +3,9 @@ project(CkLoader
     LANGUAGES CXX
 )
 
-find_package(ExtensionSystem CONFIG REQUIRED)
-
 file(GLOB_RECURSE _src *.h *.cpp *.qrc)
+
+find_package(ExtensionSystem CONFIG REQUIRED)
 
 choruskit_add_library(${PROJECT_NAME} STATIC NO_SYNC_INCLUDE AUTOGEN
     SOURCES ${_src}

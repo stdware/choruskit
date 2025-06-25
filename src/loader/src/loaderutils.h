@@ -6,22 +6,6 @@
 
 namespace Loader {
 
-    inline double screenDpi(const QScreen *screen) {
-#if QT_VERSION_MAJOR < 6
-        return screen->logicalDotsPerInch() / unitDpi();
-#else
-        return screen->devicePixelRatio();
-#endif
-    }
-
-    enum MessageBoxFlag {
-        NoIcon,
-        Information,
-        Question,
-        Warning,
-        Critical,
-    };
-
     QFont systemDefaultFont();
 
     QFont systemDefaultFontWithDpi(double dpi);

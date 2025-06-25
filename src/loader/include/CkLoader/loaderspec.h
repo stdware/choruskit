@@ -45,8 +45,7 @@ namespace Loader {
         /// Parse extra options and do some initializations
         virtual bool preprocessArguments(QStringList &arguments, int *code = nullptr);
 
-        /// Show text on splash, you may need to save the splash pointer to use
-        /// it later
+        /// Show text on splash
         virtual void splashWillShow(QSplashScreen *screen);
 
         /// Do something before loading all plugins
