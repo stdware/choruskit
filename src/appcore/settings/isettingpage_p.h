@@ -20,8 +20,8 @@ namespace Core {
         stdc::linked_map<QString, ISettingPage *> pages;
 
         QString id;
-        DisplayString title;
-        DisplayString description;
+        QString title;
+        QString description;
     };
 
 }

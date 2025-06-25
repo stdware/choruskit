@@ -27,8 +27,8 @@ namespace Core {
         DocumentSpec *q_ptr;
 
         QString id;
-        DisplayString displayName;
-        DisplayString description;
+        QString displayName;
+        QString description;
         QIcon icon;
     };
 

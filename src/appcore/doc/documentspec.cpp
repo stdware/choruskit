@@ -33,7 +33,7 @@ namespace Core {
         return d->displayName;
     }
 
-    void DocumentSpec::setDisplayName(const DisplayString &displayName) {
+    void DocumentSpec::setDisplayName(const QString &displayName) {
         Q_D(DocumentSpec);
         d->displayName = displayName;
     }
@@ -43,7 +43,7 @@ namespace Core {
         return d->description;
     }
 
-    void DocumentSpec::setDescription(const DisplayString &description) {
+    void DocumentSpec::setDescription(const QString &description) {
         Q_D(DocumentSpec);
         d->description = description;
     }

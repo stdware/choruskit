@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include <CoreApi/displaystring.h>
+#include <CoreApi/ckappcoreglobal.h>
 
 namespace Core {
 
@@ -20,10 +20,10 @@ namespace Core {
         QString id() const;
 
         QString title() const;
-        void setTitle(const DisplayString &title);
+        void setTitle(const QString &title);
 
         QString description() const;
-        void setDescription(const DisplayString &description);
+        void setDescription(const QString &description);
 
         bool addPage(ISettingPage *page);
         bool removePage(ISettingPage *page);
