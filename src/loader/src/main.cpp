@@ -238,27 +238,6 @@ int __main__(LoaderSpec *loadSpec) {
     // Global instances must be created
     QApplication &a = *qApp;
 
-    // Settings path fallback
-    if (loadSpec->userSettingsPath.isEmpty()) {
-        loadSpec->userSettingsPath =
-            ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData);
-    }
-
-    if (loadSpec->systemSettingsPath.isEmpty()) {
-        loadSpec->systemSettingsPath =
-            ApplicationInfo::applicationLocation(ApplicationInfo::BuiltinResources);
-    }
-
-    if (!QFileInfo(loadSpec->userSettingsPath).isDir() &&
-        !QDir().mkpath(loadSpec->userSettingsPath)) {
-        QString msg = QCoreApplication::translate("Application",
-                                                  "Failed to create user settings directory: %1")
-                          .arg(loadSpec->userSettingsPath);
-        ApplicationInfo::messageBox(nullptr, ApplicationInfo::Warning, qApp->applicationName(),
-                                    msg);
-        return -1;
-    }
-
     QString workingDir = QDir::currentPath();
     QStringList arguments = a.arguments();
     ArgumentParser argsParser;
@@ -293,24 +272,16 @@ int __main__(LoaderSpec *loadSpec) {
         }
     }
 
+    // QtCreator ExtensionSystem plugin manager
     PluginManager pluginManager;
     pluginManager.setPluginIID(loadSpec->pluginIID);
-    pluginManager.setSettings(new QSettings(
-        QString("%1/%2.plugins.ini").arg(loadSpec->userSettingsPath, qApp->applicationName()),
-        QSettings::IniFormat));
-    pluginManager.setGlobalSettings(new QSettings(
-        QString("%1/%2.plugins.ini").arg(loadSpec->systemSettingsPath, qApp->applicationName()),
-        QSettings::IniFormat));
+    pluginManager.setSettings(loadSpec->createExtensionSystemSettings(false));
+    pluginManager.setGlobalSettings(loadSpec->createExtensionSystemSettings(true));
 
-    // We use JSON format settings for this application instead of Qt Creator's INI format
+    // ChorusKit plugin database
     PluginDatabase pluginDatabase;
-    // TODO: change to json format
-    pluginDatabase.setSettings(new QSettings(
-        QString("%1/%2.plugins.json").arg(loadSpec->userSettingsPath, qApp->applicationName()),
-        QSettings::IniFormat));
-    pluginDatabase.setGlobalSettings(new QSettings(
-        QString("%1/%2.plugins.json").arg(loadSpec->systemSettingsPath, qApp->applicationName()),
-        QSettings::IniFormat));
+    pluginDatabase.setSettings(loadSpec->createChorusKitSettings(false));
+    pluginDatabase.setGlobalSettings(loadSpec->createChorusKitSettings(true));
 
     SplashScreen splash;
     g_splash = &splash;

@@ -1,9 +1,10 @@
 #ifndef CHORUSKIT_LOADERSPEC_H
 #define CHORUSKIT_LOADERSPEC_H
 
-#include <QPair>
-#include <QSplashScreen>
-#include <QStringList>
+#include <QtCore/QPair>
+#include <QtCore/QStringList>
+#include <QtCore/QSettings>
+#include <QtWidgets/QSplashScreen>
 
 namespace Loader {
 
@@ -35,13 +36,13 @@ namespace Loader {
         };
         /// Other options to display in help text
         QList<Argument> extraArguments;
+        
+        /// Create a new settings for QtCreator ExtensionSystem
+        virtual QSettings *createExtensionSystemSettings(bool global);
 
-        /// Plugin manager user settings directory
-        QString userSettingsPath;
-
-        /// Plugin manager global settings directory
-        QString systemSettingsPath;
-
+        /// Create a new settings for ChorusKit
+        virtual QSettings *createChorusKitSettings(bool global);
+ 
         /// Parse extra options and do some initializations
         virtual bool preprocessArguments(QStringList &arguments, int *code = nullptr);
 
