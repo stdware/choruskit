@@ -38,10 +38,10 @@ namespace Loader {
         QList<Argument> extraArguments;
         
         /// Create a new settings for QtCreator ExtensionSystem
-        virtual QSettings *createExtensionSystemSettings(bool global);
+        virtual QSettings *createExtensionSystemSettings(QSettings::Scope scope);
 
         /// Create a new settings for ChorusKit
-        virtual QSettings *createChorusKitSettings(bool global);
+        virtual QSettings *createChorusKitSettings(QSettings::Scope scope);
  
         /// Parse extra options and do some initializations
         virtual bool preprocessArguments(QStringList &arguments, int *code = nullptr);

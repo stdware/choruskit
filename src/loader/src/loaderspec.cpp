@@ -12,38 +12,25 @@ namespace Loader {
 
     using namespace Core;
 
-    QSettings *LoaderSpec::createExtensionSystemSettings(bool global) {
-        if (global) {
-            return new QSettings(
-                QStringLiteral("%1/%2.extensionsystem.ini")
-                    .arg(ApplicationInfo::applicationLocation(ApplicationInfo::BuiltinResources),
-                         QCoreApplication::applicationName()),
-                QSettings::IniFormat);
-        } else {
-            return new QSettings(
-                QStringLiteral("%1/%2.extensionsystem.ini")
-                    .arg(ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData),
-                         QCoreApplication::applicationName()),
-                QSettings::IniFormat);
-        }
+    QSettings *LoaderSpec::createExtensionSystemSettings(QSettings::Scope scope) {
+        QString dir = ApplicationInfo::applicationLocation(scope == QSettings::UserScope
+                                                               ? ApplicationInfo::RuntimeData
+                                                               : ApplicationInfo::BuiltinResources);
+        return new QSettings(QStringLiteral("%1/%2.extensionsystem.ini")
+                                 .arg(dir, QCoreApplication::applicationName()),
+                             QSettings::IniFormat);
     }
 
     /// Create a new settings for ChorusKit
-    QSettings *LoaderSpec::createChorusKitSettings(bool global) {
-        if (global) {
-            return new QSettings(
-                QString("%1/%2.plugins.ini")
-                    .arg(ApplicationInfo::applicationLocation(ApplicationInfo::BuiltinResources),
-                         QCoreApplication::applicationName()),
-                QSettings::IniFormat);
-        } else {
-            return new QSettings(
-                QString("%1/%2.plugins.ini")
-                    .arg(ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData),
-                         QCoreApplication::applicationName()),
-                QSettings::IniFormat);
-        }
+    QSettings *LoaderSpec::createChorusKitSettings(QSettings::Scope scope) {
+        QString dir = ApplicationInfo::applicationLocation(scope == QSettings::UserScope
+                                                               ? ApplicationInfo::RuntimeData
+                                                               : ApplicationInfo::BuiltinResources);
+        return new QSettings(
+            QStringLiteral("%1/%2.plugins.ini").arg(dir, QCoreApplication::applicationName()),
+            QSettings::IniFormat);
     }
+
 
     bool LoaderSpec::preprocessArguments(QStringList &arguments, int *code) {
         return true;

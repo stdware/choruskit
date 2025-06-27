@@ -275,13 +275,14 @@ int __main__(LoaderSpec *loadSpec) {
     // QtCreator ExtensionSystem plugin manager
     PluginManager pluginManager;
     pluginManager.setPluginIID(loadSpec->pluginIID);
-    pluginManager.setSettings(loadSpec->createExtensionSystemSettings(false));
-    pluginManager.setGlobalSettings(loadSpec->createExtensionSystemSettings(true));
+    pluginManager.setSettings(loadSpec->createExtensionSystemSettings(QSettings::UserScope));
+    pluginManager.setGlobalSettings(
+        loadSpec->createExtensionSystemSettings(QSettings::SystemScope));
 
     // ChorusKit plugin database
     PluginDatabase pluginDatabase;
-    pluginDatabase.setSettings(loadSpec->createChorusKitSettings(false));
-    pluginDatabase.setGlobalSettings(loadSpec->createChorusKitSettings(true));
+    pluginDatabase.setSettings(loadSpec->createChorusKitSettings(QSettings::UserScope));
+    pluginDatabase.setGlobalSettings(loadSpec->createChorusKitSettings(QSettings::SystemScope));
 
     SplashScreen splash;
     g_splash = &splash;
