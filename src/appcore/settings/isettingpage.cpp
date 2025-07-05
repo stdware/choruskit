@@ -51,6 +51,17 @@ namespace Core {
 
         Q_EMIT descriptionChanged(description);
     }
+    bool ISettingPage::dirty() const {
+        Q_D(const ISettingPage);
+        return d->dirty;
+    }
+    void ISettingPage::markDirty() {
+        Q_D(ISettingPage);
+        if (d->dirty)
+            return;
+        d->dirty = true;
+        emit dirtyChanged(true);
+    }
 
     bool ISettingPage::addPage(ISettingPage *page) {
         Q_D(ISettingPage);
@@ -125,6 +136,10 @@ namespace Core {
         Q_D(const ISettingPage);
         return d->title.contains(word, Qt::CaseInsensitive) ||
                sortKeyword().contains(word, Qt::CaseInsensitive);
+    }
+    void ISettingPage::finish() {
+        Q_D(ISettingPage);
+        d->dirty = false;
     }
 
     ISettingPage::ISettingPage(ISettingPagePrivate &d, const QString &id, QObject *parent)

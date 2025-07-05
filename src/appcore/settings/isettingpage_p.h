@@ -22,6 +22,7 @@ namespace Core {
         QString id;
         QString title;
         QString description;
+        bool dirty{};
     };
 
 }

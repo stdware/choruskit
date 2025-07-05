@@ -25,6 +25,9 @@ namespace Core {
         QString description() const;
         void setDescription(const QString &description);
 
+        bool dirty() const;
+        void markDirty();
+
         bool addPage(ISettingPage *page);
         bool removePage(ISettingPage *page);
         bool removePage(const QString &id);
@@ -44,11 +47,12 @@ namespace Core {
         virtual QObject *widget() = 0;
 
         virtual bool accept() = 0;
-        virtual void finish() = 0;
+        virtual void finish();
 
     Q_SIGNALS:
         void titleChanged(const QString &title);
         void descriptionChanged(const QString &description);
+        void dirtyChanged(bool dirty);
 
         void pageAdded(ISettingPage *page);
         void pageRemoved(ISettingPage *page);
