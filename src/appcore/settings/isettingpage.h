@@ -12,6 +12,13 @@ namespace Core {
     class CKAPPCORE_EXPORT ISettingPage : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(ISettingPage)
+        Q_PROPERTY(QString id READ id CONSTANT)
+        Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
+        Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
+        Q_PROPERTY(bool dirty READ dirty NOTIFY dirtyChanged)
+        Q_PROPERTY(QString sortKeyword READ sortKeyword CONSTANT)
+        Q_PROPERTY(QList<ISettingPage *> pages READ pages)
+        Q_PROPERTY(ISettingPage * parentPage READ parentPage)
     public:
         ISettingPage(const QString &id, QObject *parent = nullptr);
         ~ISettingPage();
@@ -26,7 +33,7 @@ namespace Core {
         void setDescription(const QString &description);
 
         bool dirty() const;
-        void markDirty();
+        Q_INVOKABLE void markDirty();
 
         bool addPage(ISettingPage *page);
         bool removePage(ISettingPage *page);
@@ -41,7 +48,7 @@ namespace Core {
     public:
         virtual QString sortKeyword() const;
 
-        virtual bool matches(const QString &word) const;
+        Q_INVOKABLE virtual bool matches(const QString &word) const;
 
         // Abstraction for QtWidgets and QtQuick
         virtual QObject *widget() = 0;
