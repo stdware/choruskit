@@ -18,7 +18,8 @@ namespace Core {
         Q_PROPERTY(bool dirty READ dirty NOTIFY dirtyChanged)
         Q_PROPERTY(QString sortKeyword READ sortKeyword CONSTANT)
         Q_PROPERTY(QList<ISettingPage *> pages READ pages)
-        Q_PROPERTY(ISettingPage * parentPage READ parentPage)
+        Q_PROPERTY(ISettingPage *parentPage READ parentPage)
+        Q_PROPERTY(QObject *widget READ widget)
     public:
         ISettingPage(const QString &id, QObject *parent = nullptr);
         ~ISettingPage();
