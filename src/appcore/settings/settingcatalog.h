@@ -10,6 +10,8 @@ namespace Core {
     class CKAPPCORE_EXPORT SettingCatalog : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(SettingCatalog)
+        Q_PROPERTY(QList<ISettingPage *> pages READ pages)
+        Q_PROPERTY(QList<ISettingPage *> allPages READ allPages)
     public:
         explicit SettingCatalog(QObject *parent = nullptr);
         ~SettingCatalog();

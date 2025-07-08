@@ -137,7 +137,16 @@ namespace Core {
         return d->title.contains(word, Qt::CaseInsensitive) ||
                sortKeyword().contains(word, Qt::CaseInsensitive);
     }
-    void ISettingPage::finish() {
+    bool ISettingPage::accept() {
+        Q_D(ISettingPage);
+        d->dirty = false;
+        return true;
+    }
+    void ISettingPage::beginSetting() {
+        Q_D(ISettingPage);
+        d->dirty = false;
+    }
+    void ISettingPage::endSetting() {
         Q_D(ISettingPage);
         d->dirty = false;
     }

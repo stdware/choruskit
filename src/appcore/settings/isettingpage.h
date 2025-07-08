@@ -54,8 +54,10 @@ namespace Core {
         // Abstraction for QtWidgets and QtQuick
         virtual QObject *widget() = 0;
 
-        virtual bool accept() = 0;
-        virtual void finish();
+        Q_INVOKABLE virtual bool accept();
+
+        Q_INVOKABLE virtual void beginSetting();
+        Q_INVOKABLE virtual void endSetting();
 
     Q_SIGNALS:
         void titleChanged(const QString &title);
