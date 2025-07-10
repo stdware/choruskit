@@ -25,6 +25,7 @@ namespace Core{
         QSettings *settings;
         QSettings *globalSettings;
 
+        QQmlEngine *qmlEngine;
         WindowSystem *windowSystem;
         DocumentSystem *documentSystem;
         SettingCatalog *settingCatalog;
