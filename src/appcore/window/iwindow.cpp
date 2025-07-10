@@ -8,8 +8,8 @@
 #include <QFileInfo>
 #include <QMimeData>
 #include <QActionEvent>
-
-#include <private/qwidget_p.h>
+#include <QWindow>
+#include <QApplication>
 
 static const int DELAYED_INITIALIZE_INTERVAL = 5; // ms
 
@@ -21,17 +21,17 @@ namespace Core {
 
     class WindowEventFilter : public QObject {
     public:
-        explicit WindowEventFilter(IWindowPrivate *d, QWidget *w);
+        explicit WindowEventFilter(IWindowPrivate *d, QWindow *w);
         ~WindowEventFilter();
 
         IWindowPrivate *d;
-        QWidget *w;
+        QWindow *w;
 
     protected:
         bool eventFilter(QObject *obj, QEvent *event) override;
     };
 
-    WindowEventFilter::WindowEventFilter(IWindowPrivate *d, QWidget *w) : QObject(d), d(d), w(w) {
+    WindowEventFilter::WindowEventFilter(IWindowPrivate *d, QWindow *w) : QObject(d), d(d), w(w) {
         w->installEventFilter(this);
     }
 
@@ -44,6 +44,10 @@ namespace Core {
                 case QEvent::Close:
                     if (d->closeAsExit && event->isAccepted()) {
                         d->quit();
+                    }
+                    // Auto-destroy window behavior like WA_DeleteOnClose
+                    if (event->isAccepted()) {
+                        w->deleteLater();
                     }
                     break;
                 default:
@@ -73,12 +77,13 @@ namespace Core {
     }
 
     IWindowAddOn::IWindowAddOn(IWindowAddOnPrivate &d, QObject *parent)
-        : IExecutiveAddOn(*new IWindowAddOnPrivate(), parent) {
+        : IExecutiveAddOn(d, parent) {
         d.init();
     }
 
     IWindowPrivate::IWindowPrivate() {
         closeAsExit = true;
+        window = nullptr;
     }
 
     IWindowPrivate::~IWindowPrivate() {
@@ -92,10 +97,9 @@ namespace Core {
 
         // Create window
         auto win = q->createWindow(nullptr);
-        win->setAttribute(Qt::WA_DeleteOnClose);
 
         // Ensure closing window when quit
-        connect(qApp, &QApplication::aboutToQuit, win, &QWidget::close);
+        connect(qApp, &QApplication::aboutToQuit, win, &QWindow::close);
 
         q->setWindow(win);
         winFilter = new WindowEventFilter(this, win);
@@ -111,7 +115,7 @@ namespace Core {
         Q_Q(IWindow);
 
         auto w = q->window();
-        if (!w->isHidden())
+        if (w && w->isVisible())
             w->hide();
 
         ICoreBase::instance()->windowSystem()->d_func()->windowAboutToDestroy(q);
@@ -133,6 +137,16 @@ namespace Core {
     void IWindow::setCloseAsExit(bool on) {
         Q_D(IWindow);
         d->closeAsExit = on;
+    }
+
+    QWindow *IWindow::window() const {
+        Q_D(const IWindow);
+        return d->window;
+    }
+
+    void IWindow::setWindow(QWindow *w) {
+        Q_D(IWindow);
+        d->window = w;
     }
 
     IWindow::IWindow(QObject *parent) : IWindow(*new IWindowPrivate(), parent) {

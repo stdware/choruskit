@@ -2,7 +2,7 @@
 #define IWINDOW_H
 
 #include <CoreApi/iexecutive.h>
-#include <CoreApi/windowelementsadaptor.h>
+#include <QWindow>
 
 namespace Core {
 
@@ -31,7 +31,7 @@ namespace Core {
         friend class IWindowPrivate;
     };
 
-    class CKAPPCORE_EXPORT IWindow : public IExecutive, public WindowElementsAdaptor {
+    class CKAPPCORE_EXPORT IWindow : public IExecutive {
         Q_OBJECT
         Q_DECLARE_PRIVATE(IWindow)
     public:
@@ -44,8 +44,11 @@ namespace Core {
         bool closeAsExit() const;
         void setCloseAsExit(bool on);
 
+        QWindow *window() const;
+        void setWindow(QWindow *w);
+
     protected:
-        virtual QWidget *createWindow(QWidget *parent) const = 0;
+        virtual QWindow *createWindow(QObject *parent) const = 0;
 
     protected:
         explicit IWindow(QObject *parent = nullptr);

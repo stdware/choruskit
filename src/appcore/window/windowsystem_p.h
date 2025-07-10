@@ -23,15 +23,6 @@ namespace Core {
         QJsonObject toObject() const;
     };
 
-    struct SplitterSizes {
-        QList<int> sizes;
-
-        SplitterSizes(const QList<int> &sizes = {}) : sizes(sizes){};
-
-        static SplitterSizes fromObject(const QJsonObject &obj);
-        QJsonObject toObject() const;
-    };
-
     class WindowSizeTrimmer;
 
     class WindowSystemPrivate : public QObject {
@@ -49,10 +40,9 @@ namespace Core {
         WindowSystem *q_ptr;
 
         stdc::linked_map<IWindow *, int /*NOT USED*/> iWindows;
-        QHash<QWidget *, IWindow *> windowMap;
+        QHash<QWindow *, IWindow *> windowMap;
 
         QHash<QString, WindowGeometry> winGeometries;
-        QHash<QString, SplitterSizes> splitterSizes;
 
         void windowCreated(IWindow *iWin);
         void windowAboutToDestroy(IWindow *iWin);

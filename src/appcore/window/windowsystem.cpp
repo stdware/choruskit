@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QPointer>
 #include <QScreen>
-#include <QSplitter>
+#include <QWindow>
 #include <QJsonArray>
 #include <QJsonObject>
 
@@ -38,50 +38,6 @@ namespace Core {
         return obj;
     }
 
-    static QList<int> strListToIntList(const QStringList &list) {
-        QList<int> res;
-        for (const auto &item : list) {
-            bool isNum;
-            int num = item.toInt(&isNum);
-            if (!isNum) {
-                return {};
-            }
-            res.append(num);
-        }
-        return res;
-    }
-
-    static QStringList jsonArrayToStrList(const QJsonArray &arr, bool considerNum = false) {
-        QStringList res;
-        for (const auto &item : arr)
-            if (item.isString())
-                res.append(item.toString());
-            else if (item.isDouble() && considerNum)
-                res.append(QString::number(item.toDouble()));
-        return res;
-    }
-
-    SplitterSizes SplitterSizes::fromObject(const QJsonObject &obj) {
-        return strListToIntList(jsonArrayToStrList(obj.value("sizes").toArray()));
-    }
-
-    template <class V, template <class> class Array, class T, class Mapper>
-    static Array<V> Select(const Array<T> &list, Mapper mapper) { // Same collection
-        Array<V> res;
-        res.reserve(list.size());
-        for (const auto &item : qAsConst(list)) {
-            res.push_back(mapper(item));
-        }
-        return res;
-    }
-
-    QJsonObject SplitterSizes::toObject() const {
-        return {
-            {"sizes", QJsonArray::fromStringList(Select<QString>(
-                          sizes, [](int num) -> QString { return QString::number(num); }))}
-        };
-    }
-
     WindowSystemPrivate::WindowSystemPrivate() : q_ptr(nullptr) {
     }
 
@@ -95,8 +51,6 @@ namespace Core {
     static const char settingCatalogC[] = "WindowSystem";
 
     static const char winGeometryGroupC[] = "WindowGeometry";
-
-    static const char splitterSizesGroupC[] = "SplitterSizes";
 
     void WindowSystemPrivate::readSettings() {
         winGeometries.clear();
@@ -112,14 +66,6 @@ namespace Core {
             winGeometries.insert(it.key(), WindowGeometry::fromObject(it->toObject()));
         }
 
-        auto spPropsObj = settings->value(splitterSizesGroupC).toJsonObject();
-        for (auto it = spPropsObj.begin(); it != spPropsObj.end(); ++it) {
-            if (!it->isObject()) {
-                continue;
-            }
-            splitterSizes.insert(it.key(), SplitterSizes::fromObject(it->toObject()));
-        }
-
         settings->endGroup();
     }
 
@@ -129,16 +75,10 @@ namespace Core {
             winPropsObj.insert(it.key(), it->toObject());
         }
 
-        QJsonObject spPropsObj;
-        for (auto it = splitterSizes.begin(); it != splitterSizes.end(); ++it) {
-            spPropsObj.insert(it.key(), it->toObject());
-        }
-
         auto settings = PluginDatabase::settings();
         settings->beginGroup(QLatin1String(settingCatalogC));
 
         settings->setValue(QLatin1String(winGeometryGroupC), winPropsObj);
-        settings->setValue(QLatin1String(splitterSizesGroupC), spPropsObj);
         
         settings->endGroup();
     }
@@ -147,11 +87,14 @@ namespace Core {
         Q_Q(WindowSystem);
         windowMap.insert(iWin->window(), iWin);
         iWindows.append(iWin, 0);
+        Q_EMIT q->windowCreated(iWin);
     }
 
     void WindowSystemPrivate::windowAboutToDestroy(IWindow *iWin) {
+        Q_Q(WindowSystem);
         windowMap.remove(iWin->window());
         iWindows.remove(iWin);
+        Q_EMIT q->windowAboutToDestroy(iWin);
     }
 
     static WindowSystem *m_instance = nullptr;
@@ -167,11 +110,10 @@ namespace Core {
         m_instance = nullptr;
     }
 
-    IWindow *WindowSystem::findWindow(QWidget *window) const {
+    IWindow *WindowSystem::findWindow(QWindow *window) const {
         Q_D(const WindowSystem);
         if (!window)
             return nullptr;
-        window = window->window();
         return d->windowMap.value(window, nullptr);
     }
 
@@ -196,11 +138,11 @@ namespace Core {
 
     class WindowSizeTrimmer : public QObject {
     public:
-        WindowSizeTrimmer(const QString &id, QWidget *w) : QObject(w), id(id) {
+        WindowSizeTrimmer(const QString &id, QWindow *w) : QObject(w), id(id) {
             winSizeTrimmers->insert(id, this);
 
-            widget = w;
-            m_pos = w->pos();
+            window = w;
+            m_pos = w->position();
             m_obsolete = false;
             w->installEventFilter(this);
         }
@@ -225,16 +167,8 @@ namespace Core {
     protected:
         bool eventFilter(QObject *obj, QEvent *event) override {
             switch (event->type()) {
-                    // case QEvent ::WindowStateChange: {
-                    //     auto e = static_cast<QWindowStateChangeEvent *>(event);
-                    //     if ((e->oldState() & Qt::WindowMaximized) || !(widget->windowState() &
-                    //     Qt::WindowMaximized))
-                    //     {
-                    //         break;
-                    //     }
-                    // }
                 case QEvent::Move:
-                    if (widget->isVisible()) {
+                    if (window && window->isVisible()) {
                         makeObsolete();
                     }
                     break;
@@ -244,16 +178,16 @@ namespace Core {
             return QObject::eventFilter(obj, event);
         }
 
-        QPointer<QWidget> widget;
+        QPointer<QWindow> window;
         QString id;
         QPoint m_pos;
         bool m_obsolete;
     };
 
-    static void centralizeWindow(QWidget *w, QSizeF ratio = QSizeF(-1, -1)) {
+    static void centralizeWindow(QWindow *w, QSizeF ratio = QSizeF(-1, -1)) {
         QSize desktopSize;
-        if (w->parentWidget()) {
-            desktopSize = w->parentWidget()->size();
+        if (w->transientParent()) {
+            desktopSize = static_cast<QWindow*>(w->transientParent())->size();
         } else {
             desktopSize = w->screen()->size();
         }
@@ -276,7 +210,7 @@ namespace Core {
                        size.height());
     }
 
-    void WindowSystem::loadGeometry(const QString &id, QWidget *w, const QSize &fallback) const {
+    void WindowSystem::loadGeometry(const QString &id, QWindow *w, const QSize &fallback) const {
         Q_D(const WindowSystem);
 
         auto winProp = d->winGeometries.value(id, {});
@@ -284,7 +218,7 @@ namespace Core {
         const auto &winRect = winProp.geometry;
         const auto &isMax = winProp.maximized;
 
-        bool isDialog = w->parentWidget() && (w->windowFlags() & Qt::Dialog);
+        bool isDialog = w->transientParent() && (w->flags() & Qt::Dialog);
         if (winRect.size().isEmpty() || isMax) {
             // Adjust sizes
             w->resize(fallback.isValid() ? fallback
@@ -324,27 +258,9 @@ namespace Core {
         }
     }
 
-    void WindowSystem::saveGeometry(const QString &id, QWidget *w) {
+    void WindowSystem::saveGeometry(const QString &id, QWindow *w) {
         Q_D(WindowSystem);
-        d->winGeometries.insert(id, {w->geometry(), w->isMaximized()});
-    }
-
-    void WindowSystem::loadSplitterSizes(const QString &id, QSplitter *s,
-                                         const QList<int> &fallback) const {
-        Q_D(const WindowSystem);
-
-        auto spProp = d->splitterSizes.value(id, {});
-        if (spProp.sizes.size() != s->count()) {
-            if (fallback.size() == s->count())
-                s->setSizes(fallback);
-        } else {
-            s->setSizes(spProp.sizes);
-        }
-    }
-
-    void WindowSystem::saveSplitterSizes(const QString &id, QSplitter *s) {
-        Q_D(WindowSystem);
-        d->splitterSizes.insert(id, {s->sizes()});
+        d->winGeometries.insert(id, {w->geometry(), w->windowState() == Qt::WindowMaximized});
     }
 
     WindowSystem::WindowSystem(WindowSystemPrivate &d, QObject *parent)

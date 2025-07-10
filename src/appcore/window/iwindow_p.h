@@ -47,7 +47,7 @@ namespace Core {
         bool closeAsExit;
 
         QObject *winFilter;
-        QHash<QString, QWidget *> widgetMap;
+        QWindow *window;
 
     private:
         friend class WindowSystem;

@@ -2,10 +2,9 @@
 #define WINDOWSYSTEM_H
 
 #include <QObject>
+#include <QWindow>
 
 #include <CoreApi/iwindow.h>
-
-class QSplitter;
 
 namespace Core {
 
@@ -19,18 +18,14 @@ namespace Core {
         ~WindowSystem();
 
     public:
-        IWindow *findWindow(QWidget *window) const;
+        IWindow *findWindow(QWindow *window) const;
         int count() const;
         QList<IWindow *> windows() const;
         IWindow *firstWindow() const;
 
     public:
-        void loadGeometry(const QString &id, QWidget *w, const QSize &fallback = {}) const;
-        void saveGeometry(const QString &id, QWidget *w);
-
-        void loadSplitterSizes(const QString &id, QSplitter *s,
-                               const QList<int> &fallback = {}) const;
-        void saveSplitterSizes(const QString &id, QSplitter *s);
+        void loadGeometry(const QString &id, QWindow *w, const QSize &fallback = {}) const;
+        void saveGeometry(const QString &id, QWindow *w);
 
     Q_SIGNALS:
         void windowCreated(IWindow *iWin);
