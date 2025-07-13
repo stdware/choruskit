@@ -10,9 +10,9 @@ find_package(stdcorelib CONFIG REQUIRED)
 choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
     SOURCES ${_src}
     QT_LINKS
-        Core Widgets Network Qml
+        Core Widgets Network
     QT_INCLUDE_PRIVATE
-        Core Gui Widgets Qml
+        Core Gui Widgets
     LINKS_PRIVATE
         stdcorelib::stdcorelib
     INCLUDE_PRIVATE

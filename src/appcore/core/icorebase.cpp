@@ -3,7 +3,6 @@
 
 #include <QtCore/QFileInfo>
 #include <QtGui/QGuiApplication>
-#include <QtQml/QQmlApplicationEngine>
 
 namespace Core {
 
@@ -27,7 +26,6 @@ namespace Core {
         windowSystem = new WindowSystem(q);
         documentSystem = new DocumentSystem(q);
         settingCatalog = new SettingCatalog(q);
-        qmlEngine = new QQmlApplicationEngine(q);
     }
 
     static ICoreBase *m_instance = nullptr;
@@ -42,10 +40,7 @@ namespace Core {
     ICoreBase *ICoreBase::instance() {
         return m_instance;
     }
-    QQmlEngine *ICoreBase::qmlEngine() {
-        checkInstance;
-        return m_instance->d_func()->qmlEngine;
-    }
+
     WindowSystem *ICoreBase::windowSystem() {
         checkInstance;
         return m_instance->d_func()->windowSystem;

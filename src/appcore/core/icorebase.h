@@ -8,8 +8,6 @@
 #include <CoreApi/settingcatalog.h>
 #include <CoreApi/windowsystem.h>
 
-class QQmlEngine;
-
 namespace Core {
 
     class ICoreBasePrivate;
@@ -25,7 +23,6 @@ namespace Core {
 
         // Resource Managers
     public:
-        static QQmlEngine *qmlEngine();
         static WindowSystem *windowSystem();
         static DocumentSystem *documentSystem();
         static SettingCatalog *settingCatalog();
