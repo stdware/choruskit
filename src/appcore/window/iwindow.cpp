@@ -115,8 +115,9 @@ namespace Core {
         Q_Q(IWindow);
 
         auto w = q->window();
-        if (w && w->isVisible())
-            w->hide();
+        // FIXME: QGuiApplication::quitOnLastWindowClosed seems not to work if the last window is closed when it is invisible
+        // if (w && w->isVisible())
+        //     w->hide();
 
         ICoreBase::instance()->windowSystem()->d_func()->windowAboutToDestroy(q);
 
