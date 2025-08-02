@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #include <QtCore/QByteArray>
+#include <QtCore/QDebug>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QSharedMemory>
 
