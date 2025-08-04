@@ -42,12 +42,12 @@ namespace Core {
         if (obj == w) {
             switch (event->type()) {
                 case QEvent::Close:
-                    if (d->closeAsExit && event->isAccepted()) {
-                        d->quit();
-                    }
                     // Auto-destroy window behavior like WA_DeleteOnClose
                     if (event->isAccepted()) {
                         w->deleteLater();
+                    }
+                    if (d->closeAsExit && event->isAccepted()) {
+                        d->quit();
                     }
                     break;
                 default:
@@ -123,7 +123,6 @@ namespace Core {
 
         IExecutivePrivate::quit();
 
-        q->setWindow(nullptr);
         q->deleteLater();
     }
 
@@ -147,7 +146,10 @@ namespace Core {
 
     void IWindow::setWindow(QWindow *w) {
         Q_D(IWindow);
-        d->window = w;
+        if (d->window != w) {
+            d->window = w;
+            emit windowChanged(w);
+        }
     }
 
     IWindow::IWindow(QObject *parent) : IWindow(*new IWindowPrivate(), parent) {

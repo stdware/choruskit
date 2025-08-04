@@ -95,7 +95,7 @@ namespace Core {
         // Delete addOns
         for (auto it2 = addOns.rbegin(); it2 != addOns.rend(); ++it2) {
             auto &addOn = *it2;
-            delete addOn;
+            addOn->deleteLater();
         }
 
         changeLoadState(IExecutive::Deleted);

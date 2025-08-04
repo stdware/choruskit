@@ -13,6 +13,7 @@
 #include <QHash>
 #include <QSet>
 #include <QTimer>
+#include <QPointer>
 
 #include <stdcorelib/linked_map.h>
 
@@ -47,7 +48,7 @@ namespace Core {
         bool closeAsExit;
 
         QObject *winFilter;
-        QWindow *window;
+        QPointer<QWindow> window;
 
     private:
         friend class WindowSystem;

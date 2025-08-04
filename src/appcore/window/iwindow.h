@@ -18,6 +18,7 @@ namespace Core {
     class CKAPPCORE_EXPORT IWindowAddOn : public IExecutiveAddOn {
         Q_OBJECT
         Q_DECLARE_PRIVATE(IWindowAddOn)
+        Q_PROPERTY(IWindow *windowHandle READ windowHandle CONSTANT)
     public:
         explicit IWindowAddOn(QObject *parent = nullptr);
         ~IWindowAddOn();
@@ -34,6 +35,7 @@ namespace Core {
     class CKAPPCORE_EXPORT IWindow : public IExecutive {
         Q_OBJECT
         Q_DECLARE_PRIVATE(IWindow)
+        Q_PROPERTY(QWindow *window READ window WRITE setWindow NOTIFY windowChanged)
     public:
         using AddOnType = IWindowAddOn;
         
@@ -57,6 +59,9 @@ namespace Core {
         friend class ICore;
         friend class ICorePrivate;
         friend class Internal::CorePlugin;
+
+    Q_SIGNALS:
+        void windowChanged(QWindow *window);
 
     public:
         template <class T>
