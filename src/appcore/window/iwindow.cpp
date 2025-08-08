@@ -119,6 +119,10 @@ namespace Core {
         // if (w && w->isVisible())
         //     w->hide();
 
+        if (w) {
+            w->deleteLater();
+        }
+
         ICoreBase::instance()->windowSystem()->d_func()->windowAboutToDestroy(q);
 
         IExecutivePrivate::quit();

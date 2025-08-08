@@ -1,6 +1,8 @@
 #include "windowsystem.h"
 #include "windowsystem_p.h"
 
+#include <algorithm>
+
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDebug>
@@ -269,5 +271,15 @@ namespace Core {
 
         d.q_ptr = this;
         d.init();
+    }
+    IWindow *WindowSystem::firstWindowOfTypeImpl(const QMetaObject &type) const {
+        Q_D(const WindowSystem);
+        auto it = std::ranges::find_if(d->iWindows, [=](const auto &p) -> bool {
+            return p.first->inherits(type.className());
+        });
+        if (it == d->iWindows.end()) {
+            return nullptr;
+        }
+        return it.key();
     }
 }

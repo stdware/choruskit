@@ -22,6 +22,10 @@ namespace Core {
         int count() const;
         QList<IWindow *> windows() const;
         IWindow *firstWindow() const;
+        template <class T>
+        T *firstWindowOfType() const {
+            return qobject_cast<T *>(firstWindowOfTypeImpl(T::staticMetaObject));
+        }
 
     public:
         void loadGeometry(const QString &id, QWindow *w, const QSize &fallback = {}) const;
@@ -38,6 +42,9 @@ namespace Core {
 
         friend class IWindow;
         friend class IWindowPrivate;
+
+    private:
+        IWindow *firstWindowOfTypeImpl(const QMetaObject &type) const;
     };
 
 }
