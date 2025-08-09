@@ -21,6 +21,9 @@ namespace Core {
 
         static ICoreBase *instance();
 
+        Q_INVOKABLE static void exitApplicationGracefully(int exitCode = 0);
+        Q_INVOKABLE static void restartApplication(int exitCode = 0);
+
         // Resource Managers
     public:
         static WindowSystem *windowSystem();

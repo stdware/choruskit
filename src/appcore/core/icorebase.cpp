@@ -1,6 +1,7 @@
 #include "icorebase.h"
 #include "icorebase_p.h"
 
+#include <QTimer>
 #include <QtCore/QFileInfo>
 #include <QtGui/QGuiApplication>
 
@@ -39,6 +40,23 @@ namespace Core {
 
     ICoreBase *ICoreBase::instance() {
         return m_instance;
+    }
+    void ICoreBase::exitApplicationGracefully(int exitCode) {
+        if (m_instance) {
+            for (auto iWin: windowSystem()->windows()) {
+                iWin->quit();
+            }
+        }
+        for (auto window : qApp->allWindows()) {
+            window->close();
+        }
+        QTimer::singleShot(0, [exitCode] {
+            QCoreApplication::exit(exitCode);
+        });
+    }
+    void ICoreBase::restartApplication(int exitCode) {
+        qApp->setProperty("restart", true);
+        exitApplicationGracefully(exitCode);
     }
 
     WindowSystem *ICoreBase::windowSystem() {
