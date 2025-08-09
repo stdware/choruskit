@@ -10,7 +10,7 @@ find_package(stdcorelib CONFIG REQUIRED)
 choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
     SOURCES ${_src}
     QT_LINKS
-        Core Widgets Network
+        Core Widgets Network Qml
     QT_INCLUDE_PRIVATE
         Core Gui Widgets
     LINKS_PRIVATE
@@ -18,7 +18,20 @@ choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
     INCLUDE_PRIVATE
         *
     FEATURES
-        cxx_std_17
+        cxx_std_20
     SYNC_INCLUDE_PREFIX
         CoreApi
+)
+
+if(QT_KNOWN_POLICY_QTP0001)
+    qt_policy(SET QTP0001 NEW)
+endif()
+if(QT_KNOWN_POLICY_QTP0004)
+    qt_policy(SET QTP0004 NEW)
+endif()
+
+qt_add_qml_module(${PROJECT_NAME}
+    URI ChorusKit.AppCore
+    QML_FILES
+    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ChorusKit/AppCore
 )

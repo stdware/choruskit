@@ -2,6 +2,10 @@
 
 #include <tuple>
 
+#include <QDateTime>
+#include <QSettings>
+#include <QtQml/QQmlEngine>
+
 #include "objectpool_p.h"
 
 namespace Core {
@@ -31,16 +35,21 @@ namespace Core {
         QSettings *globalSettings = nullptr;
 
         QSplashScreen *splash = nullptr;
+
+        QQmlEngine *qmlEngine = nullptr;
     };
 
     static PluginDatabase *m_instance = nullptr;
 
     PluginDatabase::PluginDatabase(QObject *parent)
         : ObjectPool(*new PluginDatabasePrivate(), parent) {
+        Q_ASSERT(!m_instance);
         m_instance = this;
     }
 
-    PluginDatabase::~PluginDatabase() = default;
+    PluginDatabase::~PluginDatabase() {
+        m_instance = nullptr;
+    }
 
     QDateTime PluginDatabase::startTime() {
         static QDateTime start = QDateTime::currentDateTime();
@@ -77,6 +86,16 @@ namespace Core {
         settings->setParent(m_instance);
     }
 
+    QQmlEngine *PluginDatabase::qmlEngine() {
+        checkInstance;
+        return m_instance->d_func()->qmlEngine;
+    }
+
+    void PluginDatabase::setQmlEngine(QQmlEngine *qmlEngine) {
+        checkInstanceV;
+        m_instance->d_func()->qmlEngine = qmlEngine;
+    }
+
     QSplashScreen *PluginDatabase::splash() {
         checkInstance;
         return m_instance->d_func()->splash;
@@ -98,3 +117,5 @@ namespace Core {
     }
 
 }
+
+#include "moc_plugindatabase.cpp"

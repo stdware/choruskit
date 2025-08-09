@@ -12,6 +12,11 @@
 
 #include <CoreApi/icorebase.h>
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
+class QQmlEngine;
+class QJSEngine;
+
 namespace Core{
 
     class CKAPPCORE_EXPORT ICoreBasePrivate {
@@ -22,14 +27,23 @@ namespace Core{
 
         void init();
 
-        QSettings *settings;
-        QSettings *globalSettings;
-
         WindowSystem *windowSystem;
         DocumentSystem *documentSystem;
         SettingCatalog *settingCatalog;
 
         ICoreBase *q_ptr;
+    };
+
+    struct ICoreBaseForeign {
+        Q_GADGET
+        QML_FOREIGN(ICoreBase)
+        QML_SINGLETON
+        QML_NAMED_ELEMENT(ICoreBase)
+    public:
+
+        static inline ICoreBase *create(QQmlEngine *, QJSEngine *engine) {
+            return ICoreBase::instance();
+        }
     };
 
 }

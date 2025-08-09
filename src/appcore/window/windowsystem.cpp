@@ -11,6 +11,7 @@
 #include <QWindow>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QSettings>
 
 #include "plugindatabase.h"
 

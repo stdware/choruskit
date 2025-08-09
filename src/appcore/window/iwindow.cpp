@@ -123,7 +123,9 @@ namespace Core {
             w->deleteLater();
         }
 
-        ICoreBase::instance()->windowSystem()->d_func()->windowAboutToDestroy(q);
+        if (ICoreBase::instance()) { // ICoreBase might have already been destroyed at this point of time
+            ICoreBase::windowSystem()->d_func()->windowAboutToDestroy(q);
+        }
 
         IExecutivePrivate::quit();
 

@@ -5,8 +5,10 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QSettings>
+#include <QWidget>
 
-#include "icorebase.h"
+#include <CoreApi/icorebase.h>
+#include <CoreApi/documentsystem.h>
 
 namespace Core {
 

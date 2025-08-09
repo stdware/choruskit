@@ -5,6 +5,10 @@
 #include <QtCore/QFileInfo>
 #include <QtGui/QGuiApplication>
 
+#include <CoreApi/windowsystem.h>
+#include <CoreApi/settingcatalog.h>
+#include <CoreApi/documentsystem.h>
+
 namespace Core {
 
 #define myWarning (qWarning().nospace() << "Core::ICoreBase::" << __func__ << "():").space()
@@ -42,14 +46,6 @@ namespace Core {
         return m_instance;
     }
     void ICoreBase::exitApplicationGracefully(int exitCode) {
-        if (m_instance) {
-            for (auto iWin: windowSystem()->windows()) {
-                iWin->quit();
-            }
-        }
-        for (auto window : qApp->allWindows()) {
-            window->close();
-        }
         QTimer::singleShot(0, [exitCode] {
             QCoreApplication::exit(exitCode);
         });
@@ -75,6 +71,7 @@ namespace Core {
     }
 
     ICoreBase::ICoreBase(ICoreBasePrivate &d, QObject *parent) : QObject(parent), d_ptr(&d) {
+        Q_ASSERT(!m_instance);
         m_instance = this;
         d.q_ptr = this;
 
@@ -82,3 +79,5 @@ namespace Core {
     }
 
 }
+
+#include "moc_icorebase.cpp"

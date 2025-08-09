@@ -2,29 +2,32 @@
 #define ICOREBASE_H
 
 #include <QObject>
-#include <QSettings>
 
-#include <CoreApi/documentsystem.h>
-#include <CoreApi/settingcatalog.h>
-#include <CoreApi/windowsystem.h>
+#include <CoreApi/ckappcoreglobal.h>
 
 namespace Core {
 
     class ICoreBasePrivate;
 
+    class WindowSystem;
+    class DocumentSystem;
+    class SettingCatalog;
+
     class CKAPPCORE_EXPORT ICoreBase : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(ICoreBase)
+        Q_PROPERTY(Core::WindowSystem *windowSystem READ windowSystem CONSTANT)
+        Q_PROPERTY(Core::DocumentSystem *documentSystem READ documentSystem CONSTANT)
+        Q_PROPERTY(Core::SettingCatalog *settingCatalog READ settingCatalog CONSTANT)
     public:
         explicit ICoreBase(QObject *parent = nullptr);
-        ~ICoreBase();
+        ~ICoreBase() override;
 
         static ICoreBase *instance();
 
         Q_INVOKABLE static void exitApplicationGracefully(int exitCode = 0);
         Q_INVOKABLE static void restartApplication(int exitCode = 0);
 
-        // Resource Managers
     public:
         static WindowSystem *windowSystem();
         static DocumentSystem *documentSystem();

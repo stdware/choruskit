@@ -3,7 +3,8 @@
 
 #include <QDebug>
 
-#include "icorebase.h"
+#include <CoreApi/icorebase.h>
+#include <CoreApi/documentsystem.h>
 
 namespace Core {
 
