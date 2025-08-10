@@ -132,7 +132,7 @@ namespace Core {
         return d->id;
     }
 
-    bool ISettingPage::matches(const QString &word) const {
+    bool ISettingPage::matches(const QString &word) {
         Q_D(const ISettingPage);
         return d->title.contains(word, Qt::CaseInsensitive) ||
                sortKeyword().contains(word, Qt::CaseInsensitive);

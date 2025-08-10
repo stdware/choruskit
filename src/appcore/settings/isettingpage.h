@@ -49,7 +49,7 @@ namespace Core {
     public:
         virtual QString sortKeyword() const;
 
-        Q_INVOKABLE virtual bool matches(const QString &word) const;
+        Q_INVOKABLE virtual bool matches(const QString &word);
 
         // Abstraction for QtWidgets and QtQuick
         virtual QObject *widget() = 0;
