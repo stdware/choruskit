@@ -9,7 +9,7 @@ if(CHORUSKIT_BUILD_TRANSLATIONS)
     get_property(_targets GLOBAL PROPERTY CHORUSKIT_TRANSLATE_TARGETS)
     set(_qm_dir ${CMAKE_BUILD_SHARE_DIR}/${CHORUSKIT_INSTALL_NAME}/translations)
     qm_add_translation(choruskit_translations
-        LOCALES ja_JP zh_CN zh_TW
+        LOCALES en_US zh_CN zh_TW ja_JP
         PREFIX choruskit
         TARGETS ${_targets}
         TS_DIR translations
