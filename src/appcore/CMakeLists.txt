@@ -3,6 +3,8 @@ project(CkAppCore
     LANGUAGES CXX
 )
 
+qm_import(Qml)
+
 file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
 find_package(stdcorelib CONFIG REQUIRED)
@@ -33,5 +35,7 @@ endif()
 qt_add_qml_module(${PROJECT_NAME}
     URI ChorusKit.AppCore
     QML_FILES
-    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ChorusKit/AppCore
+    OUTPUT_DIRECTORY ${QMSETUP_BUILD_DIR}/qml/ChorusKit/AppCore
 )
+
+qm_install_qml_modules(${PROJECT_NAME})

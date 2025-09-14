@@ -39,6 +39,11 @@ set(CHORUSKIT_TRANSLATIONS zh_CN zh_TW ja_JP)
 find_package(qmsetup CONFIG REQUIRED)
 
 qm_import(Filesystem)
+
+if (NOT DEFINED QMSETUP_BUILD_DIR)
+    set(QMSETUP_BUILD_DIR "${CMAKE_BINARY_DIR}/out")
+endif()
+
 qm_init_directories()
 
 # ----------------------------------
