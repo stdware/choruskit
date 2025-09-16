@@ -1,5 +1,5 @@
-#ifndef ICOREBASE_H
-#define ICOREBASE_H
+#ifndef COREINTERFACEBASE_H
+#define COREINTERFACEBASE_H
 
 #include <QObject>
 
@@ -7,23 +7,23 @@
 
 namespace Core {
 
-    class ICoreBasePrivate;
+    class CoreInterfaceBasePrivate;
 
     class WindowSystem;
     class DocumentSystem;
     class SettingCatalog;
 
-    class CKAPPCORE_EXPORT ICoreBase : public QObject {
+    class CKAPPCORE_EXPORT CoreInterfaceBase : public QObject {
         Q_OBJECT
-        Q_DECLARE_PRIVATE(ICoreBase)
+        Q_DECLARE_PRIVATE(CoreInterfaceBase)
         Q_PROPERTY(Core::WindowSystem *windowSystem READ windowSystem CONSTANT)
         Q_PROPERTY(Core::DocumentSystem *documentSystem READ documentSystem CONSTANT)
         Q_PROPERTY(Core::SettingCatalog *settingCatalog READ settingCatalog CONSTANT)
     public:
-        explicit ICoreBase(QObject *parent = nullptr);
-        ~ICoreBase() override;
+        explicit CoreInterfaceBase(QObject *parent = nullptr);
+        ~CoreInterfaceBase() override;
 
-        static ICoreBase *instance();
+        static CoreInterfaceBase *instance();
 
         Q_INVOKABLE static void exitApplicationGracefully(int exitCode = 0);
         Q_INVOKABLE static void restartApplication(int exitCode = 0);
@@ -34,11 +34,11 @@ namespace Core {
         static SettingCatalog *settingCatalog();
 
     protected:
-        ICoreBase(ICoreBasePrivate &d, QObject *parent = nullptr);
+        CoreInterfaceBase(CoreInterfaceBasePrivate &d, QObject *parent = nullptr);
 
-        QScopedPointer<ICoreBasePrivate> d_ptr;
+        QScopedPointer<CoreInterfaceBasePrivate> d_ptr;
     };
 
 }
 
-#endif // ICOREBASE_H
+#endif // COREINTERFACEBASE_H

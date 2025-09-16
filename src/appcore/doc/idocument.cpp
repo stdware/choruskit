@@ -7,7 +7,7 @@
 #include <QSettings>
 #include <QWidget>
 
-#include <CoreApi/icorebase.h>
+#include <CoreApi/coreinterfacebase.h>
 #include <CoreApi/documentsystem.h>
 
 namespace Core {
@@ -24,7 +24,7 @@ namespace Core {
     }
 
     bool IDocumentPrivate::getSpec() {
-        spec = ICoreBase::instance()->documentSystem()->docType(id);
+        spec = CoreInterfaceBase::instance()->documentSystem()->docType(id);
         if (!spec) {
             qWarning() << "Core::IDocument(): document is not registered to Document:" << id;
             return false;

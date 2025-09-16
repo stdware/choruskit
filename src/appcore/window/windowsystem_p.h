@@ -39,13 +39,13 @@ namespace Core {
 
         WindowSystem *q_ptr;
 
-        stdc::linked_map<IWindow *, int /*NOT USED*/> iWindows;
-        QHash<QWindow *, IWindow *> windowMap;
+        stdc::linked_map<WindowInterface *, int /*NOT USED*/> windowInterfaces;
+        QHash<QWindow *, WindowInterface *> windowMap;
 
         QHash<QString, WindowGeometry> winGeometries;
 
-        void windowCreated(IWindow *iWin);
-        void windowAboutToDestroy(IWindow *iWin);
+        void windowCreated(WindowInterface *windowInterface);
+        void windowAboutToDestroy(WindowInterface *windowInterface);
     };
 
 }

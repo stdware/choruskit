@@ -86,18 +86,18 @@ namespace Core {
         settings->endGroup();
     }
 
-    void WindowSystemPrivate::windowCreated(IWindow *iWin) {
+    void WindowSystemPrivate::windowCreated(WindowInterface *windowInterface) {
         Q_Q(WindowSystem);
-        windowMap.insert(iWin->window(), iWin);
-        iWindows.append(iWin, 0);
-        Q_EMIT q->windowCreated(iWin);
+        windowMap.insert(windowInterface->window(), windowInterface);
+        windowInterfaces.append(windowInterface, 0);
+        Q_EMIT q->windowCreated(windowInterface);
     }
 
-    void WindowSystemPrivate::windowAboutToDestroy(IWindow *iWin) {
+    void WindowSystemPrivate::windowAboutToDestroy(WindowInterface *windowInterface) {
         Q_Q(WindowSystem);
-        windowMap.remove(iWin->window());
-        iWindows.remove(iWin);
-        Q_EMIT q->windowAboutToDestroy(iWin);
+        windowMap.remove(windowInterface->window());
+        windowInterfaces.remove(windowInterface);
+        Q_EMIT q->windowAboutToDestroy(windowInterface);
     }
 
     static WindowSystem *m_instance = nullptr;
@@ -113,7 +113,7 @@ namespace Core {
         m_instance = nullptr;
     }
 
-    IWindow *WindowSystem::findWindow(QWindow *window) const {
+    WindowInterface *WindowSystem::findWindow(QWindow *window) const {
         Q_D(const WindowSystem);
         if (!window)
             return nullptr;
@@ -122,17 +122,17 @@ namespace Core {
 
     int WindowSystem::count() const {
         Q_D(const WindowSystem);
-        return d->iWindows.size();
+        return d->windowInterfaces.size();
     }
 
-    QList<IWindow *> WindowSystem::windows() const {
+    QList<WindowInterface *> WindowSystem::windows() const {
         Q_D(const WindowSystem);
-        return d->iWindows.keys_qlist();
+        return d->windowInterfaces.keys_qlist();
     }
 
-    IWindow *WindowSystem::firstWindow() const {
+    WindowInterface *WindowSystem::firstWindow() const {
         Q_D(const WindowSystem);
-        return d->iWindows.empty() ? nullptr : d->iWindows.begin()->first;
+        return d->windowInterfaces.empty() ? nullptr : d->windowInterfaces.begin()->first;
     }
 
     using WindowSizeTrimmers = QHash<QString, WindowSizeTrimmer *>;
@@ -273,12 +273,12 @@ namespace Core {
         d.q_ptr = this;
         d.init();
     }
-    IWindow *WindowSystem::firstWindowOfTypeImpl(const QMetaObject &type) const {
+    WindowInterface *WindowSystem::firstWindowOfTypeImpl(const QMetaObject &type) const {
         Q_D(const WindowSystem);
-        auto it = std::ranges::find_if(d->iWindows, [=](const auto &p) -> bool {
+        auto it = std::ranges::find_if(d->windowInterfaces, [=](const auto &p) -> bool {
             return p.first->inherits(type.className());
         });
-        if (it == d->iWindows.end()) {
+        if (it == d->windowInterfaces.end()) {
             return nullptr;
         }
         return it.key();

@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QWindow>
 
-#include <CoreApi/iwindow.h>
+#include <CoreApi/windowinterface.h>
 
 namespace Core {
 
@@ -18,10 +18,10 @@ namespace Core {
         ~WindowSystem();
 
     public:
-        IWindow *findWindow(QWindow *window) const;
+        WindowInterface *findWindow(QWindow *window) const;
         int count() const;
-        QList<IWindow *> windows() const;
-        IWindow *firstWindow() const;
+        QList<WindowInterface *> windows() const;
+        WindowInterface *firstWindow() const;
         template <class T>
         T *firstWindowOfType() const {
             return qobject_cast<T *>(firstWindowOfTypeImpl(T::staticMetaObject));
@@ -32,19 +32,19 @@ namespace Core {
         void saveGeometry(const QString &id, QWindow *w);
 
     Q_SIGNALS:
-        void windowCreated(IWindow *iWin);
-        void windowAboutToDestroy(IWindow *iWin);
+        void windowCreated(WindowInterface *windowInterface);
+        void windowAboutToDestroy(WindowInterface *windowInterface);
 
     protected:
         WindowSystem(WindowSystemPrivate &d, QObject *parent = nullptr);
 
         QScopedPointer<WindowSystemPrivate> d_ptr;
 
-        friend class IWindow;
-        friend class IWindowPrivate;
+        friend class WindowInterface;
+        friend class WindowInterfacePrivate;
 
     private:
-        IWindow *firstWindowOfTypeImpl(const QMetaObject &type) const;
+        WindowInterface *firstWindowOfTypeImpl(const QMetaObject &type) const;
     };
 
 }

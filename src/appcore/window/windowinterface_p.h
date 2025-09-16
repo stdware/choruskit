@@ -1,5 +1,5 @@
-#ifndef IWINDOW_P_H
-#define IWINDOW_P_H
+#ifndef WINDOWINTERFACE_P_H
+#define WINDOWINTERFACE_P_H
 
 //
 //  W A R N I N G !!!
@@ -17,28 +17,28 @@
 
 #include <stdcorelib/linked_map.h>
 
-#include <CoreApi/iwindow.h>
+#include <CoreApi/windowinterface.h>
 
-#include <CoreApi/private/iexecutive_p.h>
+#include <CoreApi/private/executiveinterface_p.h>
 
 namespace Core {
 
     class WindowSystemPrivate;
 
-    class IWindowAddOnPrivate : public IExecutiveAddOnPrivate {
-        Q_DECLARE_PUBLIC(IWindowAddOn)
+    class WindowInterfaceAddOnPrivate : public ExecutiveInterfaceAddOnPrivate {
+        Q_DECLARE_PUBLIC(WindowInterfaceAddOn)
     public:
-        IWindowAddOnPrivate();
-        ~IWindowAddOnPrivate();
+        WindowInterfaceAddOnPrivate();
+        ~WindowInterfaceAddOnPrivate();
 
         void init();
     };
 
-    class CKAPPCORE_EXPORT IWindowPrivate : public IExecutivePrivate {
-        Q_DECLARE_PUBLIC(IWindow)
+    class CKAPPCORE_EXPORT WindowInterfacePrivate : public ExecutiveInterfacePrivate {
+        Q_DECLARE_PUBLIC(WindowInterface)
     public:
-        IWindowPrivate();
-        ~IWindowPrivate();
+        WindowInterfacePrivate();
+        ~WindowInterfacePrivate();
 
         void init();
 
@@ -57,4 +57,4 @@ namespace Core {
 
 
 
-#endif // IWINDOW_P_H
+#endif // WINDOWINTERFACE_P_H

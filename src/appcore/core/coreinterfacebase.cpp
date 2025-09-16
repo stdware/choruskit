@@ -1,5 +1,5 @@
-#include "icorebase.h"
-#include "icorebase_p.h"
+#include "coreinterfacebase.h"
+#include "coreinterfacebase_p.h"
 
 #include <QTimer>
 #include <QtCore/QFileInfo>
@@ -11,66 +11,66 @@
 
 namespace Core {
 
-#define myWarning (qWarning().nospace() << "Core::ICoreBase::" << __func__ << "():").space()
+#define myWarning (qWarning().nospace() << "Core::CoreInterfaceBase::" << __func__ << "():").space()
 
 #define checkInstance                                                                              \
     if (!m_instance) {                                                                             \
-        myWarning << "Please instantiate the ICoreBase object first";                              \
+        myWarning << "Please instantiate the CoreInterfaceBase object first";                              \
         return {};                                                                                 \
     }
 
-    ICoreBasePrivate::ICoreBasePrivate() {
+    CoreInterfaceBasePrivate::CoreInterfaceBasePrivate() {
     }
 
-    ICoreBasePrivate::~ICoreBasePrivate() {
+    CoreInterfaceBasePrivate::~CoreInterfaceBasePrivate() {
     }
 
-    void ICoreBasePrivate::init() {
-        Q_Q(ICoreBase);
+    void CoreInterfaceBasePrivate::init() {
+        Q_Q(CoreInterfaceBase);
 
         windowSystem = new WindowSystem(q);
         documentSystem = new DocumentSystem(q);
         settingCatalog = new SettingCatalog(q);
     }
 
-    static ICoreBase *m_instance = nullptr;
+    static CoreInterfaceBase *m_instance = nullptr;
 
-    ICoreBase::ICoreBase(QObject *parent) : ICoreBase(*new ICoreBasePrivate(), parent) {
+    CoreInterfaceBase::CoreInterfaceBase(QObject *parent) : CoreInterfaceBase(*new CoreInterfaceBasePrivate(), parent) {
     }
 
-    ICoreBase::~ICoreBase() {
+    CoreInterfaceBase::~CoreInterfaceBase() {
         m_instance = nullptr;
     }
 
-    ICoreBase *ICoreBase::instance() {
+    CoreInterfaceBase *CoreInterfaceBase::instance() {
         return m_instance;
     }
-    void ICoreBase::exitApplicationGracefully(int exitCode) {
+    void CoreInterfaceBase::exitApplicationGracefully(int exitCode) {
         QTimer::singleShot(0, [exitCode] {
             QCoreApplication::exit(exitCode);
         });
     }
-    void ICoreBase::restartApplication(int exitCode) {
+    void CoreInterfaceBase::restartApplication(int exitCode) {
         qApp->setProperty("restart", true);
         exitApplicationGracefully(exitCode);
     }
 
-    WindowSystem *ICoreBase::windowSystem() {
+    WindowSystem *CoreInterfaceBase::windowSystem() {
         checkInstance;
         return m_instance->d_func()->windowSystem;
     }
 
-    DocumentSystem *ICoreBase::documentSystem() {
+    DocumentSystem *CoreInterfaceBase::documentSystem() {
         checkInstance;
         return m_instance->d_func()->documentSystem;
     }
 
-    SettingCatalog *ICoreBase::settingCatalog() {
+    SettingCatalog *CoreInterfaceBase::settingCatalog() {
         checkInstance;
         return m_instance->d_func()->settingCatalog;
     }
 
-    ICoreBase::ICoreBase(ICoreBasePrivate &d, QObject *parent) : QObject(parent), d_ptr(&d) {
+    CoreInterfaceBase::CoreInterfaceBase(CoreInterfaceBasePrivate &d, QObject *parent) : QObject(parent), d_ptr(&d) {
         Q_ASSERT(!m_instance);
         m_instance = this;
         d.q_ptr = this;
@@ -80,4 +80,4 @@ namespace Core {
 
 }
 
-#include "moc_icorebase.cpp"
+#include "moc_coreinterfacebase.cpp"

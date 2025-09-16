@@ -1,5 +1,5 @@
-#ifndef IEXECUTIVE_H
-#define IEXECUTIVE_H
+#ifndef EXECUTIVEINTERFACE_H
+#define EXECUTIVEINTERFACE_H
 
 #include <QObject>
 
@@ -7,40 +7,40 @@
 
 namespace Core {
 
-    class IExecutive;
+    class ExecutiveInterface;
 
-    class IExecutivePrivate;
+    class ExecutiveInterfacePrivate;
 
-    class IExecutiveAddOnPrivate;
+    class ExecutiveInterfaceAddOnPrivate;
 
-    class CKAPPCORE_EXPORT IExecutiveAddOn : public QObject {
+    class CKAPPCORE_EXPORT ExecutiveInterfaceAddOn : public QObject {
         Q_OBJECT
-        Q_DECLARE_PRIVATE(IExecutiveAddOn)
+        Q_DECLARE_PRIVATE(ExecutiveInterfaceAddOn)
     public:
-        explicit IExecutiveAddOn(QObject *parent = nullptr);
-        ~IExecutiveAddOn();
+        explicit ExecutiveInterfaceAddOn(QObject *parent = nullptr);
+        ~ExecutiveInterfaceAddOn();
 
         virtual void initialize() = 0;
         virtual void extensionsInitialized() = 0;
         virtual bool delayedInitialize();
 
     public:
-        IExecutive *host() const;
+        ExecutiveInterface *host() const;
 
     protected:
-        IExecutiveAddOn(IExecutiveAddOnPrivate &d, QObject *parent = nullptr);
+        ExecutiveInterfaceAddOn(ExecutiveInterfaceAddOnPrivate &d, QObject *parent = nullptr);
 
-        QScopedPointer<IExecutiveAddOnPrivate> d_ptr;
+        QScopedPointer<ExecutiveInterfaceAddOnPrivate> d_ptr;
 
-        friend class IExecutive;
-        friend class IExecutivePrivate;
+        friend class ExecutiveInterface;
+        friend class ExecutiveInterfacePrivate;
     };
 
-    class CKAPPCORE_EXPORT IExecutive : public ObjectPool {
+    class CKAPPCORE_EXPORT ExecutiveInterface : public ObjectPool {
         Q_OBJECT
-        Q_DECLARE_PRIVATE(IExecutive)
+        Q_DECLARE_PRIVATE(ExecutiveInterface)
     public:
-        using AddOnType = IExecutiveAddOn;
+        using AddOnType = ExecutiveInterfaceAddOn;
 
         enum State {
             Preparatory,
@@ -52,7 +52,7 @@ namespace Core {
         };
         Q_ENUM(State)
 
-        ~IExecutive();
+        ~ExecutiveInterface();
 
         State state() const;
 
@@ -63,31 +63,31 @@ namespace Core {
         void loadingStateChanged(State state);
 
     protected:
-        void attachImpl(IExecutiveAddOn *addOn);
+        void attachImpl(ExecutiveInterfaceAddOn *addOn);
         void loadImpl(bool enableDelayed = true);
 
     protected:
         virtual void nextLoadingState(State nextState);
 
     protected:
-        explicit IExecutive(QObject *parent = nullptr);
-        IExecutive(IExecutivePrivate &d, QObject *parent = nullptr);
+        explicit ExecutiveInterface(QObject *parent = nullptr);
+        ExecutiveInterface(ExecutiveInterfacePrivate &d, QObject *parent = nullptr);
     };
 
     template <class HostType>
-    class IExecutiveRegistry {
+    class ExecutiveInterfaceRegistry {
     public:
         using AddOnType = typename HostType::AddOnType;
-        using AddOnFactory = std::function<IExecutiveAddOn *(QObject *)>;
+        using AddOnFactory = std::function<ExecutiveInterfaceAddOn *(QObject *)>;
 
     public:
-        IExecutiveRegistry() {
+        ExecutiveInterfaceRegistry() {
         }
 
         template <class T>
         void attach() {
             static_assert(std::is_base_of<AddOnType, T>::value, "T should inherit from ...");
-            factories.append([](QObject *parent) -> IExecutiveAddOn * {
+            factories.append([](QObject *parent) -> ExecutiveInterfaceAddOn * {
                 return new T(parent); //
             });
         }
@@ -108,4 +108,4 @@ namespace Core {
 
 }
 
-#endif // IEXECUTIVE_H
+#endif // EXECUTIVEINTERFACE_H

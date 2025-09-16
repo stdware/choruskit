@@ -3,7 +3,7 @@
 
 #include <QDebug>
 
-#include <CoreApi/icorebase.h>
+#include <CoreApi/coreinterfacebase.h>
 #include <CoreApi/documentsystem.h>
 
 namespace Core {
@@ -64,7 +64,7 @@ namespace Core {
     }
 
     bool DocumentSpec::open(const QString &fileName, QWidget *parent) {
-        auto doc = ICoreBase::instance()->documentSystem()->searchDocument(fileName);
+        auto doc = CoreInterfaceBase::instance()->documentSystem()->searchDocument(fileName);
         if (doc) {
             doc->raise();
             return true;

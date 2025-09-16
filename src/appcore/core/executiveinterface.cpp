@@ -1,56 +1,56 @@
-#include "iexecutive.h"
-#include "iexecutive_p.h"
+#include "executiveinterface.h"
+#include "executiveinterface_p.h"
 
 namespace Core {
 
     static const int DELAYED_INITIALIZE_INTERVAL = 5; // ms
 
-    IExecutiveAddOnPrivate::IExecutiveAddOnPrivate() {
+    ExecutiveInterfaceAddOnPrivate::ExecutiveInterfaceAddOnPrivate() {
     }
 
-    IExecutiveAddOnPrivate::~IExecutiveAddOnPrivate() = default;
+    ExecutiveInterfaceAddOnPrivate::~ExecutiveInterfaceAddOnPrivate() = default;
 
-    void IExecutiveAddOnPrivate::init() {
+    void ExecutiveInterfaceAddOnPrivate::init() {
     }
 
-    IExecutiveAddOn::IExecutiveAddOn(QObject *parent) : QObject(parent) {
+    ExecutiveInterfaceAddOn::ExecutiveInterfaceAddOn(QObject *parent) : QObject(parent) {
     }
 
-    IExecutiveAddOn::~IExecutiveAddOn() {
+    ExecutiveInterfaceAddOn::~ExecutiveInterfaceAddOn() {
     }
 
-    bool IExecutiveAddOn::delayedInitialize() {
+    bool ExecutiveInterfaceAddOn::delayedInitialize() {
         return false;
     }
 
-    IExecutive *IExecutiveAddOn::host() const {
-        Q_D(const IExecutiveAddOn);
+    ExecutiveInterface *ExecutiveInterfaceAddOn::host() const {
+        Q_D(const ExecutiveInterfaceAddOn);
         return d->host;
     }
 
-    IExecutiveAddOn::IExecutiveAddOn(IExecutiveAddOnPrivate &d, QObject *parent)
+    ExecutiveInterfaceAddOn::ExecutiveInterfaceAddOn(ExecutiveInterfaceAddOnPrivate &d, QObject *parent)
         : QObject(parent), d_ptr(&d) {
         d.q_ptr = this;
         d.init();
     }
 
-    IExecutivePrivate::IExecutivePrivate() {
-        state = IExecutive::Preparatory;
+    ExecutiveInterfacePrivate::ExecutiveInterfacePrivate() {
+        state = ExecutiveInterface::Preparatory;
         delayedInitializeTimer = nullptr;
     }
 
-    IExecutivePrivate::~IExecutivePrivate() {
+    ExecutiveInterfacePrivate::~ExecutiveInterfacePrivate() {
         stopDelayedTimer();
     }
 
-    void IExecutivePrivate::init() {
+    void ExecutiveInterfacePrivate::init() {
     }
 
-    void IExecutivePrivate::load(bool enableDelayed) {
-        Q_Q(IExecutive);
+    void ExecutiveInterfacePrivate::load(bool enableDelayed) {
+        Q_Q(ExecutiveInterface);
 
         // Setup
-        changeLoadState(IExecutive::Starting);
+        changeLoadState(ExecutiveInterface::Starting);
 
         // Initialize
         for (auto &addOn : qAsConst(addOns)) {
@@ -58,7 +58,7 @@ namespace Core {
             addOn->initialize();
         }
 
-        changeLoadState(IExecutive::Initialized);
+        changeLoadState(ExecutiveInterface::Initialized);
 
         // ExtensionsInitialized
         for (auto it2 = addOns.rbegin(); it2 != addOns.rend(); ++it2) {
@@ -68,7 +68,7 @@ namespace Core {
         }
 
         // Add-ons finished
-        changeLoadState(IExecutive::Running);
+        changeLoadState(ExecutiveInterface::Running);
 
         if (enableDelayed) {
             // Delayed initialize
@@ -78,19 +78,19 @@ namespace Core {
             delayedInitializeTimer->setInterval(DELAYED_INITIALIZE_INTERVAL);
             delayedInitializeTimer->setSingleShot(true);
             connect(delayedInitializeTimer, &QTimer::timeout, this,
-                    &IExecutivePrivate::nextDelayedInitialize);
+                    &ExecutiveInterfacePrivate::nextDelayedInitialize);
             delayedInitializeTimer->start();
         } else {
             Q_EMIT q->initializationDone();
         }
     }
 
-    void IExecutivePrivate::quit() {
-        Q_Q(IExecutive);
+    void ExecutiveInterfacePrivate::quit() {
+        Q_Q(ExecutiveInterface);
 
         stopDelayedTimer();
 
-        changeLoadState(IExecutive::Exiting);
+        changeLoadState(ExecutiveInterface::Exiting);
 
         // Delete addOns
         for (auto it2 = addOns.rbegin(); it2 != addOns.rend(); ++it2) {
@@ -98,17 +98,17 @@ namespace Core {
             addOn->deleteLater();
         }
 
-        changeLoadState(IExecutive::Deleted);
+        changeLoadState(ExecutiveInterface::Deleted);
     }
 
-    void IExecutivePrivate::changeLoadState(IExecutive::State newState) {
-        Q_Q(IExecutive);
+    void ExecutiveInterfacePrivate::changeLoadState(ExecutiveInterface::State newState) {
+        Q_Q(ExecutiveInterface);
         q->nextLoadingState(newState);
         state = newState;
         Q_EMIT q->loadingStateChanged(newState);
     }
 
-    void IExecutivePrivate::stopDelayedTimer() {
+    void ExecutiveInterfacePrivate::stopDelayedTimer() {
         // Stop delayed initializations
         if (delayedInitializeTimer) {
             if (delayedInitializeTimer->isActive()) {
@@ -119,8 +119,8 @@ namespace Core {
         }
     }
 
-    void IExecutivePrivate::nextDelayedInitialize() {
-        Q_Q(IExecutive);
+    void ExecutiveInterfacePrivate::nextDelayedInitialize() {
+        Q_Q(ExecutiveInterface);
 
         while (!delayedInitializeQueue.empty()) {
             auto addOn = delayedInitializeQueue.front();
@@ -139,30 +139,30 @@ namespace Core {
         }
     }
 
-    IExecutive::~IExecutive() {
+    ExecutiveInterface::~ExecutiveInterface() {
     }
 
-    IExecutive::State IExecutive::state() const {
-        Q_D(const IExecutive);
+    ExecutiveInterface::State ExecutiveInterface::state() const {
+        Q_D(const ExecutiveInterface);
         return d->state;
     }
 
-    void IExecutive::quit() {
-        Q_D(IExecutive);
+    void ExecutiveInterface::quit() {
+        Q_D(ExecutiveInterface);
         if (d->state != Running)
             return;
         d->quit();
     }
 
-    void IExecutive::attachImpl(IExecutiveAddOn *addOn) {
-        Q_D(IExecutive);
+    void ExecutiveInterface::attachImpl(ExecutiveInterfaceAddOn *addOn) {
+        Q_D(ExecutiveInterface);
         if (d->state >= Starting)
             return;
         d->addOns.append(addOn);
     }
 
-    void IExecutive::loadImpl(bool enableDelayed) {
-        Q_D(IExecutive);
+    void ExecutiveInterface::loadImpl(bool enableDelayed) {
+        Q_D(ExecutiveInterface);
         if (d->state >= Starting)
             return;
 
@@ -173,14 +173,14 @@ namespace Core {
         d->load(enableDelayed);
     }
 
-    void IExecutive::nextLoadingState(State nextState) {
+    void ExecutiveInterface::nextLoadingState(State nextState) {
         Q_UNUSED(nextState);
     }
 
-    IExecutive::IExecutive(QObject *parent) : IExecutive(*new IExecutivePrivate(), parent) {
+    ExecutiveInterface::ExecutiveInterface(QObject *parent) : ExecutiveInterface(*new ExecutiveInterfacePrivate(), parent) {
     }
 
-    IExecutive::IExecutive(IExecutivePrivate &d, QObject *parent) : ObjectPool(d, parent) {
+    ExecutiveInterface::ExecutiveInterface(ExecutiveInterfacePrivate &d, QObject *parent) : ObjectPool(d, parent) {
         d.init();
     }
 
