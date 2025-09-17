@@ -30,6 +30,7 @@ namespace Core{
         WindowSystem *windowSystem;
         DocumentSystem *documentSystem;
         SettingCatalog *settingCatalog;
+        TranslationManager *translationManager;
 
         CoreInterfaceBase *q_ptr;
     };

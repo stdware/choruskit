@@ -87,7 +87,7 @@ macro(choruskit_add_library _target _type)
 
     if(NOT FUNC_NO_SYNC_INCLUDE)
         # Generate a standard include directory in build directory
-        qm_sync_include(. "${CHORUSKIT_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options}
+        qm_sync_include(. "${CHORUSKIT_GENERATED_INCLUDE_DIR}/${_inc_name}" ${_install_options} FORCE
             ${FUNC_SYNC_INCLUDE_OPTIONS}
         )
         target_include_directories(${_target} PUBLIC
