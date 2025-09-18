@@ -122,7 +122,14 @@ namespace Core {
             return;
 
         d->translationPaths.insert(path);
-        d->qmFilesDirty = true;
+
+        auto map = scanTranslation_helper(path);
+        d->insertTranslationFiles_helper(map);
+        auto it = map.find(QLocale().name());
+        if (it != map.end()) {
+            auto translators = installTranslation_helper(it.value());
+            d->translators.append(translators);
+        }
     }
 
     /*!
@@ -142,7 +149,21 @@ namespace Core {
         if (it == d->translationPaths.end())
             return;
 
+        auto map = scanTranslation_helper(path);
+        auto localeFiles = map.value(QLocale().name());
+        for (auto &file : localeFiles) {
+            for (int i = d->translators.size() - 1; i >= 0; --i) {
+                QTranslator *t = d->translators[i];
+                if (t && t->isEmpty() == false && t->filePath() == file) {
+                    QCoreApplication::removeTranslator(t);
+                    delete t;
+                    d->translators.removeAt(i);
+                }
+            }
+        }
+
         d->translationPaths.erase(it);
+
         d->qmFilesDirty = true;
     }
 
