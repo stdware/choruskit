@@ -31,7 +31,7 @@ using namespace Core;
 // Use native messageBox to display message, instead of QMessageBox
 #define CKLOADER_USE_NATIVE_MESSAGEBOX
 
-static Q_LOGGING_CATEGORY(ckLoader, "ckLoader");
+static Q_LOGGING_CATEGORY(ckLoader, "ck.loader");
 
 static const SingleApplication::Options opts = SingleApplication::User |              //
                                                SingleApplication::ExcludeAppPath |    //
