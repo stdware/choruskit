@@ -1,7 +1,7 @@
 #include "documentsystem.h"
 #include "documentsystem_p.h"
 
-#include "plugindatabase.h"
+#include "runtimeinterface.h"
 #include "applicationinfo.h"
 
 #include <QApplication>
@@ -56,7 +56,7 @@ namespace Core {
     }
 
     void DocumentSystemPrivate::readSettings() {
-        auto settings = PluginDatabase::settings();
+        auto settings = RuntimeInterface::settings();
         settings->beginGroup(QLatin1String(settingCategoryC));
 
         QStringList recentFiles = settings->value(QLatin1String(recentFilesC)).toStringList();
@@ -84,7 +84,7 @@ namespace Core {
     }
 
     void DocumentSystemPrivate::saveSettings() const {
-        auto settings = PluginDatabase::settings();
+        auto settings = RuntimeInterface::settings();
         settings->beginGroup(QLatin1String(settingCategoryC));
 
         settings->setValue(QLatin1String(recentFilesC), m_recentFiles);

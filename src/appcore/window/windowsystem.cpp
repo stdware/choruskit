@@ -13,7 +13,7 @@
 #include <QJsonObject>
 #include <QSettings>
 
-#include "plugindatabase.h"
+#include "runtimeinterface.h"
 
 namespace Core {
 
@@ -58,7 +58,7 @@ namespace Core {
     void WindowSystemPrivate::readSettings() {
         winGeometries.clear();
 
-        auto settings = PluginDatabase::settings();
+        auto settings = RuntimeInterface::settings();
         settings->beginGroup(QLatin1String(settingCatalogC));
 
         auto winPropsObj = settings->value(winGeometryGroupC).toJsonObject();
@@ -78,7 +78,7 @@ namespace Core {
             winPropsObj.insert(it.key(), it->toObject());
         }
 
-        auto settings = PluginDatabase::settings();
+        auto settings = RuntimeInterface::settings();
         settings->beginGroup(QLatin1String(settingCatalogC));
 
         settings->setValue(QLatin1String(winGeometryGroupC), winPropsObj);

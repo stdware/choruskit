@@ -1,4 +1,4 @@
-#include "plugindatabase.h"
+#include "runtimeinterface.h"
 
 #include <tuple>
 
@@ -10,25 +10,25 @@
 
 namespace Core {
 
-#define myWarning (qWarning().nospace() << "Core::PluginDatabase::" << __func__ << "():").space()
+#define myWarning (qWarning().nospace() << "Core::RuntimeInterface::" << __func__ << "():").space()
 
 #define checkInstanceV                                                                             \
     if (!m_instance) {                                                                             \
-        myWarning << "Please instantiate the PluginDatabase object first";                         \
+        myWarning << "Please instantiate the RuntimeInterface object first";                         \
         return;                                                                                    \
     }
 
 #define checkInstance                                                                              \
     if (!m_instance) {                                                                             \
-        myWarning << "Please instantiate the PluginDatabase object first";                         \
+        myWarning << "Please instantiate the RuntimeInterface object first";                         \
         return {};                                                                                 \
     }
 
-    class PluginDatabasePrivate : public ObjectPoolPrivate {
-        Q_DECLARE_PUBLIC(PluginDatabase)
+    class RuntimeInterfacePrivate : public ObjectPoolPrivate {
+        Q_DECLARE_PUBLIC(RuntimeInterface)
     public:
-        PluginDatabasePrivate() {
-            std::ignore = PluginDatabase::startTime();
+        RuntimeInterfacePrivate() {
+            std::ignore = RuntimeInterface::startTime();
         }
 
         QSettings *settings = nullptr;
@@ -39,29 +39,29 @@ namespace Core {
         QQmlEngine *qmlEngine = nullptr;
     };
 
-    static PluginDatabase *m_instance = nullptr;
+    static RuntimeInterface *m_instance = nullptr;
 
-    PluginDatabase::PluginDatabase(QObject *parent)
-        : ObjectPool(*new PluginDatabasePrivate(), parent) {
+    RuntimeInterface::RuntimeInterface(QObject *parent)
+        : ObjectPool(*new RuntimeInterfacePrivate(), parent) {
         Q_ASSERT(!m_instance);
         m_instance = this;
     }
 
-    PluginDatabase::~PluginDatabase() {
+    RuntimeInterface::~RuntimeInterface() {
         m_instance = nullptr;
     }
 
-    QDateTime PluginDatabase::startTime() {
+    QDateTime RuntimeInterface::startTime() {
         static QDateTime start = QDateTime::currentDateTime();
         return start;
     }
 
-    QSettings *PluginDatabase::settings() {
+    QSettings *RuntimeInterface::settings() {
         checkInstance;
         return m_instance->d_func()->settings;
     }
 
-    void PluginDatabase::setSettings(QSettings *settings) {
+    void RuntimeInterface::setSettings(QSettings *settings) {
         checkInstanceV;
 
         auto &settingsRef = m_instance->d_func()->settings;
@@ -71,12 +71,12 @@ namespace Core {
         settings->setParent(m_instance);
     }
 
-    QSettings *PluginDatabase::globalSettings() {
+    QSettings *RuntimeInterface::globalSettings() {
         checkInstance;
         return m_instance->d_func()->globalSettings;
     }
 
-    void PluginDatabase::setGlobalSettings(QSettings *settings) {
+    void RuntimeInterface::setGlobalSettings(QSettings *settings) {
         checkInstanceV;
 
         auto &settingsRef = m_instance->d_func()->globalSettings;
@@ -86,22 +86,22 @@ namespace Core {
         settings->setParent(m_instance);
     }
 
-    QQmlEngine *PluginDatabase::qmlEngine() {
+    QQmlEngine *RuntimeInterface::qmlEngine() {
         checkInstance;
         return m_instance->d_func()->qmlEngine;
     }
 
-    void PluginDatabase::setQmlEngine(QQmlEngine *qmlEngine) {
+    void RuntimeInterface::setQmlEngine(QQmlEngine *qmlEngine) {
         checkInstanceV;
         m_instance->d_func()->qmlEngine = qmlEngine;
     }
 
-    QSplashScreen *PluginDatabase::splash() {
+    QSplashScreen *RuntimeInterface::splash() {
         checkInstance;
         return m_instance->d_func()->splash;
     }
 
-    void PluginDatabase::setSplash(QSplashScreen *splash) {
+    void RuntimeInterface::setSplash(QSplashScreen *splash) {
         checkInstanceV;
 
         auto &splashRef = m_instance->d_func()->splash;
@@ -112,10 +112,10 @@ namespace Core {
         splashRef = splash;
     }
 
-    PluginDatabase *PluginDatabase::instance() {
+    RuntimeInterface *RuntimeInterface::instance() {
         return m_instance;
     }
 
 }
 
-#include "moc_plugindatabase.cpp"
+#include "moc_runtimeinterface.cpp"

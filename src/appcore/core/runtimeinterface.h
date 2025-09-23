@@ -1,5 +1,5 @@
-#ifndef CHORUSKIT_PLUGINDATABASE_H
-#define CHORUSKIT_PLUGINDATABASE_H
+#ifndef CHORUSKIT_RUNTIMEINTERFACE_H
+#define CHORUSKIT_RUNTIMEINTERFACE_H
 
 #include <CoreApi/objectpool.h>
 
@@ -11,22 +11,22 @@ class QSplashScreen;
 
 namespace Core {
 
-    class PluginDatabasePrivate;
+    class RuntimeInterfacePrivate;
 
-    class CKAPPCORE_EXPORT PluginDatabase : public ObjectPool {
+    class CKAPPCORE_EXPORT RuntimeInterface : public ObjectPool {
         Q_OBJECT
-        Q_DECLARE_PRIVATE(PluginDatabase)
+        Q_DECLARE_PRIVATE(RuntimeInterface)
         Q_PROPERTY(QDateTime startTime READ startTime CONSTANT)
         Q_PROPERTY(QSettings *settings READ settings CONSTANT)
         Q_PROPERTY(QSettings *globalSettings READ globalSettings CONSTANT)
         Q_PROPERTY(QQmlEngine *qmlEngine READ qmlEngine CONSTANT)
     public:
-        explicit PluginDatabase(QObject *parent = nullptr);
-        ~PluginDatabase() override;
+        explicit RuntimeInterface(QObject *parent = nullptr);
+        ~RuntimeInterface() override;
 
         static QDateTime startTime();
 
-        static PluginDatabase *instance();
+        static RuntimeInterface *instance();
 
     public:
         static QSettings *settings();
@@ -44,4 +44,4 @@ namespace Core {
 
 }
 
-#endif // CHORUSKIT_PLUGINDATABASE_H
+#endif // CHORUSKIT_RUNTIMEINTERFACE_H

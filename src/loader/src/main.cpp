@@ -17,7 +17,7 @@
 #include <SingleApplication>
 
 #include <CoreApi/applicationinfo.h>
-#include <CoreApi/plugindatabase.h>
+#include <CoreApi/runtimeinterface.h>
 
 #include "loaderspec.h"
 #include "splashscreen.h"
@@ -280,13 +280,13 @@ int __main__(LoaderSpec *loadSpec) {
         loadSpec->createExtensionSystemSettings(QSettings::SystemScope));
 
     // ChorusKit plugin database
-    PluginDatabase pluginDatabase;
-    pluginDatabase.setSettings(loadSpec->createChorusKitSettings(QSettings::UserScope));
-    pluginDatabase.setGlobalSettings(loadSpec->createChorusKitSettings(QSettings::SystemScope));
+    RuntimeInterface runtimeInterface;
+    runtimeInterface.setSettings(loadSpec->createChorusKitSettings(QSettings::UserScope));
+    runtimeInterface.setGlobalSettings(loadSpec->createChorusKitSettings(QSettings::SystemScope));
 
     SplashScreen splash;
     g_splash = &splash;
-    pluginDatabase.setSplash(&splash);
+    runtimeInterface.setSplash(&splash);
     loadSpec->splashWillShow(&splash);
 
     splash.applyConfig(loadSpec->splashConfigPath);
