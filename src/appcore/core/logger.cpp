@@ -143,19 +143,45 @@ namespace Core {
         }
     }
 
+    void LoggerPrivate::archiveExistingLogFiles() const {
+        const QString logsDir = Logger::logsLocation();
+        QDir dir(logsDir);
+
+        const QStringList filters{QStringLiteral("*.log")};
+        const auto logFiles = dir.entryInfoList(filters, QDir::Files, QDir::Time);
+
+        // Archive all existing uncompressed log files
+        for (const auto &fileInfo : logFiles) {
+            const QString filePath = fileInfo.absoluteFilePath();
+            
+            // Only compress files that have content and don't already have a compressed version
+            if (fileInfo.size() > 0) {
+                const QString archiveFileName = generateArchiveFileName(filePath);
+                if (!QFile::exists(archiveFileName)) {
+                    compressAndArchiveFile(filePath);
+                }
+            } else {
+                // Remove empty log files
+                QFile::remove(filePath);
+            }
+        }
+    }
+
     QString LoggerPrivate::generateLogFileName() {
         const QString logsDir = Logger::logsLocation();
         const auto now = QDateTime::currentDateTimeUtc();
-        // Format: 2025-01-23T11-45-14Z_1.log
-        const QString timestamp = now.toString(QStringLiteral("yyyy-MM-ddThh-mm-ss")) + QStringLiteral("Z");
+        const QString timestamp = now.toString(Qt::ISODate).replace(QLatin1Char(':'), QLatin1Char('-'));
 
         QString baseName = QStringLiteral("%1/%2").arg(logsDir, timestamp);
 
-        // Handle potential filename conflicts by adding counter
-        int counter = 1;
+        int counter = 0;
         QString fileName;
         do {
-            fileName = QStringLiteral("%1_%2.log").arg(baseName).arg(counter);
+            if (counter == 0) {
+                fileName = QStringLiteral("%1.log").arg(baseName);
+            } else {
+                fileName = QStringLiteral("%1_%2.log").arg(baseName, QString::number(counter));
+            }
             ++counter;
         } while (QFile::exists(fileName) && counter < 1000); // Safety limit
 
@@ -177,6 +203,7 @@ namespace Core {
         file.close();
 
         // Simple compression using qCompress (zlib format)
+        // FIXME should use gzip compress
         const QByteArray compressed = qCompress(data, 9); // Maximum compression level
 
         const QString archiveFileName = generateArchiveFileName(filePath);
@@ -203,7 +230,7 @@ namespace Core {
 
     void LoggerPrivate::writeToFile(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now) {
         // Ensure log file is ready
-        if (!logFile || currentLogFile != generateLogFileName()) {
+        if (!logFile || QFileInfo(currentLogFile).fileName().mid(0, 10) != now.toUTC().toString(Qt::ISODate).mid(0, 10)) {
             rotateLogFile();
         }
 
@@ -237,6 +264,7 @@ namespace Core {
         Q_D(Logger);
         d->q_ptr = this;
         ensureLogDirectoryExists();
+        d->archiveExistingLogFiles();
         loadSettings();
     }
 
@@ -388,7 +416,9 @@ namespace Core {
 
         }
 
-        Q_EMIT messageLogged(type, category, message);
+        if (type >= d->consoleLogLevel) {
+            Q_EMIT messageLogged(type, category, message);
+        }
     }
 
 }

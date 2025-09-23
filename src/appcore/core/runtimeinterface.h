@@ -11,6 +11,8 @@ class QSplashScreen;
 
 namespace Core {
 
+    class Logger;
+
     class RuntimeInterfacePrivate;
 
     class CKAPPCORE_EXPORT RuntimeInterface : public ObjectPool {
@@ -40,6 +42,9 @@ namespace Core {
 
         static QSplashScreen *splash();
         static void setSplash(QSplashScreen *splash);
+
+        static Logger *logger();
+        static void setLogger(Logger *logger);
     };
 
 }

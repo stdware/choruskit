@@ -29,6 +29,7 @@ namespace Core {
 
         void rotateLogFile();
         void cleanupOldArchives() const;
+        void archiveExistingLogFiles() const;
         static QString generateLogFileName();
         static QString generateArchiveFileName(const QString &originalFile);
         void compressAndArchiveFile(const QString &filePath) const;

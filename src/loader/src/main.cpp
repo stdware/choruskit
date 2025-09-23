@@ -18,6 +18,7 @@
 
 #include <CoreApi/applicationinfo.h>
 #include <CoreApi/runtimeinterface.h>
+#include <CoreApi/logger.h>
 
 #include "loaderspec.h"
 #include "splashscreen.h"
@@ -390,6 +391,14 @@ int __main__(LoaderSpec *loadSpec) {
             qCDebug(ckLoader) << "primary instance initializing...";
         }
     }
+
+    Logger logger;
+    RuntimeInterface::setLogger(&logger);
+    qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+        RuntimeInterface::logger()->log(Logger::fromQtMsgType(type), context.category, msg);
+    });
+
+    qInfo().noquote() << QApplication::applicationName() << QApplication::applicationVersion() << "starting...";
 
     loadSpec->beforeLoadPlugins();
 

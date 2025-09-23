@@ -45,6 +45,22 @@ namespace Core {
         };
         Q_ENUM(MessageType)
 
+        static constexpr MessageType fromQtMsgType(QtMsgType type) {
+            switch (type) {
+                case QtDebugMsg:
+                    return Debug;
+                case QtInfoMsg:
+                    return Info;
+                case QtWarningMsg:
+                    return Warning;
+                case QtCriticalMsg:
+                    return Critical;
+                case QtFatalMsg:
+                    return Fatal;
+            }
+            return {};
+        }
+
         MessageType consoleLogLevel() const;
         void setConsoleLogLevel(MessageType consoleLogLevel);
 
@@ -56,7 +72,7 @@ namespace Core {
 
         static QString logsLocation();
 
-        Q_INVOKABLE void log(MessageType type, const QString &category, const QString &message);
+        void log(MessageType type, const QString &category, const QString &message);
 
     Q_SIGNALS:
         void maxFileSizeChanged(qsizetype maxFileSize);

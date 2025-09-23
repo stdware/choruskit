@@ -10,20 +10,6 @@
 
 namespace Core {
 
-#define myWarning (qWarning().nospace() << "Core::RuntimeInterface::" << __func__ << "():").space()
-
-#define checkInstanceV                                                                             \
-    if (!m_instance) {                                                                             \
-        myWarning << "Please instantiate the RuntimeInterface object first";                         \
-        return;                                                                                    \
-    }
-
-#define checkInstance                                                                              \
-    if (!m_instance) {                                                                             \
-        myWarning << "Please instantiate the RuntimeInterface object first";                         \
-        return {};                                                                                 \
-    }
-
     class RuntimeInterfacePrivate : public ObjectPoolPrivate {
         Q_DECLARE_PUBLIC(RuntimeInterface)
     public:
@@ -37,6 +23,8 @@ namespace Core {
         QSplashScreen *splash = nullptr;
 
         QQmlEngine *qmlEngine = nullptr;
+
+        Logger *logger = nullptr;
     };
 
     static RuntimeInterface *m_instance = nullptr;
@@ -57,13 +45,12 @@ namespace Core {
     }
 
     QSettings *RuntimeInterface::settings() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->settings;
     }
 
     void RuntimeInterface::setSettings(QSettings *settings) {
-        checkInstanceV;
-
+        Q_ASSERT(m_instance);
         auto &settingsRef = m_instance->d_func()->settings;
         delete settingsRef;
 
@@ -72,13 +59,12 @@ namespace Core {
     }
 
     QSettings *RuntimeInterface::globalSettings() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->globalSettings;
     }
 
     void RuntimeInterface::setGlobalSettings(QSettings *settings) {
-        checkInstanceV;
-
+        Q_ASSERT(m_instance);
         auto &settingsRef = m_instance->d_func()->globalSettings;
         delete settingsRef;
 
@@ -87,29 +73,35 @@ namespace Core {
     }
 
     QQmlEngine *RuntimeInterface::qmlEngine() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->qmlEngine;
     }
 
     void RuntimeInterface::setQmlEngine(QQmlEngine *qmlEngine) {
-        checkInstanceV;
+        Q_ASSERT(m_instance);
         m_instance->d_func()->qmlEngine = qmlEngine;
     }
 
     QSplashScreen *RuntimeInterface::splash() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->splash;
     }
 
     void RuntimeInterface::setSplash(QSplashScreen *splash) {
-        checkInstanceV;
-
+        Q_ASSERT(m_instance);
         auto &splashRef = m_instance->d_func()->splash;
-        if (splashRef) {
-            myWarning << "Ignores the new splash screen because there is already one set";
-            return;
-        }
+        Q_ASSERT(!splashRef);
         splashRef = splash;
+    }
+
+    Logger * RuntimeInterface::logger() {
+        Q_ASSERT(m_instance);
+        return m_instance->d_func()->logger;
+    }
+
+    void RuntimeInterface::setLogger(Logger *logger) {
+        Q_ASSERT(m_instance);
+        m_instance->d_func()->logger = logger;
     }
 
     RuntimeInterface *RuntimeInterface::instance() {
