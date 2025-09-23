@@ -54,16 +54,32 @@ namespace Core {
     }
 
     static QString formatConsoleOutput(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now, bool prettifiesConsoleOutput) {
-        static auto formatString = QStringLiteral("[%1] [%2/%3]: %4");
-        auto text = formatString.arg(now.toString(Qt::ISODate), category, typeToString(type), message);
+        static auto formatString = QStringLiteral("[%1 %2] [%3/%4]: %5");
+        auto offset = now.timeZone().offsetFromUtc(now);
+        auto hours = qAbs(offset) / 3600;
+        auto minutes = qAbs(offset) % 3600 / 60;
+        auto sign = offset >= 0 ? '+' : '-';
+        auto offsetText = QStringLiteral("%1%2:%3")
+            .arg(sign)
+            .arg(hours, 2, 10, QLatin1Char('0'))
+            .arg(minutes, 2, 10, QLatin1Char('0'));
+
+        auto text = formatString.arg(now.toString(Qt::ISODateWithMs), offsetText, category, typeToString(type), message);
         return prettifiesConsoleOutput ? colorizeText(text, typeToSGRCode(type)) : text;
     }
 
-    static QString formatFileOutput(Logger::MessageType type, const QString &category,
-                                    const QString &message, const QDateTime &now) {
-        static auto formatString = QStringLiteral("[%1] [%2/%3]: %4");
-        auto text = formatString.arg(now.toUTC().toString(Qt::ISODate), category,
-                                     typeToString(type), message);
+    static QString formatFileOutput(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now) {
+        static auto formatString = QStringLiteral("[%1 %2] [%3/%4]: %5");
+        auto offset = now.timeZone().offsetFromUtc(now);
+        auto hours = qAbs(offset) / 3600;
+        auto minutes = qAbs(offset) % 3600 / 60;
+        auto sign = offset >= 0 ? '+' : '-';
+        auto offsetText = QStringLiteral("%1%2:%3")
+            .arg(sign)
+            .arg(hours, 2, 10, QLatin1Char('0'))
+            .arg(minutes, 2, 10, QLatin1Char('0'));
+
+        auto text = formatString.arg(now.toString(Qt::ISODateWithMs), offsetText, category, typeToString(type), message);
         return text;
     }
 
@@ -204,7 +220,8 @@ namespace Core {
 
         // Simple compression using qCompress (zlib format)
         // FIXME should use gzip compress
-        const QByteArray compressed = qCompress(data, 9); // Maximum compression level
+        // const QByteArray compressed = qCompress(data, 9); // Maximum compression level
+        const QByteArray compressed = data;
 
         const QString archiveFileName = generateArchiveFileName(filePath);
         QFile archiveFile(archiveFileName);
@@ -224,6 +241,7 @@ namespace Core {
         // Output to stderr for better compatibility with redirection
         FILE *stderrFile = stderr;
         QTextStream stderrStream(stderrFile, QIODevice::WriteOnly);
+        stderrStream.setEncoding(QStringConverter::System);
         stderrStream << consoleOutput << Qt::endl;
         stderrStream.flush();
     }

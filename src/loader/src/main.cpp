@@ -398,7 +398,7 @@ int __main__(LoaderSpec *loadSpec) {
         RuntimeInterface::logger()->log(Logger::fromQtMsgType(type), context.category, msg);
     });
 
-    qInfo().noquote() << QApplication::applicationName() << QApplication::applicationVersion() << "starting...";
+    qInfo().noquote() << QApplication::applicationName() << QApplication::applicationVersion() << "starting";
 
     loadSpec->beforeLoadPlugins();
 
