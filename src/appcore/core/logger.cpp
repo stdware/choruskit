@@ -54,7 +54,7 @@ namespace Core {
     }
 
     static QString formatConsoleOutput(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now, bool prettifiesConsoleOutput) {
-        static auto formatString = QStringLiteral("[%1 %2] [%3/%4]: %5");
+        static auto formatString = QStringLiteral("[%1 %2] [%3] [%4]: %5");
         auto offset = now.timeZone().offsetFromUtc(now);
         auto hours = qAbs(offset) / 3600;
         auto minutes = qAbs(offset) % 3600 / 60;
@@ -69,7 +69,7 @@ namespace Core {
     }
 
     static QString formatFileOutput(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now) {
-        static auto formatString = QStringLiteral("[%1 %2] [%3/%4]: %5");
+        static auto formatString = QStringLiteral("[%1 %2] [%3] [%4]: %5");
         auto offset = now.timeZone().offsetFromUtc(now);
         auto hours = qAbs(offset) / 3600;
         auto minutes = qAbs(offset) % 3600 / 60;
