@@ -72,7 +72,7 @@ namespace Core {
 
         static QString logsLocation();
 
-        void log(MessageType type, const QString &category, const QString &message);
+        void log(MessageType type, const QString &category, const QString &message, bool onlyConsole = false);
 
     Q_SIGNALS:
         void maxFileSizeChanged(qsizetype maxFileSize);

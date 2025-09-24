@@ -10,13 +10,16 @@
 #include <QMutexLocker>
 #include <QDebug>
 #include <QFileInfo>
+#include <QLoggingCategory>
 #include <QTimeZone>
-#include <cstdio>
+#include <QtZlib/zlib.h>
 
 #include <CoreApi/runtimeinterface.h>
 #include <CoreApi/applicationinfo.h>
 
 namespace Core {
+
+    static const QString lcTextLogger = "ck.logger";
 
     static QString typeToString(Logger::MessageType type) {
         switch (type) {
@@ -91,8 +94,76 @@ namespace Core {
         }
     }
 
+    static QString generateLogFileName() {
+        const QString logsDir = Logger::logsLocation();
+        const auto now = QDateTime::currentDateTimeUtc();
+        const QString timestamp = now.toString(Qt::ISODate).replace(QLatin1Char(':'), QLatin1Char('-'));
+
+        QString baseName = QStringLiteral("%1/%2").arg(logsDir, timestamp);
+
+        int counter = 0;
+        QString fileName;
+        do {
+            if (counter == 0) {
+                fileName = QStringLiteral("%1.log").arg(baseName);
+            } else {
+                fileName = QStringLiteral("%1_%2.log").arg(baseName, QString::number(counter));
+            }
+            ++counter;
+        } while (QFile::exists(fileName) && counter < 1000); // Safety limit
+
+        return fileName;
+    }
+
+    static QByteArray compressData(const QByteArray &input) {
+        z_stream strm;
+        std::memset(&strm, 0, sizeof(strm));
+
+        int windowBits = MAX_WBITS + 16;
+        int memLevel = 8; // 推荐值
+        int strategy = Z_DEFAULT_STRATEGY;
+
+        int ret = deflateInit2(&strm, 9, Z_DEFLATED, windowBits, memLevel, strategy);
+        if (ret != Z_OK) {
+            return {};
+        }
+
+        const int CHUNK = 16384;
+        QByteArray output;
+        output.reserve(input.size() / 2 + CHUNK);
+
+        strm.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(input.data()));
+        strm.avail_in = static_cast<uInt>(input.size());
+
+        do {
+            unsigned char outbuf[CHUNK];
+            strm.next_out = outbuf;
+            strm.avail_out = CHUNK;
+
+            ret = deflate(&strm, strm.avail_in ? Z_NO_FLUSH : Z_FINISH);
+            if (ret == Z_STREAM_ERROR) {
+                deflateEnd(&strm);
+                return {};
+            }
+
+            int have = CHUNK - strm.avail_out;
+            if (have > 0) {
+                output.append(reinterpret_cast<char*>(outbuf), have);
+            }
+        } while (ret != Z_STREAM_END);
+
+        deflateEnd(&strm);
+
+        return output;
+    }
+
+    static QString generateArchiveFileName(const QString &originalFile) {
+        return originalFile + QStringLiteral(".gz");
+    }
+
     void LoggerPrivate::rotateLogFile() {
-        // Close existing file
+        Q_Q(Logger);
+        q->log(Logger::Debug, lcTextLogger, "Rotating log file", true);
         if (logStream) {
             logStream->flush();
             delete logStream;
@@ -120,7 +191,7 @@ namespace Core {
             // Cleanup old archives when rotating log file
             cleanupOldArchives();
         } else {
-            outputCriticalToConsoleOnly(QStringLiteral("Failed to open log file: %1").arg(currentLogFile));
+            q->log(Logger::Critical, lcTextLogger, QStringLiteral("Failed to open log file: %1").arg(currentLogFile));
             delete logFile;
             logFile = nullptr;
         }
@@ -159,7 +230,9 @@ namespace Core {
         }
     }
 
-    void LoggerPrivate::archiveExistingLogFiles() const {
+    void LoggerPrivate::archiveExistingLogFiles() {
+        Q_Q(Logger);
+
         const QString logsDir = Logger::logsLocation();
         QDir dir(logsDir);
 
@@ -169,6 +242,8 @@ namespace Core {
         // Archive all existing uncompressed log files
         for (const auto &fileInfo : logFiles) {
             const QString filePath = fileInfo.absoluteFilePath();
+
+            q->log(Logger::Debug, lcTextLogger, "Archiving existing log file: " + filePath);
             
             // Only compress files that have content and don't already have a compressed version
             if (fileInfo.size() > 0) {
@@ -183,35 +258,12 @@ namespace Core {
         }
     }
 
-    QString LoggerPrivate::generateLogFileName() {
-        const QString logsDir = Logger::logsLocation();
-        const auto now = QDateTime::currentDateTimeUtc();
-        const QString timestamp = now.toString(Qt::ISODate).replace(QLatin1Char(':'), QLatin1Char('-'));
-
-        QString baseName = QStringLiteral("%1/%2").arg(logsDir, timestamp);
-
-        int counter = 0;
-        QString fileName;
-        do {
-            if (counter == 0) {
-                fileName = QStringLiteral("%1.log").arg(baseName);
-            } else {
-                fileName = QStringLiteral("%1_%2.log").arg(baseName, QString::number(counter));
-            }
-            ++counter;
-        } while (QFile::exists(fileName) && counter < 1000); // Safety limit
-
-        return fileName;
-    }
-
-    QString LoggerPrivate::generateArchiveFileName(const QString &originalFile) {
-        return originalFile + QStringLiteral(".gz");
-    }
-
-    void LoggerPrivate::compressAndArchiveFile(const QString &filePath) const {
+    void LoggerPrivate::compressAndArchiveFile(const QString &filePath) {
+        Q_Q(Logger);
+        q->log(Logger::Debug, lcTextLogger, "Compressing file: " + filePath);
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly)) {
-            outputCriticalToConsoleOnly(QStringLiteral("Failed to open file for compression: %1").arg(filePath));
+            q->log(Logger::Critical, lcTextLogger, QStringLiteral("Failed to open file for compression: %1").arg(filePath), true);
             return;
         }
 
@@ -221,7 +273,12 @@ namespace Core {
         // Simple compression using qCompress (zlib format)
         // FIXME should use gzip compress
         // const QByteArray compressed = qCompress(data, 9); // Maximum compression level
-        const QByteArray compressed = data;
+        const QByteArray compressed = compressData(data);
+
+        if (compressed.isEmpty()) {
+            q->log(Logger::Critical, lcTextLogger, QStringLiteral("Failed to compress file: %1").arg(filePath), true);
+            return;
+        }
 
         const QString archiveFileName = generateArchiveFileName(filePath);
         QFile archiveFile(archiveFileName);
@@ -232,7 +289,7 @@ namespace Core {
             // Remove original file after successful compression
             QFile::remove(filePath);
         } else {
-            outputCriticalToConsoleOnly(QStringLiteral("Failed to create archive file: %1").arg(archiveFileName));
+            q->log(Logger::Critical, lcTextLogger, QStringLiteral("Failed to create archive file: %1").arg(archiveFileName), true);
         }
     }
 
@@ -247,13 +304,16 @@ namespace Core {
     }
 
     void LoggerPrivate::writeToFile(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now) {
+        Q_Q(Logger);
         // Ensure log file is ready
-        if (!logFile || QFileInfo(currentLogFile).fileName().mid(0, 10) != now.toUTC().toString(Qt::ISODate).mid(0, 10)) {
+        if (!logFile) {
+            q->log(Logger::Debug, lcTextLogger, "No log file", true);
             rotateLogFile();
         }
 
         // Check if current log file exceeds size limit
         if (logFile && logFile->size() > maxFileSize) {
+            q->log(Logger::Debug, lcTextLogger, "Log file exceeds size limit", true);
             rotateLogFile();
         }
 
@@ -263,27 +323,16 @@ namespace Core {
             logStream->flush();
         } else {
             // If file logging fails, output critical message to console only
-            outputCriticalToConsoleOnly(QStringLiteral("Failed to write log message to file - file logging unavailable"));
+            q->log(Logger::Critical, lcTextLogger, QStringLiteral("Failed to write log message to file - file logging unavailable"), true);
         }
-    }
-
-    void LoggerPrivate::outputCriticalToConsoleOnly(const QString &message) const {
-        // Direct console output without going through the log system to avoid recursion
-        const auto now = QDateTime::currentDateTime();
-        const QString criticalOutput = formatConsoleOutput(Logger::Critical, QStringLiteral("ck.logger"), message, now, prettifiesConsoleOutput);
-
-        FILE *stderrFile = stderr;
-        QTextStream stderrStream(stderrFile, QIODevice::WriteOnly);
-        stderrStream << criticalOutput << Qt::endl;
-        stderrStream.flush();
     }
 
     Logger::Logger(QObject *parent) : QObject(parent), d_ptr(new LoggerPrivate) {
         Q_D(Logger);
         d->q_ptr = this;
         ensureLogDirectoryExists();
-        d->archiveExistingLogFiles();
         loadSettings();
+        d->archiveExistingLogFiles();
     }
 
     Logger::~Logger() {
@@ -415,7 +464,7 @@ namespace Core {
         return ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData) + QStringLiteral("/logs");
     }
 
-    void Logger::log(MessageType type, const QString &category, const QString &message) {
+    void Logger::log(MessageType type, const QString &category, const QString &message, bool onlyConsole) {
         Q_D(Logger);
         const auto now = QDateTime::currentDateTime();
 
@@ -428,7 +477,7 @@ namespace Core {
             }
 
             // File output
-            if (type >= d->fileLogLevel) {
+            if (!onlyConsole && type >= d->fileLogLevel) {
                 d->writeToFile(type, category, message, now);
             }
 

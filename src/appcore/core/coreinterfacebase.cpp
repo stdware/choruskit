@@ -3,6 +3,7 @@
 
 #include <QTimer>
 #include <QtCore/QFileInfo>
+#include <QtCore/QLoggingCategory>
 #include <QtGui/QGuiApplication>
 
 #include <CoreApi/windowsystem.h>
@@ -12,13 +13,7 @@
 
 namespace Core {
 
-#define myWarning (qWarning().nospace() << "Core::CoreInterfaceBase::" << __func__ << "():").space()
-
-#define checkInstance                                                                              \
-    if (!m_instance) {                                                                             \
-        myWarning << "Please instantiate the CoreInterfaceBase object first";                              \
-        return {};                                                                                 \
-    }
+    Q_STATIC_LOGGING_CATEGORY(lcCoreInterfaceBase, "ck.coreinterfacebase")
 
     CoreInterfaceBasePrivate::CoreInterfaceBasePrivate() {
     }
@@ -48,32 +43,35 @@ namespace Core {
         return m_instance;
     }
     void CoreInterfaceBase::exitApplicationGracefully(int exitCode) {
+        qCInfo(lcCoreInterfaceBase) << "Manually exit" << exitCode;
         QTimer::singleShot(0, [exitCode] {
+            qCDebug(lcCoreInterfaceBase) << "Calling QCoreApplication::exit" << exitCode;
             QCoreApplication::exit(exitCode);
         });
     }
     void CoreInterfaceBase::restartApplication(int exitCode) {
+        qCInfo(lcCoreInterfaceBase) << "Restarting application" << exitCode;
         qApp->setProperty("restart", true);
         exitApplicationGracefully(exitCode);
     }
 
     WindowSystem *CoreInterfaceBase::windowSystem() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->windowSystem;
     }
 
     DocumentSystem *CoreInterfaceBase::documentSystem() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->documentSystem;
     }
 
     SettingCatalog *CoreInterfaceBase::settingCatalog() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->settingCatalog;
     }
 
     TranslationManager *CoreInterfaceBase::translationManager() {
-        checkInstance;
+        Q_ASSERT(m_instance);
         return m_instance->d_func()->translationManager;
     }
 

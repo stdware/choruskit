@@ -22,20 +22,17 @@ namespace Core {
         Logger::MessageType fileLogLevel = Logger::Info;
 
         // Private implementation members
-        mutable QMutex mutex;
+        mutable QRecursiveMutex mutex;
         QString currentLogFile;
         QFile *logFile = nullptr;
         QTextStream *logStream = nullptr;
 
         void rotateLogFile();
         void cleanupOldArchives() const;
-        void archiveExistingLogFiles() const;
-        static QString generateLogFileName();
-        static QString generateArchiveFileName(const QString &originalFile);
-        void compressAndArchiveFile(const QString &filePath) const;
+        void archiveExistingLogFiles();
+        void compressAndArchiveFile(const QString &filePath);
         void writeToConsole(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now) const;
         void writeToFile(Logger::MessageType type, const QString &category, const QString &message, const QDateTime &now);
-        void outputCriticalToConsoleOnly(const QString &message) const;
     };
 
 }
