@@ -399,6 +399,7 @@ int __main__(LoaderSpec *loadSpec) {
     });
 
     qInfo().noquote() << QApplication::applicationName() << QApplication::applicationVersion() << "starting";
+    qInfo() << "Application started at" << RuntimeInterface::startTime().toString() << RuntimeInterface::startTime().toUTC().toString(Qt::ISODateWithMs);
 
     loadSpec->beforeLoadPlugins();
 
