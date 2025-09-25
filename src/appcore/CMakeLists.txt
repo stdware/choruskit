@@ -9,6 +9,12 @@ file(GLOB_RECURSE _src *.h *.cpp *.qrc)
 
 find_package(stdcorelib CONFIG REQUIRED)
 
+set(_zlib_link)
+if(NOT WIN32)
+    find_package(ZLIB REQUIRED)
+    set(_zlib_link ZLIB::ZLIB)
+endif()
+
 choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
     SOURCES ${_src}
     QT_LINKS
@@ -16,7 +22,7 @@ choruskit_add_library(${PROJECT_NAME} SHARED AUTOGEN
     QT_INCLUDE_PRIVATE
         Core Gui Widgets
     LINKS_PRIVATE
-        stdcorelib::stdcorelib
+        stdcorelib::stdcorelib ${_zlib_link}
     INCLUDE_PRIVATE
         *
     FEATURES

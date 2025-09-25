@@ -12,7 +12,11 @@
 #include <QFileInfo>
 #include <QLoggingCategory>
 #include <QTimeZone>
-#include <QtZlib/zlib.h>
+#ifdef Q_OS_WIN // TODO I'm not sure
+#   include <QtZlib/zlib.h>
+#else
+#   include <zlib.h>
+#endif
 
 #include <CoreApi/runtimeinterface.h>
 #include <CoreApi/applicationinfo.h>
