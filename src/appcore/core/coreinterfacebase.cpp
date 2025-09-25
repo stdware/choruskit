@@ -9,7 +9,6 @@
 #include <CoreApi/windowsystem.h>
 #include <CoreApi/settingcatalog.h>
 #include <CoreApi/documentsystem.h>
-#include <CoreApi/translationmanager.h>
 
 namespace Core {
 
@@ -27,7 +26,6 @@ namespace Core {
         windowSystem = new WindowSystem(q);
         documentSystem = new DocumentSystem(q);
         settingCatalog = new SettingCatalog(q);
-        translationManager = new TranslationManager(q);
     }
 
     static CoreInterfaceBase *m_instance = nullptr;
@@ -68,11 +66,6 @@ namespace Core {
     SettingCatalog *CoreInterfaceBase::settingCatalog() {
         Q_ASSERT(m_instance);
         return m_instance->d_func()->settingCatalog;
-    }
-
-    TranslationManager *CoreInterfaceBase::translationManager() {
-        Q_ASSERT(m_instance);
-        return m_instance->d_func()->translationManager;
     }
 
     CoreInterfaceBase::CoreInterfaceBase(CoreInterfaceBasePrivate &d, QObject *parent) : QObject(parent), d_ptr(&d) {

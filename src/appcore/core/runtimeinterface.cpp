@@ -25,6 +25,7 @@ namespace Core {
         QQmlEngine *qmlEngine = nullptr;
 
         Logger *logger = nullptr;
+        TranslationManager *translationManager = nullptr;
     };
 
     static RuntimeInterface *m_instance = nullptr;
@@ -102,6 +103,14 @@ namespace Core {
     void RuntimeInterface::setLogger(Logger *logger) {
         Q_ASSERT(m_instance);
         m_instance->d_func()->logger = logger;
+    }
+    TranslationManager *RuntimeInterface::translationManager() {
+        Q_ASSERT(m_instance);
+        return m_instance->d_func()->translationManager;
+    }
+    void RuntimeInterface::setTranslationManager(TranslationManager *translationManager) {
+        Q_ASSERT(m_instance);
+        m_instance->d_func()->translationManager = translationManager;
     }
 
     RuntimeInterface *RuntimeInterface::instance() {

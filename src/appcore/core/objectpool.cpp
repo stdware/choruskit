@@ -5,12 +5,13 @@
 
 #include <QDebug>
 #include <QMetaMethod>
+#include <QLoggingCategory>
 
 #define DISABLE_WARNING_OBJECTS_LEFT
 
 namespace Core {
 
-#define myWarning (qWarning().nospace() << "Core::ObjectPool::" << __func__ << "():").space()
+    Q_STATIC_LOGGING_CATEGORY(lcObjectPool, "ck.objectpool")
 
     ObjectPoolPrivate::ObjectPoolPrivate() {
     }
@@ -61,7 +62,7 @@ namespace Core {
     void ObjectPool::addObject(const QString &id, QObject *obj) {
         Q_D(ObjectPool);
         if (!obj) {
-            myWarning << "trying to add null object";
+            qCWarning(lcObjectPool) << "trying to add null object";
             return;
         }
 
@@ -69,7 +70,7 @@ namespace Core {
             QWriteLocker locker(&d->objectListLock);
             auto &set = d->objectMap[id];
             if (!set.append(obj, 0).second) {
-                myWarning << "trying to add duplicated object:" << id << obj;
+                qCWarning(lcObjectPool) << "trying to add duplicated object:" << id << obj;
                 return;
             }
 
@@ -91,7 +92,7 @@ namespace Core {
 
             auto it = d->objectIndexes.find(obj);
             if (it == d->objectIndexes.end()) {
-                myWarning << "obj does not exist:" << obj;
+                qCWarning(lcObjectPool) << "obj does not exist:" << obj;
                 return;
             }
 

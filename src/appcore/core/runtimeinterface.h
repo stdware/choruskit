@@ -12,6 +12,7 @@ class QSplashScreen;
 namespace Core {
 
     class Logger;
+    class TranslationManager;
 
     class RuntimeInterfacePrivate;
 
@@ -45,6 +46,9 @@ namespace Core {
 
         static Logger *logger();
         static void setLogger(Logger *logger);
+
+        static TranslationManager *translationManager();
+        static void setTranslationManager(TranslationManager *translationManager);
     };
 
 }

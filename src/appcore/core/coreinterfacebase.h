@@ -12,7 +12,6 @@ namespace Core {
     class WindowSystem;
     class DocumentSystem;
     class SettingCatalog;
-    class TranslationManager;
 
     class CKAPPCORE_EXPORT CoreInterfaceBase : public QObject {
         Q_OBJECT
@@ -20,7 +19,6 @@ namespace Core {
         Q_PROPERTY(Core::WindowSystem *windowSystem READ windowSystem CONSTANT)
         Q_PROPERTY(Core::DocumentSystem *documentSystem READ documentSystem CONSTANT)
         Q_PROPERTY(Core::SettingCatalog *settingCatalog READ settingCatalog CONSTANT)
-        Q_PROPERTY(Core::TranslationManager *translationManager READ translationManager CONSTANT)
     public:
         explicit CoreInterfaceBase(QObject *parent = nullptr);
         ~CoreInterfaceBase() override;
@@ -34,7 +32,6 @@ namespace Core {
         static WindowSystem *windowSystem();
         static DocumentSystem *documentSystem();
         static SettingCatalog *settingCatalog();
-        static TranslationManager *translationManager();
 
     protected:
         CoreInterfaceBase(CoreInterfaceBasePrivate &d, QObject *parent = nullptr);

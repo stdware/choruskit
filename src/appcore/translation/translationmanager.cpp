@@ -7,8 +7,11 @@
 #include <QFileInfo>
 #include <QLocale>
 #include <QRegularExpression>
+#include <QLoggingCategory>
 
 namespace Core {
+
+    Q_STATIC_LOGGING_CATEGORY(lcTranslationManager, "ck.translationmanager")
 
     TranslationManagerPrivate::TranslationManagerPrivate() {
         qmFilesDirty = false;
@@ -21,6 +24,8 @@ namespace Core {
 
     static QMap<QString, QStringList> scanTranslation_helper(const QString &path) {
         QMap<QString, QStringList> res;
+
+        qCDebug(lcTranslationManager) << "Scanning translation files in:" << path;
 
         QFileInfoList searchFiles;
         QStringList searchPaths = {path};
@@ -47,6 +52,7 @@ namespace Core {
             QLocale testLocale(match.captured(2) + match.captured(3));
             if (testLocale.language() == QLocale::C)
                 continue;
+            qCDebug(lcTranslationManager) << "Found translation" << file.fileName() << "for locale" << testLocale.name();
             res[testLocale.name()].append(file.absoluteFilePath());
         }
         return res;
@@ -55,8 +61,10 @@ namespace Core {
     static QList<QTranslator *> installTranslation_helper(const QStringList &paths) {
         QList<QTranslator *> res;
         for (const auto &file : qAsConst(paths)) {
+            qCDebug(lcTranslationManager) << "Installing translation" << file;
             auto t = new QTranslator(qApp);
             if (!t->load(file)) {
+                qCWarning(lcTranslationManager) << "Failed to load translation" << file;
                 delete t;
                 continue;
             }
@@ -111,15 +119,23 @@ namespace Core {
     void TranslationManager::addTranslationPath(const QString &path) {
         Q_D(TranslationManager);
 
-        if (path.isEmpty())
+        qCInfo(lcTranslationManager) << "Adding translation path:" << path;
+
+        if (path.isEmpty()) {
+            qCWarning(lcTranslationManager) << "Empty translation path";
             return;
+        }
 
         QString canonicalPath = QDir(path).canonicalPath();
-        if (canonicalPath.isEmpty())
+        if (canonicalPath.isEmpty()) {
+            qCWarning(lcTranslationManager) << "Invalid translation path:" << path;
             return;
+        }
 
-        if (d->translationPaths.contains(path))
+        if (d->translationPaths.contains(path)) {
+            qCWarning(lcTranslationManager) << "Translation path already exists:" << path;
             return;
+        }
 
         d->translationPaths.insert(path);
 
@@ -183,6 +199,8 @@ namespace Core {
     */
     void TranslationManager::setLocale(const QLocale &locale) {
         Q_D(TranslationManager);
+
+        qCInfo(lcTranslationManager) << "Using locale:" << locale;
 
         if (d->qmFilesDirty) {
             d->scanTranslations();
