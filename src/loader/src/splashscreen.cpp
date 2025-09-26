@@ -1,4 +1,4 @@
-#include "SplashScreen.h"
+#include "splashscreen.h"
 
 #include <utility>
 
