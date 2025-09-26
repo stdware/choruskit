@@ -476,7 +476,13 @@ namespace Core {
             QMutexLocker locker(&d->mutex);
 
             // Console output
-            if (type >= d->consoleLogLevel) {
+            if (
+#ifdef QT_DEBUG
+                true // ignore log level in debug mode
+#else
+                type >= d->consoleLogLevel
+#endif
+            ) {
                 d->writeToConsole(type, category, message, now);
             }
 
@@ -484,12 +490,9 @@ namespace Core {
             if (!onlyConsole && type >= d->fileLogLevel) {
                 d->writeToFile(type, category, message, now);
             }
-
         }
 
-        if (type >= d->consoleLogLevel) {
-            Q_EMIT messageLogged(type, category, message);
-        }
+        Q_EMIT messageLogged(type, category, message);
     }
 
 }
