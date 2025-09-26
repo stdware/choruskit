@@ -100,7 +100,7 @@ void displayError(const QString &t, int exitCode = -1) {
 #ifndef CKLOADER_USE_NATIVE_MESSAGEBOX
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Critical);
-    msgbox.setWindowTitle(qApp->applicationName());
+    msgbox.setWindowTitle(qApp->applicationDisplayName());
     msgbox.setText(toHtml(t));
     msgbox.show();
     if (g_splash) {
@@ -111,7 +111,7 @@ void displayError(const QString &t, int exitCode = -1) {
     if (g_splash) {
         g_splash->close();
     }
-    ApplicationInfo::messageBox(nullptr, ApplicationInfo::Critical, qApp->applicationName(), t);
+    ApplicationInfo::messageBox(nullptr, ApplicationInfo::Critical, qApp->applicationDisplayName(), t);
 #endif
     std::exit(exitCode);
 }
@@ -120,7 +120,7 @@ static inline void displayHelpText(const QString &t) {
 #if 1
     QMessageBox msgbox;
     msgbox.setIcon(QMessageBox::Information);
-    msgbox.setWindowTitle(qApp->applicationName());
+    msgbox.setWindowTitle(qApp->applicationDisplayName());
     msgbox.setText(toHtml(t));
     msgbox.show();
     if (g_splash) {
@@ -131,7 +131,7 @@ static inline void displayHelpText(const QString &t) {
     if (g_splash) {
         g_splash->close();
     }
-    ApplicationInfo::messageBox(nullptr, ApplicationInfo::Information, qApp->applicationName(), t);
+    ApplicationInfo::messageBox(nullptr, ApplicationInfo::Information, qApp->applicationDisplayName(), t);
 #endif
 
     std::exit(0);
@@ -254,14 +254,14 @@ int __main__(LoaderSpec *loadSpec) {
                 QCoreApplication::translate(
                     "Application", "You're trying to start %1 as the %2, which is "
                                    "extremely dangerous and therefore strongly not recommended.")
-                    .arg(qApp->applicationName(),
+                    .arg(qApp->applicationDisplayName(),
 #ifdef Q_OS_WINDOWS
                          QCoreApplication::translate("Application", "Administrator")
 #else
                          QCoreApplication::translate("Application", "Root")
 #endif
                     );
-            ApplicationInfo::messageBox(nullptr, ApplicationInfo::Warning, qApp->applicationName(),
+            ApplicationInfo::messageBox(nullptr, ApplicationInfo::Warning, qApp->applicationDisplayName(),
                                         msg);
             return 0;
         }

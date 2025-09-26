@@ -69,7 +69,7 @@ namespace Loader {
         splashImage = QImage(splashImagePath);
 
         if (splashImage.isNull()) {
-            splashImage = generateTextImage(qApp->applicationName());
+            splashImage = generateTextImage(qApp->applicationDisplayName());
             splashSize = splashImage.size();
         }
 

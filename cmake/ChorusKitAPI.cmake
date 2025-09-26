@@ -16,6 +16,7 @@ endif()
     ck_init_buildsystem()
 
     Customizable Variables:
+        CK_APPLICATION_TARGET
         CK_APPLICATION_NAME
         CK_APPLICATION_DESCRIPTION
         CK_APPLICATION_VERSION
@@ -260,7 +261,7 @@ function(ck_configure_application)
     set(multiValueArgs ICO)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(_target ${CK_APPLICATION_NAME})
+    set(_target ${CK_APPLICATION_TARGET})
     add_executable(${_target})
 
     # Make location dependent executable, otherwise GNOME cannot recognize
@@ -417,14 +418,14 @@ function(ck_add_plugin _target)
     endif()
 
     _ck_add_library_internal(${_target} SHARED ${FUNC_UNPARSED_ARGUMENTS})
-    add_library(${CK_APPLICATION_NAME}::${_target} ALIAS ${_target})
+    add_library(${CK_APPLICATION_TARGET}::${_target} ALIAS ${_target})
 
     if(_vcpkg_applocal_deps)
         set(VCPKG_APPLOCAL_DEPS on)
     endif()
 
     # Add target level dependency
-    add_dependencies(${CK_APPLICATION_NAME} ${_target})
+    add_dependencies(${CK_APPLICATION_TARGET} ${_target})
 
     qm_set_value(_vendor FUNC_VENDOR ${CK_APPLICATION_VENDOR})
     qm_set_value(_copyright FUNC_COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${_vendor}")
@@ -604,7 +605,7 @@ function(ck_add_library _target)
     _ck_check_shared_library(${_target} _shared)
 
     if(CK_INITIALIZED)
-        add_library(${CK_APPLICATION_NAME}::${_target} ALIAS ${_target})
+        add_library(${CK_APPLICATION_TARGET}::${_target} ALIAS ${_target})
     endif()
 
     # Add windows rc file
