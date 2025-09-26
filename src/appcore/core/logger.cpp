@@ -478,7 +478,7 @@ namespace Core {
     }
 
     QString Logger::logsLocation() {
-        return ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData) + QStringLiteral("/logs");
+        return QDir::toNativeSeparators(ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData) + QStringLiteral("/logs"));
     }
 
     void Logger::log(MessageType type, const QString &category, const QString &message, bool onlyConsole) {
