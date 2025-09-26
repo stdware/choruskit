@@ -119,7 +119,7 @@ namespace Core {
         return fileName;
     }
 
-    static QByteArray compressData(const QByteArray &input) {
+    static QByteArray compressData(const QByteArray &input, int compressLevel) {
         z_stream strm;
         std::memset(&strm, 0, sizeof(strm));
 
@@ -127,7 +127,7 @@ namespace Core {
         int memLevel = 8; // 推荐值
         int strategy = Z_DEFAULT_STRATEGY;
 
-        int ret = deflateInit2(&strm, 9, Z_DEFLATED, windowBits, memLevel, strategy);
+        int ret = deflateInit2(&strm, compressLevel, Z_DEFLATED, windowBits, memLevel, strategy);
         if (ret != Z_OK) {
             return {};
         }
@@ -275,9 +275,7 @@ namespace Core {
         file.close();
 
         // Simple compression using qCompress (zlib format)
-        // FIXME should use gzip compress
-        // const QByteArray compressed = qCompress(data, 9); // Maximum compression level
-        const QByteArray compressed = compressData(data);
+        const QByteArray compressed = compressData(data, compressLevel);
 
         if (compressed.isEmpty()) {
             q->log(Logger::Critical, lcTextLogger, QStringLiteral("Failed to compress file: %1").arg(filePath), true);
@@ -435,6 +433,19 @@ namespace Core {
         Q_EMIT fileLogLevelChanged(fileLogLevel);
     }
 
+    int Logger::compressLevel() const {
+        Q_D(const Logger);
+        return d->compressLevel;
+    }
+
+    void Logger::setCompressLevel(int compressLevel) {
+        Q_D(Logger);
+        if (d->compressLevel == compressLevel)
+            return;
+        d->compressLevel = compressLevel;
+        Q_EMIT compressLevelChanged(compressLevel);
+    }
+
     void Logger::loadSettings() {
         auto settings = RuntimeInterface::settings();
         settings->beginGroup(staticMetaObject.className());
@@ -445,6 +456,7 @@ namespace Core {
         setPrettifiesConsoleOutput(settings->value("prettifiesConsoleOutput", true).toBool());
         setConsoleLogLevel(static_cast<MessageType>(settings->value("consoleLogLevel", static_cast<int>(Info)).toInt()));
         setFileLogLevel(static_cast<MessageType>(settings->value("fileLogLevel", static_cast<int>(Info)).toInt()));
+        setCompressLevel(settings->value("compressLevel", 9).toInt());
         
         settings->endGroup();
     }
@@ -460,6 +472,7 @@ namespace Core {
         settings->setValue("prettifiesConsoleOutput", d->prettifiesConsoleOutput);
         settings->setValue("consoleLogLevel", static_cast<int>(d->consoleLogLevel));
         settings->setValue("fileLogLevel", static_cast<int>(d->fileLogLevel));
+        settings->setValue("compressLevel", d->compressLevel);
 
         settings->endGroup();
     }

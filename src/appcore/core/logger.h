@@ -19,6 +19,7 @@ namespace Core {
         Q_PROPERTY(bool prettifiesConsoleOutput READ prettifiesConsoleOutput WRITE setPrettifiesConsoleOutput NOTIFY prettifiesConsoleOutputChanged)
         Q_PROPERTY(MessageType consoleLogLevel READ consoleLogLevel WRITE setConsoleLogLevel NOTIFY consoleLogLevelChanged)
         Q_PROPERTY(MessageType fileLogLevel READ fileLogLevel WRITE setFileLogLevel NOTIFY fileLogLevelChanged)
+        Q_PROPERTY(int compressLevel READ compressLevel WRITE setCompressLevel NOTIFY compressLevelChanged)
 
     public:
         explicit Logger(QObject *parent = nullptr);
@@ -67,6 +68,9 @@ namespace Core {
         MessageType fileLogLevel() const;
         void setFileLogLevel(MessageType fileLogLevel);
 
+        int compressLevel() const;
+        void setCompressLevel(int compressLevel);
+
         void loadSettings();
         void saveSettings() const;
 
@@ -81,6 +85,7 @@ namespace Core {
         void prettifiesConsoleOutputChanged(bool prettifiesConsoleOutput);
         void consoleLogLevelChanged(MessageType consoleLogLevel);
         void fileLogLevelChanged(MessageType fileLogLevel);
+        void compressLevelChanged(int compressLevel);
 
         void messageLogged(MessageType type, const QString &category, const QString &message);
 

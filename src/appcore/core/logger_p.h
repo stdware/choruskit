@@ -20,6 +20,7 @@ namespace Core {
         bool prettifiesConsoleOutput = true;
         Logger::MessageType consoleLogLevel = Logger::Info;
         Logger::MessageType fileLogLevel = Logger::Info;
+        int compressLevel = 9;
 
         // Private implementation members
         mutable QRecursiveMutex mutex;
