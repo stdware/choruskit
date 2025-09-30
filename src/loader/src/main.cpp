@@ -401,6 +401,10 @@ int __main__(LoaderSpec *loadSpec) {
     qInfo().noquote() << QApplication::applicationName() << QApplication::applicationVersion() << "starting";
     qInfo() << "Application started at" << RuntimeInterface::startTime().toString() << RuntimeInterface::startTime().toUTC().toString(Qt::ISODateWithMs);
 
+    QObject::connect(qApp, &QCoreApplication::aboutToQuit, [&] {
+        qInfo() << "Quitting";
+    });
+
     loadSpec->beforeLoadPlugins();
 
     // Update loader text
