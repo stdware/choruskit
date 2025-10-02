@@ -12,12 +12,15 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSettings>
+#include <QTimer>
+#include <QQmlInfo>
+#include <QLoggingCategory>
 
 #include "runtimeinterface.h"
 
 namespace Core {
 
-#define myWarning(func) (qWarning().nospace() << "Core::WindowSystem::" << (func) << "():").space()
+    Q_STATIC_LOGGING_CATEGORY(lcWindowSystem, "ck.windowsystem")
 
     WindowGeometry WindowGeometry::fromObject(const QJsonObject &obj) {
         QRect winRect;
@@ -39,6 +42,112 @@ namespace Core {
         obj.insert("height", geometry.height());
         obj.insert("isMaximized", maximized);
         return obj;
+    }
+
+    WindowSystemAttachedType::WindowSystemAttachedType(QObject *parent)
+        : QObject(parent), m_window(qobject_cast<QWindow *>(parent)) {
+        // Create debounce timer
+        m_saveTimer = new QTimer(this);
+        m_saveTimer->setSingleShot(true);
+        m_saveTimer->setInterval(500); // 500ms debounce
+        connect(m_saveTimer, &QTimer::timeout, this, &WindowSystemAttachedType::saveGeometryDebounced);
+    }
+
+    WindowSystemAttachedType::~WindowSystemAttachedType() {
+        disconnectFromWindow();
+    }
+
+    WindowSystemAttachedType *WindowSystem::qmlAttachedProperties(QObject *object) {
+        QWindow *window = qobject_cast<QWindow *>(object);
+        if (!window)
+            qmlWarning(object) << "WindowSystem should be attached to a QWindow";
+        return new WindowSystemAttachedType(object);
+    }
+
+    WindowSystem *WindowSystemAttachedType::windowSystem() const {
+        return m_windowSystem;
+    }
+
+    void WindowSystemAttachedType::setWindowSystem(WindowSystem *windowSystem) {
+        if (m_windowSystem != windowSystem) {
+            m_windowSystem = windowSystem;
+            Q_EMIT windowSystemChanged();
+            loadGeometryIfReady();
+        }
+    }
+
+    QString WindowSystemAttachedType::id() const {
+        return m_id;
+    }
+
+    void WindowSystemAttachedType::setId(const QString &id) {
+        if (m_id != id) {
+            m_id = id;
+            Q_EMIT idChanged();
+            loadGeometryIfReady();
+        }
+    }
+
+    void WindowSystemAttachedType::connectToWindow() {
+        if (!m_window) {
+            return;
+        }
+
+        connect(m_window, &QWindow::xChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        connect(m_window, &QWindow::yChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        connect(m_window, &QWindow::widthChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        connect(m_window, &QWindow::heightChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        connect(m_window, &QWindow::visibilityChanged, this, &WindowSystemAttachedType::onWindowVisibilityChanged);
+    }
+
+    void WindowSystemAttachedType::disconnectFromWindow() {
+        if (!m_window) {
+            return;
+        }
+
+        disconnect(m_window, &QWindow::xChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        disconnect(m_window, &QWindow::yChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        disconnect(m_window, &QWindow::widthChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        disconnect(m_window, &QWindow::heightChanged, this, &WindowSystemAttachedType::onWindowGeometryChanged);
+        disconnect(m_window, &QWindow::visibilityChanged, this, &WindowSystemAttachedType::onWindowVisibilityChanged);
+    }
+
+    void WindowSystemAttachedType::loadGeometryIfReady() {
+        if (!m_windowSystem || m_id.isEmpty() || !m_window) {
+            return;
+        }
+
+        // Connect to window signals when we have both windowSystem and id
+        connectToWindow();
+        
+        // Load geometry
+        m_windowSystem->loadGeometry(m_id, m_window, m_window->size());
+    }
+
+    void WindowSystemAttachedType::onWindowGeometryChanged() const {
+        if (!m_windowSystem || m_id.isEmpty() || !m_window) {
+            return;
+        }
+
+        // Start/restart debounce timer
+        m_saveTimer->start();
+    }
+
+    void WindowSystemAttachedType::onWindowVisibilityChanged() const {
+        if (!m_windowSystem || m_id.isEmpty() || !m_window) {
+            return;
+        }
+
+        // Start/restart debounce timer
+        m_saveTimer->start();
+    }
+
+    void WindowSystemAttachedType::saveGeometryDebounced() const {
+        if (!m_windowSystem || m_id.isEmpty() || !m_window) {
+            return;
+        }
+
+        m_windowSystem->saveGeometry(m_id, m_window);
     }
 
     WindowSystemPrivate::WindowSystemPrivate() : q_ptr(nullptr) {
@@ -69,6 +178,8 @@ namespace Core {
             winGeometries.insert(it.key(), WindowGeometry::fromObject(it->toObject()));
         }
 
+        shouldStoreGeometry = settings->value("shouldStoreGeometry", true).toBool();
+
         settings->endGroup();
     }
 
@@ -82,6 +193,7 @@ namespace Core {
         settings->beginGroup(QLatin1String(settingCatalogC));
 
         settings->setValue(QLatin1String(winGeometryGroupC), winPropsObj);
+        settings->setValue("shouldStoreGeometry", shouldStoreGeometry);
         
         settings->endGroup();
     }
@@ -215,6 +327,10 @@ namespace Core {
 
     void WindowSystem::loadGeometry(const QString &id, QWindow *w, const QSize &fallback) const {
         Q_D(const WindowSystem);
+        if (!d->shouldStoreGeometry)
+            return;
+
+        qCInfo(lcWindowSystem) << "Loading window geometry for" << id << w << fallback;
 
         auto winProp = d->winGeometries.value(id, {});
 
@@ -222,7 +338,9 @@ namespace Core {
         const auto &isMax = winProp.maximized;
 
         bool isDialog = w->transientParent() && (w->flags() & Qt::Dialog);
+        qCDebug(lcWindowSystem) << "Window is dialog:" << isDialog;
         if (winRect.size().isEmpty() || isMax) {
+            qCDebug(lcWindowSystem) << "Saved window geometry is empty or maximized:" << isMax;
             // Adjust sizes
             w->resize(fallback.isValid() ? fallback
                                          : (QApplication::primaryScreen()->size() * 0.75));
@@ -233,6 +351,7 @@ namespace Core {
                 w->showMaximized();
             }
         } else {
+            qCDebug(lcWindowSystem) << "Saved window geometry is valid:" << winRect;
             if (isDialog)
                 w->resize(winRect.size());
             else
@@ -242,6 +361,7 @@ namespace Core {
         double ratio = (w->screen()->devicePixelRatio());
         auto addTrimmer = [&](bool move) {
             if (!isDialog && !isMax) {
+                qCDebug(lcWindowSystem) << "Trimmer" << move;
                 if (move) {
                     QRect rect = w->geometry();
                     w->setGeometry(QRect(rect.topLeft() + QPoint(30, 30) * ratio, rect.size()));
@@ -263,7 +383,23 @@ namespace Core {
 
     void WindowSystem::saveGeometry(const QString &id, QWindow *w) {
         Q_D(WindowSystem);
-        d->winGeometries.insert(id, {w->geometry(), w->windowState() == Qt::WindowMaximized});
+        if (!d->shouldStoreGeometry)
+            return;
+        qCInfo(lcWindowSystem) << "Saving window geometry for" << id << w << w->geometry() << w->visibility();
+        d->winGeometries.insert(id, {w->geometry(), w->visibility() == QWindow::Maximized});
+    }
+
+    bool WindowSystem::shouldStoreGeometry() const {
+        Q_D(const WindowSystem);
+        return d->shouldStoreGeometry;
+    }
+
+    void WindowSystem::setShouldStoreGeometry(bool on) {
+        Q_D(WindowSystem);
+        if (d->shouldStoreGeometry != on) {
+            d->shouldStoreGeometry = on;
+            Q_EMIT shouldStoreGeometryChanged(on);
+        }
     }
 
     WindowSystem::WindowSystem(WindowSystemPrivate &d, QObject *parent)
@@ -284,3 +420,5 @@ namespace Core {
         return it.key();
     }
 }
+
+#include "moc_windowsystem.cpp"
