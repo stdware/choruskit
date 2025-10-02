@@ -8,7 +8,7 @@ namespace Loader {
 
     struct SplashText {
         QList<int> pos;
-        QList<int> anchor;
+        int alignment = 0;  // Qt::Alignment value
         int fontSize = 0;
         QString fontColor;
         int maxWidth = 0;

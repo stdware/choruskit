@@ -49,6 +49,9 @@ namespace Loader {
         /// Show text on splash
         virtual void splashWillShow(QSplashScreen *screen);
 
+        /// Show splash
+        virtual void splashShown(QSplashScreen *screen);
+
         /// Do something before loading all plugins
         virtual void beforeLoadPlugins();
 

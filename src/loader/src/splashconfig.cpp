@@ -75,12 +75,10 @@ namespace Loader {
                         }
                     }
 
-                    // anchor
-                    auto itAnchor = textObj.find("anchor");
-                    if (itAnchor != textObj.end() && itAnchor.value().isArray()) {
-                        for (const QJsonValue &val : itAnchor.value().toArray()) {
-                            splashText.anchor.append(val.toInt());
-                        }
+                    // alignment
+                    auto itAlignment = textObj.find("alignment");
+                    if (itAlignment != textObj.end() && itAlignment.value().isDouble()) {
+                        splashText.alignment = itAlignment.value().toInt();
                     }
 
                     // fontSize

@@ -296,6 +296,8 @@ int __main__(LoaderSpec *loadSpec) {
     // QFontDatabase needs a lot of time to initialize, so we show splash first and then show texts
     splash.showTexts();
 
+    loadSpec->splashShown(&splash);
+
     // Update loader text
     splash.showMessage(QCoreApplication::translate("Application", "Searching plugins..."));
 

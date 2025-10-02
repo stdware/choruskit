@@ -94,8 +94,7 @@ namespace Loader {
             const auto &item = it.value();
             SplashScreen::Attribute attr;
             attr.pos = item.pos.size() == 2 ? QPoint(item.pos[0], item.pos[1]) : attr.pos;
-            attr.anchor =
-                item.anchor.size() == 2 ? qMakePair(item.anchor[0], item.anchor[1]) : attr.anchor;
+            attr.alignment = item.alignment > 0 ? Qt::Alignment(item.alignment) : attr.alignment;
             attr.fontSize = item.fontSize > 0 ? item.fontSize : attr.fontSize;
             attr.fontColor = Loader::parseColor(item.fontColor);
             attr.maxWidth = item.maxWidth > 0 ? item.maxWidth : attr.maxWidth;
@@ -136,6 +135,7 @@ namespace Loader {
             font.setPixelSize(attr.fontSize);
             QFontMetrics fm(font);
 
+            // Calculate base position, supporting negative coordinates (relative to right/bottom)
             QPoint pos(attr.pos);
             if (pos.x() < 0) {
                 pos.rx() += this->width();
@@ -144,21 +144,45 @@ namespace Loader {
                 pos.ry() += this->height();
             }
 
-            int w = this->width();
-            int maxWidth = qMin(attr.anchor.first > 0 ? w - pos.x() : pos.x(),
-                                attr.maxWidth > 0 ? attr.maxWidth : w);
-            QRect dst(attr.anchor.first > 0 ? pos.x() : pos.x() - maxWidth,
-                      attr.anchor.second > 0 ? pos.y() : pos.y() - fm.height(), maxWidth,
-                      fm.height());
+            // Determine text width
+            int textWidth = fm.horizontalAdvance(item.text);
+            int maxWidth = attr.maxWidth > 0 ? attr.maxWidth : this->width();
+            int actualWidth = qMin(textWidth, maxWidth);
+            
+            // Calculate text rectangle based on alignment
+            QRect textRect;
+            int textHeight = fm.height();
+            
+            // Horizontal alignment
+            if (attr.alignment & Qt::AlignHCenter) {
+                textRect.setX(pos.x() - actualWidth / 2);
+            } else if (attr.alignment & Qt::AlignRight) {
+                textRect.setX(pos.x() - actualWidth);
+            } else { // Qt::AlignLeft (default)
+                textRect.setX(pos.x());
+            }
+            
+            // Vertical alignment
+            if (attr.alignment & Qt::AlignVCenter) {
+                textRect.setY(pos.y() - textHeight / 2);
+            } else if (attr.alignment & Qt::AlignBottom) {
+                textRect.setY(pos.y() - textHeight);
+            } else { // Qt::AlignTop (default)
+                textRect.setY(pos.y());
+            }
+            
+            textRect.setWidth(actualWidth);
+            textRect.setHeight(textHeight);
 
-            QString text = fm.horizontalAdvance(item.text) > dst.width()
-                               ? fm.elidedText(item.text, Qt::ElideRight, dst.width())
-                               : item.text;
+            // Handle text eliding if needed
+            QString displayText = textWidth > actualWidth
+                                  ? fm.elidedText(item.text, Qt::ElideRight, actualWidth)
+                                  : item.text;
+
+            // Draw the text
             painter->setPen(QPen(attr.fontColor));
             painter->setFont(font);
-            painter->drawText(
-                dst, (attr.anchor.first > 0 ? Qt::AlignLeft : Qt::AlignRight) | Qt::AlignVCenter,
-                text);
+            painter->drawText(textRect, attr.alignment, displayText);
         }
     }
 

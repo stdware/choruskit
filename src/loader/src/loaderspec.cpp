@@ -39,6 +39,9 @@ namespace Loader {
     void LoaderSpec::splashWillShow(QSplashScreen *screen) {
     }
 
+    void LoaderSpec::splashShown(QSplashScreen *screen) {
+    }
+
     void LoaderSpec::beforeLoadPlugins() {
     }
 

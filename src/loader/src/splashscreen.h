@@ -13,7 +13,7 @@ namespace Loader {
 
         struct Attribute {
             QPoint pos;
-            QPair<int, int> anchor = {1, 1};
+            Qt::Alignment alignment = Qt::AlignLeft | Qt::AlignTop;
             int fontSize = 12;
             QColor fontColor;
             int maxWidth = 0;
@@ -24,7 +24,7 @@ namespace Loader {
 
     public:
         void setTextAttribute(const QString &id, const Attribute &attr);
-        void setText(const QString &id, const QString &text);
+        Q_INVOKABLE void setText(const QString &id, const QString &text);
 
         // The first display of text takes a relatively long time,
         // So we firstly display the image background, then show texts
