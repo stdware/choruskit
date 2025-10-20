@@ -8,7 +8,7 @@
 
 #include <CoreApi/windowsystem.h>
 #include <CoreApi/settingcatalog.h>
-#include <CoreApi/documentsystem.h>
+#include <CoreApi/recentfilecollection.h>
 
 namespace Core {
 
@@ -24,7 +24,7 @@ namespace Core {
         Q_Q(CoreInterfaceBase);
 
         windowSystem = new WindowSystem(q);
-        documentSystem = new DocumentSystem(q);
+        recentFileCollection = new RecentFileCollection(q);
         settingCatalog = new SettingCatalog(q);
     }
 
@@ -58,9 +58,9 @@ namespace Core {
         return m_instance->d_func()->windowSystem;
     }
 
-    DocumentSystem *CoreInterfaceBase::documentSystem() {
+    RecentFileCollection *CoreInterfaceBase::recentFileCollection() {
         Q_ASSERT(m_instance);
-        return m_instance->d_func()->documentSystem;
+        return m_instance->d_func()->recentFileCollection;
     }
 
     SettingCatalog *CoreInterfaceBase::settingCatalog() {

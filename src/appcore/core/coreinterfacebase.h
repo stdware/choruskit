@@ -10,14 +10,14 @@ namespace Core {
     class CoreInterfaceBasePrivate;
 
     class WindowSystem;
-    class DocumentSystem;
+    class RecentFileCollection;
     class SettingCatalog;
 
     class CKAPPCORE_EXPORT CoreInterfaceBase : public QObject {
         Q_OBJECT
         Q_DECLARE_PRIVATE(CoreInterfaceBase)
         Q_PROPERTY(Core::WindowSystem *windowSystem READ windowSystem CONSTANT)
-        Q_PROPERTY(Core::DocumentSystem *documentSystem READ documentSystem CONSTANT)
+        Q_PROPERTY(Core::RecentFileCollection *recentFileCollection READ recentFileCollection CONSTANT)
         Q_PROPERTY(Core::SettingCatalog *settingCatalog READ settingCatalog CONSTANT)
     public:
         explicit CoreInterfaceBase(QObject *parent = nullptr);
@@ -30,7 +30,7 @@ namespace Core {
 
     public:
         static WindowSystem *windowSystem();
-        static DocumentSystem *documentSystem();
+        static RecentFileCollection *recentFileCollection();
         static SettingCatalog *settingCatalog();
 
     protected:

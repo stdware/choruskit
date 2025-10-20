@@ -28,7 +28,7 @@ namespace Core{
         void init();
 
         WindowSystem *windowSystem;
-        DocumentSystem *documentSystem;
+        RecentFileCollection *recentFileCollection;
         SettingCatalog *settingCatalog;
 
         CoreInterfaceBase *q_ptr;
