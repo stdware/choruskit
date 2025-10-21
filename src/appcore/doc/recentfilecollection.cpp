@@ -90,7 +90,7 @@ namespace Core {
             return;
         }
         
-        qCDebug(lcRecentFileCollection) << "Setting count from" << d->count << "to" << count;
+        qCInfo(lcRecentFileCollection) << "Setting count from" << d->count << "to" << count;
         
         // If new count is smaller than current list length, need to remove excess files and cleanup thumbnails
         if (count < d->recentFiles.size()) {
@@ -98,11 +98,11 @@ namespace Core {
                 d->cleanupThumbnail(d->recentFiles.at(i));
             }
             d->recentFiles = d->recentFiles.mid(0, count);
-            emit recentFilesChanged();
+            Q_EMIT recentFilesChanged();
         }
         
         d->count = count;
-        emit countChanged(count);
+        Q_EMIT countChanged(count);
         saveSettings();
     }
 
@@ -112,17 +112,17 @@ namespace Core {
         // Check if file exists
         QFileInfo fileInfo(path);
         if (!fileInfo.exists()) {
-            qCDebug(lcRecentFileCollection) << "File does not exist:" << path;
+            qCWarning(lcRecentFileCollection) << "File does not exist:" << path;
             return false;
         }
         
         QString canonicalPath = d->canonicalFilePath(path);
         if (canonicalPath.isEmpty()) {
-            qCDebug(lcRecentFileCollection) << "Failed to get canonical path for:" << path;
+            qCWarning(lcRecentFileCollection) << "Failed to get canonical path for:" << path;
             return false;
         }
         
-        qCDebug(lcRecentFileCollection) << "Adding recent file:" << canonicalPath;
+        qCInfo(lcRecentFileCollection) << "Adding recent file:" << canonicalPath;
         
         // If file already exists, remove it first
         int existingIndex = -1;
@@ -160,7 +160,7 @@ namespace Core {
             qCDebug(lcRecentFileCollection) << "Removed oldest file due to count limit:" << removedFile;
         }
         
-        emit recentFilesChanged();
+        Q_EMIT recentFilesChanged();
         saveSettings();
         
         return true;
@@ -168,40 +168,51 @@ namespace Core {
 
     bool RecentFileCollection::removeRecentFile(const QString &path) {
         Q_D(RecentFileCollection);
-        
+
         QString canonicalPath = d->canonicalFilePath(path);
         if (canonicalPath.isEmpty()) {
             // If unable to get canonical path, try direct matching
             canonicalPath = path;
         }
-        
+
         int removeIndex = -1;
         for (int i = 0; i < d->recentFiles.size(); ++i) {
             QString itemCanonical = d->canonicalFilePath(d->recentFiles.at(i));
             if (itemCanonical.isEmpty()) {
                 itemCanonical = d->recentFiles.at(i);
             }
-            
+
             if (itemCanonical == canonicalPath) {
                 removeIndex = i;
                 break;
             }
         }
-        
+
         if (removeIndex < 0) {
-            qCDebug(lcRecentFileCollection) << "File not found in recent list:" << path;
+            qCWarning(lcRecentFileCollection) << "File not found in recent list:" << path;
             return false;
         }
-        
+
         QString removedFile = d->recentFiles.takeAt(removeIndex);
         d->cleanupThumbnail(removedFile);
-        
-        qCDebug(lcRecentFileCollection) << "Removed recent file:" << removedFile;
-        
-        emit recentFilesChanged();
+
+        qCInfo(lcRecentFileCollection) << "Removed recent file:" << removedFile;
+
+        Q_EMIT recentFilesChanged();
         saveSettings();
-        
+
         return true;
+    }
+
+    void RecentFileCollection::clearRecentFile() {
+        Q_D(RecentFileCollection);
+        for (auto file : d->recentFiles) {
+            d->cleanupThumbnail(file);
+        }
+        d->recentFiles.clear();
+        qCInfo(lcRecentFileCollection) << "Cleared recent files";
+        Q_EMIT recentFilesChanged();
+        saveSettings();
     }
 
     QPixmap RecentFileCollection::thumbnail(const QString &path) {

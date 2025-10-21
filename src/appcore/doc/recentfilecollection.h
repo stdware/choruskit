@@ -30,6 +30,7 @@ namespace Core {
 
         Q_INVOKABLE bool addRecentFile(const QString &path, const QPixmap &thumbnail);
         Q_INVOKABLE bool removeRecentFile(const QString &path);
+        Q_INVOKABLE void clearRecentFile();
         Q_INVOKABLE QPixmap thumbnail(const QString &path);
         Q_INVOKABLE QString thumbnailPath(const QString &path);
 
