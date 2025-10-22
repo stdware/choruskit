@@ -16,6 +16,7 @@ namespace Core {
         Q_DECLARE_PRIVATE(FileLocker)
         
         Q_PROPERTY(QString path READ path NOTIFY pathChanged)
+        Q_PROPERTY(QString entryName READ entryName NOTIFY entryNameChanged)
         Q_PROPERTY(bool readOnly READ isReadOnly NOTIFY readOnlyChanged)
 
     public:
@@ -23,6 +24,7 @@ namespace Core {
         ~FileLocker() override;
 
         QString path() const;
+        QString entryName() const;
         bool isReadOnly() const;
         QString errorString() const;
 
@@ -34,6 +36,7 @@ namespace Core {
 
     Q_SIGNALS:
         void pathChanged();
+        void entryNameChanged();
         void readOnlyChanged();
 
     private:

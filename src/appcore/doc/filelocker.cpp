@@ -1,6 +1,7 @@
 #include "filelocker.h"
 #include "filelocker_p.h"
 
+#include <QDir>
 #include <QFileInfo>
 #include <QLoggingCategory>
 #include <QIODevice>
@@ -77,7 +78,12 @@ namespace Core {
 
     QString FileLocker::path() const {
         Q_D(const FileLocker);
-        return d->filePath;
+        return QDir::toNativeSeparators(d->filePath);
+    }
+    
+    QString FileLocker::entryName() const {
+        Q_D(const FileLocker);
+        return QFileInfo(d->filePath).fileName();
     }
 
     bool FileLocker::isReadOnly() const {
@@ -108,15 +114,17 @@ namespace Core {
         
         // First try to open for read-write
         if (d->openForReadWrite(path)) {
-            emit pathChanged();
-            emit readOnlyChanged();
+            Q_EMIT pathChanged();
+            Q_EMIT entryNameChanged();
+            Q_EMIT readOnlyChanged();
             return true;
         }
         
         // If read-write failed, try read-only
         if (d->openForReadOnly(path)) {
-            emit pathChanged();
-            emit readOnlyChanged();
+            Q_EMIT pathChanged();
+            Q_EMIT entryNameChanged();
+            Q_EMIT readOnlyChanged();
             return true;
         }
         
@@ -237,8 +245,9 @@ namespace Core {
         d->saveFile = std::move(newFile);
         d->filePath = path;
         d->isReadOnly = false;
-        emit pathChanged();
-        emit readOnlyChanged();
+        Q_EMIT pathChanged();
+        Q_EMIT entryNameChanged();
+        Q_EMIT readOnlyChanged();
         return true;
     }
 
@@ -255,11 +264,12 @@ namespace Core {
         d->cleanup();
         
         if (pathChanged) {
-            emit this->pathChanged();
+            Q_EMIT this->pathChanged();
+            Q_EMIT this->entryNameChanged();
         }
         
         if (readOnlyChanged) {
-            emit this->readOnlyChanged();
+            Q_EMIT this->readOnlyChanged();
         }
     }
 
