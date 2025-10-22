@@ -9,30 +9,16 @@ namespace Core {
 
     Q_STATIC_LOGGING_CATEGORY(lcFileLocker, "ck.filelocker")
 
-    void FileLockerPrivate::init() {
-        // Initialize private data
-        saveFile = nullptr;
-        readFile = nullptr;
-        filePath.clear();
-        isReadOnly = false;
-    }
-
     void FileLockerPrivate::cleanup() {
-        if (saveFile) {
-            if (saveFile->isOpen()) {
-                saveFile->cancelWriting();
-            }
-            delete saveFile;
-            saveFile = nullptr;
+        if (saveFile && saveFile->isOpen()) {
+            saveFile->close();
         }
+        saveFile.reset();
         
-        if (readFile) {
-            if (readFile->isOpen()) {
-                readFile->close();
-            }
-            delete readFile;
-            readFile = nullptr;
+        if (readFile && readFile->isOpen()) {
+            readFile->close();
         }
+        readFile.reset();
         
         filePath.clear();
         isReadOnly = false;
@@ -42,18 +28,19 @@ namespace Core {
         Q_Q(FileLocker);
         
         // Try to open with QSaveFile for read-write access
-        saveFile = new QSaveFile(path);
-        if (saveFile->open(QIODevice::ReadWrite)) {
+        errorString.clear();
+        auto saveFile_ = std::make_unique<QFile>(path);
+        if (saveFile_->open(QIODevice::ReadWrite)) {
             filePath = path;
             isReadOnly = false;
             qCDebug(lcFileLocker) << "Opened file for read-write access:" << path;
+            saveFile = std::move(saveFile_);
             return true;
         }
         
-        // Failed to open for write, cleanup saveFile
-        delete saveFile;
-        saveFile = nullptr;
-        qCDebug(lcFileLocker) << "Failed to open file for read-write access:" << path;
+        // Failed to open for write
+        qCDebug(lcFileLocker) << "Failed to open file for read-write access:" << path << saveFile_->error() << saveFile_->errorString();
+        errorString = saveFile_->errorString();
         return false;
     }
 
@@ -61,18 +48,19 @@ namespace Core {
         Q_Q(FileLocker);
         
         // Try to open with QFile for read-only access
-        readFile = new QFile(path);
-        if (readFile->open(QIODevice::ReadOnly)) {
+        errorString.clear();
+        auto readFile_ = std::make_unique<QFile>(path);
+        if (readFile_->open(QIODevice::ReadOnly)) {
             filePath = path;
             isReadOnly = true;
             qCDebug(lcFileLocker) << "Opened file for read-only access:" << path;
+            readFile = std::move(readFile_);
             return true;
         }
         
-        // Failed to open for read, cleanup readFile
-        delete readFile;
-        readFile = nullptr;
-        qCWarning(lcFileLocker) << "Failed to open file for read-only access:" << path;
+        // Failed to open for read
+        qCWarning(lcFileLocker) << "Failed to open file for read-only access:" << path << readFile_->error() << readFile_->errorString();
+        errorString = readFile_->errorString();
         return false;
     }
 
@@ -80,7 +68,6 @@ namespace Core {
         : QObject(parent), d_ptr(new FileLockerPrivate) {
         Q_D(FileLocker);
         d->q_ptr = this;
-        d->init();
     }
 
     FileLocker::~FileLocker() {
@@ -98,6 +85,11 @@ namespace Core {
         return d->isReadOnly;
     }
 
+    QString FileLocker::errorString() const {
+        Q_D(const FileLocker);
+        return d->errorString;
+    }
+
     bool FileLocker::open(const QString &path) {
         Q_D(FileLocker);
         
@@ -105,9 +97,10 @@ namespace Core {
         QFileInfo fileInfo(path);
         if (!fileInfo.exists()) {
             qCWarning(lcFileLocker) << "File does not exist:" << path;
+            d->errorString = tr("File does not exist");
             return false;
         }
-        
+
         qCDebug(lcFileLocker) << "Attempting to open file:" << path;
         
         // Close any currently opened file
@@ -133,10 +126,12 @@ namespace Core {
 
     QByteArray FileLocker::readData() {
         Q_D(FileLocker);
+
+        d->errorString.clear();
         
         if (d->filePath.isEmpty()) {
             qCWarning(lcFileLocker) << "No file is currently open";
-            return QByteArray();
+            return {};
         }
         
         qCDebug(lcFileLocker) << "Reading data from file:" << d->filePath;
@@ -144,14 +139,12 @@ namespace Core {
         QByteArray result;
         
         if (d->saveFile && d->saveFile->isOpen()) {
-            // For QSaveFile, we need to read from original file
-            QFile originalFile(d->filePath);
-            if (originalFile.open(QIODevice::ReadOnly)) {
-                result = originalFile.readAll();
-                originalFile.close();
+            if (d->saveFile->seek(0)) {
+                result = d->saveFile->readAll();
                 qCDebug(lcFileLocker) << "Read" << result.size() << "bytes from file (via QSaveFile)";
             } else {
-                qCWarning(lcFileLocker) << "Failed to read from original file:" << d->filePath;
+                qCWarning(lcFileLocker) << "Failed to seek to beginning of file:" << d->filePath << d->saveFile->error() << d->saveFile->errorString();
+                d->errorString = d->saveFile->errorString();
             }
         } else if (d->readFile && d->readFile->isOpen()) {
             // For QFile, seek to beginning and read all
@@ -159,7 +152,8 @@ namespace Core {
                 result = d->readFile->readAll();
                 qCDebug(lcFileLocker) << "Read" << result.size() << "bytes from file (via QFile)";
             } else {
-                qCWarning(lcFileLocker) << "Failed to seek to beginning of file:" << d->filePath;
+                qCWarning(lcFileLocker) << "Failed to seek to beginning of file:" << d->filePath << d->readFile->error() << d->readFile->errorString();
+                d->errorString = d->readFile->errorString();
             }
         } else {
             qCWarning(lcFileLocker) << "No valid file handle available for reading";
@@ -170,6 +164,8 @@ namespace Core {
 
     bool FileLocker::save(const QByteArray &data) {
         Q_D(FileLocker);
+
+        d->errorString.clear();
         
         if (d->filePath.isEmpty()) {
             qCWarning(lcFileLocker) << "No file is currently open";
@@ -190,12 +186,14 @@ namespace Core {
         
         // Seek to beginning and resize to 0 to overwrite
         if (!d->saveFile->seek(0)) {
-            qCWarning(lcFileLocker) << "Failed to seek to beginning of file:" << d->filePath;
+            qCWarning(lcFileLocker) << "Failed to seek to beginning of file:" << d->filePath << d->saveFile->error() << d->saveFile->errorString();
+            d->errorString = d->saveFile->errorString();
             return false;
         }
         
         if (!d->saveFile->resize(0)) {
-            qCWarning(lcFileLocker) << "Failed to truncate file:" << d->filePath;
+            qCWarning(lcFileLocker) << "Failed to truncate file:" << d->filePath << d->saveFile->error() << d->saveFile->errorString();
+            d->errorString = d->saveFile->errorString();
             return false;
         }
         
@@ -203,62 +201,45 @@ namespace Core {
         qint64 bytesWritten = d->saveFile->write(data);
         if (bytesWritten != data.size()) {
             qCWarning(lcFileLocker) << "Failed to write all data to file. Expected:" << data.size() << "Actual:" << bytesWritten;
-            return false;
-        }
-        
-        // Commit the changes
-        if (!d->saveFile->commit()) {
-            qCWarning(lcFileLocker) << "Failed to commit changes to file:" << d->filePath;
+            d->errorString = d->saveFile->errorString();
             return false;
         }
         
         qCDebug(lcFileLocker) << "Successfully saved data to file:" << d->filePath;
-        
-        // Reopen the file for further operations
-        QString currentPath = d->filePath;
-        d->cleanup();
-        return d->openForReadWrite(currentPath);
+        return true;
     }
 
     bool FileLocker::saveAs(const QString &path, const QByteArray &data) {
         Q_D(FileLocker);
+
+        d->errorString.clear();
         
         qCDebug(lcFileLocker) << "Saving" << data.size() << "bytes to new file:" << path;
         
         // Create a temporary QSaveFile to write to the new path
-        QSaveFile newFile(path);
-        if (!newFile.open(QIODevice::WriteOnly)) {
-            qCWarning(lcFileLocker) << "Failed to open new file for writing:" << path;
+        auto newFile = std::make_unique<QFile>(path);
+        if (!newFile->open(QIODevice::ReadWrite)) {
+            qCWarning(lcFileLocker) << "Failed to open new file for writing:" << path << newFile->error() << newFile->errorString();
+            d->errorString = newFile->errorString();
             return false;
         }
         
         // Write the data
-        qint64 bytesWritten = newFile.write(data);
+        qint64 bytesWritten = newFile->write(data);
         if (bytesWritten != data.size()) {
             qCWarning(lcFileLocker) << "Failed to write all data to new file. Expected:" << data.size() << "Actual:" << bytesWritten;
-            newFile.cancelWriting();
-            return false;
-        }
-        
-        // Commit the new file
-        if (!newFile.commit()) {
-            qCWarning(lcFileLocker) << "Failed to commit new file:" << path;
+            d->errorString = newFile->errorString();
             return false;
         }
         
         qCDebug(lcFileLocker) << "Successfully saved data to new file:" << path;
         
-        // Close current file and open the new one
-        close();
-        
-        if (d->openForReadWrite(path)) {
-            emit pathChanged();
-            emit readOnlyChanged();
-            return true;
-        }
-        
-        qCWarning(lcFileLocker) << "Failed to reopen new file after save:" << path;
-        return false;
+        d->saveFile = std::move(newFile);
+        d->filePath = path;
+        d->isReadOnly = false;
+        emit pathChanged();
+        emit readOnlyChanged();
+        return true;
     }
 
     void FileLocker::close() {

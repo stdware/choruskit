@@ -1,9 +1,10 @@
 #ifndef CHORUSKIT_FILELOCKER_P_H
 #define CHORUSKIT_FILELOCKER_P_H
 
-#include "filelocker.h"
+#include <CoreApi/filelocker.h>
 
-#include <QSaveFile>
+#include <memory>
+
 #include <QFile>
 
 namespace Core {
@@ -15,10 +16,10 @@ namespace Core {
         
         QString filePath;
         bool isReadOnly = false;
-        QSaveFile *saveFile = nullptr;
-        QFile *readFile = nullptr;
-        
-        void init();
+        std::unique_ptr<QFile> saveFile;
+        std::unique_ptr<QFile> readFile;
+        QString errorString;
+
         void cleanup();
         bool openForReadWrite(const QString &path);
         bool openForReadOnly(const QString &path);

@@ -24,6 +24,7 @@ namespace Core {
 
         QString path() const;
         bool isReadOnly() const;
+        QString errorString() const;
 
         Q_INVOKABLE bool open(const QString &path);
         Q_INVOKABLE QByteArray readData();
