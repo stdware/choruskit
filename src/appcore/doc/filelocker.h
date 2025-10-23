@@ -17,7 +17,7 @@ namespace Core {
         
         Q_PROPERTY(QString path READ path NOTIFY pathChanged)
         Q_PROPERTY(QString entryName READ entryName NOTIFY entryNameChanged)
-        Q_PROPERTY(bool readOnly READ isReadOnly NOTIFY readOnlyChanged)
+        Q_PROPERTY(bool fileModifiedSinceLastSave READ isFileModifiedSinceLastSave NOTIFY fileModifiedSinceLastSaveChanged)
 
     public:
         explicit FileLocker(QObject *parent = nullptr);
@@ -25,11 +25,12 @@ namespace Core {
 
         QString path() const;
         QString entryName() const;
-        bool isReadOnly() const;
         QString errorString() const;
+        bool isFileModifiedSinceLastSave() const;
 
         Q_INVOKABLE bool open(const QString &path);
         Q_INVOKABLE QByteArray readData(bool *ok = nullptr);
+        Q_INVOKABLE void release();
         Q_INVOKABLE bool save(const QByteArray &data);
         Q_INVOKABLE bool saveAs(const QString &path, const QByteArray &data);
         Q_INVOKABLE void close();
@@ -37,7 +38,7 @@ namespace Core {
     Q_SIGNALS:
         void pathChanged();
         void entryNameChanged();
-        void readOnlyChanged();
+        void fileModifiedSinceLastSaveChanged();
 
     private:
         QScopedPointer<FileLockerPrivate> d_ptr;

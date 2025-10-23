@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <QFile>
+#include <QFileSystemWatcher>
 
 namespace Core {
 
@@ -13,16 +14,11 @@ namespace Core {
         Q_DECLARE_PUBLIC(FileLocker)
     public:
         FileLocker *q_ptr;
-        
         QString filePath;
-        bool isReadOnly = false;
-        std::unique_ptr<QFile> saveFile;
-        std::unique_ptr<QFile> readFile;
+        std::unique_ptr<QFile> file;
+        std::unique_ptr<QFileSystemWatcher> watcher;
         QString errorString;
-
-        void cleanup();
-        bool openForReadWrite(const QString &path);
-        bool openForReadOnly(const QString &path);
+        bool isFileModifiedSinceLastSave{};
     };
 
 }
