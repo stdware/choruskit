@@ -15,10 +15,10 @@ namespace Core {
         : QObject(parent), d_ptr(new FileLockerPrivate) {
         Q_D(FileLocker);
         d->q_ptr = this;
-        d->watcher = std::make_unique<QFileSystemWatcher>(this);
+        d->watcher = new QFileSystemWatcher(this);
         
         // Connect file system watcher signal
-        connect(d->watcher.get(), &QFileSystemWatcher::fileChanged, this, [this](const QString &path) {
+        connect(d->watcher, &QFileSystemWatcher::fileChanged, this, [this](const QString &path) {
             Q_D(FileLocker);
             Q_UNUSED(path)
             qCDebug(lcFileLocker) << "File" << d->filePath << "has been changed externally";

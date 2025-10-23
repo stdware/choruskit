@@ -16,7 +16,7 @@ namespace Core {
         FileLocker *q_ptr;
         QString filePath;
         std::unique_ptr<QFile> file;
-        std::unique_ptr<QFileSystemWatcher> watcher;
+        QFileSystemWatcher *watcher;
         QString errorString;
         bool isFileModifiedSinceLastSave{};
     };
