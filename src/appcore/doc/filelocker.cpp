@@ -132,13 +132,15 @@ namespace Core {
         return false;
     }
 
-    QByteArray FileLocker::readData() {
+    QByteArray FileLocker::readData(bool *ok) {
         Q_D(FileLocker);
 
         d->errorString.clear();
         
         if (d->filePath.isEmpty()) {
             qCWarning(lcFileLocker) << "No file is currently open";
+            if (ok)
+                *ok = false;
             return {};
         }
         
@@ -153,6 +155,8 @@ namespace Core {
             } else {
                 qCWarning(lcFileLocker) << "Failed to seek to beginning of file:" << d->filePath << d->saveFile->error() << d->saveFile->errorString();
                 d->errorString = d->saveFile->errorString();
+                if (ok)
+                    *ok = false;
             }
         } else if (d->readFile && d->readFile->isOpen()) {
             // For QFile, seek to beginning and read all
@@ -162,10 +166,17 @@ namespace Core {
             } else {
                 qCWarning(lcFileLocker) << "Failed to seek to beginning of file:" << d->filePath << d->readFile->error() << d->readFile->errorString();
                 d->errorString = d->readFile->errorString();
+                if (ok)
+                    *ok = false;
             }
         } else {
             qCWarning(lcFileLocker) << "No valid file handle available for reading";
+            if (ok)
+                *ok = false;
         }
+
+        if (ok)
+            *ok = true;
         
         return result;
     }

@@ -29,7 +29,7 @@ namespace Core {
         QString errorString() const;
 
         Q_INVOKABLE bool open(const QString &path);
-        Q_INVOKABLE QByteArray readData();
+        Q_INVOKABLE QByteArray readData(bool *ok = nullptr);
         Q_INVOKABLE bool save(const QByteArray &data);
         Q_INVOKABLE bool saveAs(const QString &path, const QByteArray &data);
         Q_INVOKABLE void close();
