@@ -252,8 +252,9 @@ int __main__(LoaderSpec *loadSpec) {
             ApplicationInfo::isUserRoot()) {
             QString msg =
                 QCoreApplication::translate(
-                    "Application", "You're trying to start %1 as the %2, which is "
-                                   "extremely dangerous and therefore strongly not recommended.")
+                    "Application", "You are trying to start %1 as the %2, which is "
+                                   "extremely dangerous and therefore strongly not recommended.\n\n"
+                                   "You can supress this warning by starting the application with \"--allow-root\" option.")
                     .arg(qApp->applicationDisplayName(),
 #ifdef Q_OS_WINDOWS
                          QCoreApplication::translate("Application", "Administrator")
@@ -263,7 +264,6 @@ int __main__(LoaderSpec *loadSpec) {
                     );
             ApplicationInfo::messageBox(nullptr, ApplicationInfo::Warning, qApp->applicationDisplayName(),
                                         msg);
-            return 0;
         }
 
         // If you need to show help, we simply ignore this error and continue loading plugins
