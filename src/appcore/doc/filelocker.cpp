@@ -215,25 +215,25 @@ namespace Core {
                 }
 
                 if (!tempFile->seek(0)) {
-                    d->errorString = d->file->errorString();
+                    d->errorString = tempFile->errorString();
                     qCWarning(lcFileLocker) << "Failed to seek after reopen:" << d->errorString;
                     return false;
                 }
 
                 if (tempFile->write(data) != data.size()) {
-                    d->errorString = d->file->errorString();
+                    d->errorString = tempFile->errorString();
                     qCWarning(lcFileLocker) << "Failed to write after reopen:" << d->errorString;
                     return false;
                 }
 
-                if (!tempFile->resize(d->file->pos())) {
-                    d->errorString = d->file->errorString();
+                if (!tempFile->resize(tempFile->pos())) {
+                    d->errorString = tempFile->errorString();
                     qCWarning(lcFileLocker) << "Failed to resize after reopen:" << d->errorString;
                     return false;
                 }
 
                 if (!tempFile->flush()) {
-                    d->errorString = d->file->errorString();
+                    d->errorString = tempFile->errorString();
                     qCWarning(lcFileLocker) << "Failed to flush after reopen:" << d->errorString;
                     return false;
                 }
@@ -252,6 +252,12 @@ namespace Core {
             if (tempFile.write(data) != data.size()) {
                 d->errorString = tempFile.errorString();
                 qCWarning(lcFileLocker) << "Failed to write data to file:" << d->errorString;
+                return false;
+            }
+
+            if (!tempFile.resize(tempFile.pos())) {
+                d->errorString = tempFile.errorString();
+                qCWarning(lcFileLocker) << "Failed to resize after reopen:" << d->errorString;
                 return false;
             }
             
@@ -292,11 +298,17 @@ namespace Core {
             qCWarning(lcFileLocker) << "Failed to open file for saveAs:" << path << "Error:" << d->errorString;
             return false;
         }
-        
+
         if (newFile->write(data) != data.size()) {
             d->errorString = newFile->errorString();
             qCWarning(lcFileLocker) << "Failed to write data during saveAs:" << d->errorString;
             newFile->close();
+            return false;
+        }
+
+        if (!newFile->resize(newFile->pos())) {
+            d->errorString = newFile->errorString();
+            qCWarning(lcFileLocker) << "Failed to resize after reopen:" << d->errorString;
             return false;
         }
         
