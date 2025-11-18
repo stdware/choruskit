@@ -50,7 +50,7 @@ namespace Core {
         QList<T *> getObjects() const {
             QReadLocker lock(listLock());
             QList<QObject *> all = allObjects();
-            QList<QObject *> res;
+            QList<T *> res;
             foreach (QObject *obj, all) {
                 if (T *result = qobject_cast<T *>(obj))
                     res.append(result);
