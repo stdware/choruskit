@@ -329,6 +329,7 @@ namespace Core {
         d->filePath = path;
         
         // Add new file to watcher
+        // FIXME macOS watcher erroneously detects the change made by this program itself
         d->watcher->addPath(path);
         
         // Reset modification flag after successful saveAs
