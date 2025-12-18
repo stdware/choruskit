@@ -32,7 +32,8 @@ namespace Core {
         // Use MD5 hash to generate filename
         QByteArray hash = QCryptographicHash::hash(canonical.toUtf8(), QCryptographicHash::Md5);
         QString fileName = QString::fromLatin1(hash.toHex()) + ".png";
-        return QDir(thumbnailDir).absoluteFilePath(fileName);
+        QFileInfo fileInfo(QDir(thumbnailDir).absoluteFilePath(fileName));
+        return fileInfo.exists() ? fileInfo.absoluteFilePath() : QString();
     }
 
     QString RecentFileCollectionPrivate::canonicalFilePath(const QString &path) const {
