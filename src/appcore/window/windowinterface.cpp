@@ -42,11 +42,14 @@ namespace Core {
         if (obj == w) {
             switch (event->type()) {
                 case QEvent::Close:
-                    // Auto-destroy window behavior like WA_DeleteOnClose
-                    if (event->isAccepted()) {
-                        w->deleteLater();
+                    for (auto &callback : d->closeCallbacks) {
+                        if (!callback()) {
+                            event->ignore();
+                            return true;
+                        }
                     }
                     if (d->closeAsExit && event->isAccepted()) {
+                        w->deleteLater();
                         d->quit();
                     }
                     break;
@@ -156,6 +159,11 @@ namespace Core {
             d->window = w;
             emit windowChanged(w);
         }
+    }
+
+    void WindowInterface::addCloseCallback(const std::function<bool()> &callback) {
+        Q_D(WindowInterface);
+        d->closeCallbacks.append(callback);
     }
 
     WindowInterface::WindowInterface(QObject *parent) : WindowInterface(*new WindowInterfacePrivate(), parent) {

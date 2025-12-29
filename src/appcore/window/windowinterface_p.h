@@ -49,6 +49,7 @@ namespace Core {
 
         QObject *winFilter;
         QPointer<QWindow> window;
+        QList<std::function<bool()>> closeCallbacks;
 
     private:
         friend class WindowSystem;

@@ -1,8 +1,11 @@
 #ifndef WINDOWINTERFACE_H
 #define WINDOWINTERFACE_H
 
-#include <CoreApi/executiveinterface.h>
+#include <functional>
+
 #include <QWindow>
+
+#include <CoreApi/executiveinterface.h>
 
 namespace Core {
 
@@ -48,6 +51,8 @@ namespace Core {
 
         QWindow *window() const;
         void setWindow(QWindow *w);
+
+        void addCloseCallback(const std::function<bool()> &callback);
 
     protected:
         virtual QWindow *createWindow(QObject *parent) const = 0;
