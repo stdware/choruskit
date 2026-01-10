@@ -1,10 +1,7 @@
 #include "coreinterfacebase.h"
 #include "coreinterfacebase_p.h"
 
-#include <QTimer>
-#include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
-#include <QtGui/QGuiApplication>
 
 #include <CoreApi/windowsystem.h>
 #include <CoreApi/settingcatalog.h>
@@ -40,19 +37,6 @@ namespace Core {
     CoreInterfaceBase *CoreInterfaceBase::instance() {
         return m_instance;
     }
-    void CoreInterfaceBase::exitApplicationGracefully(int exitCode) {
-        qCInfo(lcCoreInterfaceBase) << "Manually exit" << exitCode;
-        QTimer::singleShot(0, [exitCode] {
-            qCDebug(lcCoreInterfaceBase) << "Calling QCoreApplication::exit" << exitCode;
-            QCoreApplication::exit(exitCode);
-        });
-    }
-    void CoreInterfaceBase::restartApplication(int exitCode) {
-        qCInfo(lcCoreInterfaceBase) << "Restarting application" << exitCode;
-        qApp->setProperty("restart", true);
-        exitApplicationGracefully(exitCode);
-    }
-
     WindowSystem *CoreInterfaceBase::windowSystem() {
         Q_ASSERT(m_instance);
         return m_instance->d_func()->windowSystem;

@@ -1,6 +1,10 @@
 #ifndef CHORUSKIT_RUNTIMEINTERFACE_H
 #define CHORUSKIT_RUNTIMEINTERFACE_H
 
+#include <functional>
+
+#include <QScopedPointer>
+
 #include <CoreApi/objectpool.h>
 
 class QDateTime;
@@ -23,6 +27,7 @@ namespace Core {
         Q_PROPERTY(QSettings *settings READ settings CONSTANT)
         Q_PROPERTY(QSettings *globalSettings READ globalSettings CONSTANT)
         Q_PROPERTY(QQmlEngine *qmlEngine READ qmlEngine CONSTANT)
+        Q_PROPERTY(bool restartPlanned READ restartPlanned NOTIFY restartPlannedChanged)
     public:
         explicit RuntimeInterface(QObject *parent = nullptr);
         ~RuntimeInterface() override;
@@ -49,6 +54,19 @@ namespace Core {
 
         static TranslationManager *translationManager();
         static void setTranslationManager(TranslationManager *translationManager);
+
+        Q_INVOKABLE static void exitApplicationGracefully(int exitCode = 0);
+        Q_INVOKABLE static void restartApplication(int exitCode = 0);
+
+        static bool restartPlanned();
+
+        static void addExitCallback(const std::function<void(int)> &callback);
+
+    Q_SIGNALS:
+        void restartPlannedChanged();
+
+    private:
+        QScopedPointer<RuntimeInterfacePrivate> d_ptr;
     };
 
 }

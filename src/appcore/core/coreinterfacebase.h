@@ -25,9 +25,6 @@ namespace Core {
 
         static CoreInterfaceBase *instance();
 
-        Q_INVOKABLE static void exitApplicationGracefully(int exitCode = 0);
-        Q_INVOKABLE static void restartApplication(int exitCode = 0);
-
     public:
         static WindowSystem *windowSystem();
         static RecentFileCollection *recentFileCollection();

@@ -17,8 +17,9 @@
 #include <SingleApplication>
 
 #include <CoreApi/applicationinfo.h>
-#include <CoreApi/runtimeinterface.h>
 #include <CoreApi/logger.h>
+#include <CoreApi/runtimeinterface.h>
+#include <CoreApi/private/runtimeinterface_p.h>
 
 #include "loaderspec.h"
 #include "splashscreen.h"
@@ -179,25 +180,6 @@ static inline QString msgCoreLoadFailure(const QString &why) {
 
 namespace {
 
-    class Restarter {
-    public:
-        Restarter(const QString &workingDir) : m_workingDir(workingDir) {
-        }
-
-        int restartOrExit(int exitCode) {
-            return qApp->property("restart").toBool() ? restart(exitCode) : exitCode;
-        }
-
-        int restart(int exitCode) {
-            QProcess::startDetached(QApplication::applicationFilePath(), QApplication::arguments(),
-                                    m_workingDir);
-            return exitCode;
-        }
-
-    private:
-        QString m_workingDir;
-    };
-
     class ArgumentParser {
     public:
         bool allowRoot;
@@ -239,7 +221,6 @@ int __main__(LoaderSpec *loadSpec) {
     // Global instances must be created
     QApplication &a = *qApp;
 
-    QString workingDir = QDir::currentPath();
     QStringList arguments = a.arguments();
     ArgumentParser argsParser;
 
@@ -437,5 +418,5 @@ int __main__(LoaderSpec *loadSpec) {
     // shutdown plugin manager on the exit
     QObject::connect(&a, &QApplication::aboutToQuit, &pluginManager, &PluginManager::shutdown);
 
-    return Restarter(workingDir).restartOrExit(a.exec());
+    return RuntimeInterfacePrivate::restartOrExit(a.exec());
 }
