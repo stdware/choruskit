@@ -257,7 +257,7 @@ endmacro()
 ]] #
 function(ck_configure_application)
     set(options WIN_SHORTCUT)
-    set(oneValueArgs ICNS)
+    set(oneValueArgs ICNS INFO_PLIST)
     set(multiValueArgs ICO)
     cmake_parse_arguments(FUNC "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -283,12 +283,14 @@ function(ck_configure_application)
         )
     endif()
 
+    set(RC_COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${CK_APPLICATION_VENDOR}" PARENT_SCOPE)
+
     # Set resource files arguments
     set(_rc_args
         NAME ${CK_APPLICATION_NAME}
         VERSION ${CK_APPLICATION_VERSION}
         DESCRIPTION ${CK_APPLICATION_DESCRIPTION}
-        COPYRIGHT "Copyright ${CK_DEV_START_YEAR}-${CK_CURRENT_YEAR} ${CK_APPLICATION_VENDOR}"
+        COPYRIGHT ${RC_COPYRIGHT}
     )
 
     if(APPLE)
@@ -302,6 +304,7 @@ function(ck_configure_application)
         qm_add_mac_bundle(${_target}
             ${_rc_args}
             ${_icns}
+            INFO_PLIST ${FUNC_INFO_PLIST}
         )
 
         # Set output directory
