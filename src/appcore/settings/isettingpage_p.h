@@ -1,7 +1,7 @@
 #ifndef ISETTINGPAGEPRIVATE_H
 #define ISETTINGPAGEPRIVATE_H
 
-#include <stdcorelib/linked_map.h>
+#include <stdcorelib/adt/linked_map.h>
 
 #include <CoreApi/isettingpage.h>
 

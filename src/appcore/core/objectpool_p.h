@@ -1,7 +1,7 @@
 #ifndef OBJECTPOOL_P_H
 #define OBJECTPOOL_P_H
 
-#include <stdcorelib/linked_map.h>
+#include <stdcorelib/adt/linked_map.h>
 
 #include <CoreApi/objectpool.h>
 

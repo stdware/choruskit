@@ -15,7 +15,7 @@
 #include <QTimer>
 #include <QPointer>
 
-#include <stdcorelib/linked_map.h>
+#include <stdcorelib/adt/linked_map.h>
 
 #include <CoreApi/windowinterface.h>
 

@@ -4,7 +4,7 @@
 #include <QtCore/QSet>
 #include <QtCore/QHash>
 
-#include <stdcorelib/linked_map.h>
+#include <stdcorelib/adt/linked_map.h>
 
 #include <CoreApi/settingcatalog.h>
 
