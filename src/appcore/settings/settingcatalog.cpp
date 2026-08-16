@@ -123,7 +123,7 @@ namespace Core {
             return false;
         }
 
-        auto page = it.value();
+        auto page = it->second;
         page->setParent(nullptr);
         d->pages.erase(it);
 

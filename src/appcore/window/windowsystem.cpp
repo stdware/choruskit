@@ -417,7 +417,7 @@ namespace Core {
         if (it == d->windowInterfaces.end()) {
             return nullptr;
         }
-        return it.key();
+        return it->first;
     }
 }
 
