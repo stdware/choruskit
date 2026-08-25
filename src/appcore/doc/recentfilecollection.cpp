@@ -106,7 +106,7 @@ namespace Core {
         saveSettings();
     }
 
-    bool RecentFileCollection::addRecentFile(const QString &path, const QPixmap &thumbnail) {
+    bool RecentFileCollection::addRecentFile(const QString &path, const QImage &thumbnail) {
         Q_D(RecentFileCollection);
         
         // Check if file exists
@@ -215,7 +215,7 @@ namespace Core {
         saveSettings();
     }
 
-    QPixmap RecentFileCollection::thumbnail(const QString &path) {
+    QImage RecentFileCollection::thumbnail(const QString &path) {
         Q_D(const RecentFileCollection);
         
         QString thumbPath = d->thumbnailPath(path);
@@ -223,13 +223,13 @@ namespace Core {
             return {};
         }
         
-        QPixmap pixmap;
-        if (!pixmap.load(thumbPath)) {
+        QImage image;
+        if (!image.load(thumbPath)) {
             qCDebug(lcRecentFileCollection) << "Failed to load thumbnail:" << thumbPath;
             return {};
         }
         
-        return pixmap;
+        return image;
     }
 
     QString RecentFileCollection::thumbnailPath(const QString &path) {
