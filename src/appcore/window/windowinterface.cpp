@@ -111,7 +111,7 @@ namespace Core {
 
         CoreInterfaceBase::instance()->windowSystem()->d_func()->windowCreated(q);
 
-        win->show();
+        win->setVisible(true);
     }
 
     void WindowInterfacePrivate::quit() {
