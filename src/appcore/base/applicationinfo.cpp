@@ -82,15 +82,10 @@ namespace Core {
 
     static QString getDefaultAppDataDir() {
         static const auto path = []() {
-            QString path;
+            // %APPDATA% on Windows, ~/Library/Application Support on macOS and $XDG_DATA_HOME
+            // (~/.local/share) on Linux, once the organization and the application are removed
+            QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
             QString slashName;
-#ifdef Q_OS_WINDOWS
-            path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-#elif defined(Q_OS_MAC)
-            path = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.config";
-#else
-            path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-#endif
             slashName = '/' + QCoreApplication::applicationName();
             if (path.endsWith(slashName)) {
                 path.chop(slashName.size());
@@ -404,9 +399,11 @@ namespace Core {
     /*!
         Returns application data directory.
 
-        \li On Mac/Linux, the default path is <tt>\%HOME\%/.config/\%ORG\%/\%AppName\%</tt>
-        \li On Windows, the default path is
-       <tt>\%UserProfile\%/AppData/Local/\%ORG\%/\%AppName\%</tt>
+        \li On Windows, the default path is <tt>\%APPDATA\%/\%ORG\%/\%AppName\%</tt>
+        \li On Mac, the default path is
+       <tt>\%HOME\%/Library/Application Support/\%ORG\%/\%AppName\%</tt>
+        \li On Linux, the default path is <tt>\%HOME\%/.local/share/\%ORG\%/\%AppName\%</tt>,
+       or under <tt>\%XDG_DATA_HOME\%</tt> if set
      */
 
     /*!
