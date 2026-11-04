@@ -34,6 +34,7 @@ namespace Core {
         RuntimeInterface *q_ptr;
 
         QSettings *settings = nullptr;
+        QSettings *state = nullptr;
         QSettings *globalSettings = nullptr;
 
         QSplashScreen *splash = nullptr;

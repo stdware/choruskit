@@ -47,6 +47,13 @@ namespace Core {
             UserConfig,
             RuntimeData,
             TempData,
+            Config,
+            Data,
+            State,
+            Cache,
+            Logs,
+            SystemPlugins,
+            UserPlugins,
         };
 
         static QString applicationLocation(ApplicationLocation directory);

@@ -25,6 +25,7 @@ namespace Core {
         Q_DECLARE_PRIVATE(RuntimeInterface)
         Q_PROPERTY(QDateTime startTime READ startTime CONSTANT)
         Q_PROPERTY(QSettings *settings READ settings CONSTANT)
+        Q_PROPERTY(QSettings *state READ state CONSTANT)
         Q_PROPERTY(QSettings *globalSettings READ globalSettings CONSTANT)
         Q_PROPERTY(QQmlEngine *qmlEngine READ qmlEngine CONSTANT)
         Q_PROPERTY(bool restartPlanned READ restartPlanned NOTIFY restartPlannedChanged)
@@ -39,6 +40,9 @@ namespace Core {
     public:
         static QSettings *settings();
         static void setSettings(QSettings *settings);
+
+        static QSettings *state();
+        static void setState(QSettings *state);
 
         static QSettings *globalSettings();
         static void setGlobalSettings(QSettings *settings);

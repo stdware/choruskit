@@ -74,6 +74,7 @@ namespace Core {
         void loadSettings();
         void saveSettings() const;
 
+        static void setLogsLocation(const QString &location);
         static QString logsLocation();
 
         void log(MessageType type, const QString &category, const QString &message, bool onlyConsole = false);

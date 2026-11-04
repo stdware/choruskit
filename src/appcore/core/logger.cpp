@@ -24,6 +24,7 @@
 namespace Core {
 
     static const QString lcTextLogger = "ck.logger";
+    static QString logsLocationOverride;
 
     static QString typeToString(Logger::MessageType type) {
         switch (type) {
@@ -448,7 +449,7 @@ namespace Core {
 
     void Logger::loadSettings() {
         auto settings = RuntimeInterface::settings();
-        settings->beginGroup(staticMetaObject.className());
+        settings->beginGroup(QStringLiteral("choruskit.logging"));
         
         setMaxFileSize(settings->value("maxFileSize", 16 * 1024 * 1024).value<qsizetype>());
         setMaxArchiveSize(settings->value("maxArchiveSize", 1024LL * 1024 * 1024).value<qsizetype>());
@@ -464,7 +465,7 @@ namespace Core {
     void Logger::saveSettings() const {
         Q_D(const Logger);
         auto settings = RuntimeInterface::settings();
-        settings->beginGroup(staticMetaObject.className());
+        settings->beginGroup(QStringLiteral("choruskit.logging"));
 
         settings->setValue("maxFileSize", d->maxFileSize);
         settings->setValue("maxArchiveSize", d->maxArchiveSize);
@@ -477,8 +478,15 @@ namespace Core {
         settings->endGroup();
     }
 
+    void Logger::setLogsLocation(const QString &location) {
+        logsLocationOverride = location;
+    }
+
     QString Logger::logsLocation() {
-        return QDir::toNativeSeparators(ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData) + QStringLiteral("/logs"));
+        const auto location = logsLocationOverride.isEmpty()
+                                  ? ApplicationInfo::applicationLocation(ApplicationInfo::Logs)
+                                  : logsLocationOverride;
+        return QDir::toNativeSeparators(location);
     }
 
     void Logger::log(MessageType type, const QString &category, const QString &message, bool onlyConsole) {

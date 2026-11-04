@@ -264,6 +264,7 @@ int __main__(LoaderSpec *loadSpec) {
     // ChorusKit plugin database
     RuntimeInterface runtimeInterface;
     runtimeInterface.setSettings(loadSpec->createChorusKitSettings(QSettings::UserScope));
+    runtimeInterface.setState(loadSpec->createChorusKitState(QSettings::UserScope));
     runtimeInterface.setGlobalSettings(loadSpec->createChorusKitSettings(QSettings::SystemScope));
 
     SplashScreen splash;

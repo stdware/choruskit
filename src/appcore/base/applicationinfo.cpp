@@ -78,13 +78,27 @@ namespace Core {
         \brief The application persistent runtime data directory.
         \var ApplicationInfo::TempData
         \brief The application temporary data directory.
+        \var ApplicationInfo::Config
+        \brief The application configuration directory.
+        \var ApplicationInfo::Data
+        \brief The application data directory.
+        \var ApplicationInfo::State
+        \brief The application state directory.
+        \var ApplicationInfo::Cache
+        \brief The application cache directory.
+        \var ApplicationInfo::Logs
+        \brief The application log directory.
+        \var ApplicationInfo::SystemPlugins
+        \brief The system-wide plugins directory.
+        \var ApplicationInfo::UserPlugins
+        \brief The user plugins directory.
     */
 
     static QString getDefaultAppDataDir() {
         static const auto path = []() {
-            // %APPDATA% on Windows, ~/Library/Application Support on macOS and $XDG_DATA_HOME
+            // %LOCALAPPDATA% on Windows, ~/Library/Application Support on macOS and $XDG_DATA_HOME
             // (~/.local/share) on Linux, once the organization and the application are removed
-            QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+            QString path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
             QString slashName;
             slashName = '/' + QCoreApplication::applicationName();
             if (path.endsWith(slashName)) {
@@ -97,6 +111,41 @@ namespace Core {
             return path;
         }();
         return path;
+    }
+
+    static QString getApplicationLocationBase(ApplicationInfo::ApplicationLocation location) {
+        switch (location) {
+            case ApplicationInfo::Config:
+#if defined(Q_OS_LINUX)
+                return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+#else
+                return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+#endif
+            case ApplicationInfo::Data:
+                return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+            case ApplicationInfo::State:
+#if defined(Q_OS_LINUX)
+                return QStandardPaths::writableLocation(QStandardPaths::GenericStateLocation);
+#else
+                return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+#endif
+            case ApplicationInfo::Cache:
+#if defined(Q_OS_MACOS)
+                return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
+#else
+                return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+#endif
+            case ApplicationInfo::Logs:
+#if defined(Q_OS_MACOS)
+                return QDir::homePath() + QStringLiteral("/Library/Logs");
+#elif defined(Q_OS_LINUX)
+                return QStandardPaths::writableLocation(QStandardPaths::GenericStateLocation);
+#else
+                return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+#endif
+            default:
+                return {};
+        }
     }
 
     static QString appUpperDir() {
@@ -320,6 +369,53 @@ namespace Core {
                 res = QDir::tempPath() + "/" + QCoreApplication::organizationName() + "/" +
                       QCoreApplication::applicationName();
                 break;
+            case Config:
+                res = getApplicationLocationBase(Config) + "/" +
+                      QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName() + "/config";
+                break;
+            case Data:
+                res = getApplicationLocationBase(Data) + "/" +
+                      QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName() + "/data";
+                break;
+            case State:
+                res = getApplicationLocationBase(State) + "/" +
+                      QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName() + "/state";
+                break;
+            case Cache:
+                res = getApplicationLocationBase(Cache) + "/" +
+                      QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName() + "/cache";
+                break;
+            case Logs:
+                res = getApplicationLocationBase(Logs) + "/" +
+                      QCoreApplication::organizationName() + "/" +
+                      QCoreApplication::applicationName() + "/logs";
+                break;
+            case SystemPlugins:
+#ifdef Q_OS_WINDOWS
+                {
+                    auto commonProgramFiles = qEnvironmentVariable("CommonProgramFiles");
+                    if (commonProgramFiles.isEmpty())
+                        commonProgramFiles = QDir(qEnvironmentVariable("ProgramFiles")).filePath(QStringLiteral("Common Files"));
+                    res = QDir(QDir::fromNativeSeparators(commonProgramFiles))
+                              .filePath(QCoreApplication::organizationName() + "/" + QCoreApplication::applicationName() + QStringLiteral("/Plugins"));
+                }
+#elif defined(Q_OS_MACOS)
+                res = QDir(QStringLiteral("/Library/Application Support"))
+                          .filePath(QCoreApplication::organizationName() + "/" + QCoreApplication::applicationName() + QStringLiteral("/plugins"));
+#elif defined(Q_OS_LINUX)
+                res = QDir(QStringLiteral("/usr/local")).filePath(
+                    QStringLiteral(OS_LIBRARY_DIR) + u'/' + QCoreApplication::applicationName() + QStringLiteral("/plugins"));
+#else
+                res = {};
+#endif
+                break;
+            case UserPlugins:
+                res = QDir(getDefaultAppDataDir()).filePath(QCoreApplication::organizationName() + "/" + QCoreApplication::applicationName() + QStringLiteral("/plugins"));
+                break;
             default:
                 break;
         }
@@ -399,7 +495,7 @@ namespace Core {
     /*!
         Returns application data directory.
 
-        \li On Windows, the default path is <tt>\%APPDATA\%/\%ORG\%/\%AppName\%</tt>
+        \li On Windows, the default path is <tt>\%LOCALAPPDATA\%/\%ORG\%/\%AppName\%</tt>
         \li On Mac, the default path is
        <tt>\%HOME\%/Library/Application Support/\%ORG\%/\%AppName\%</tt>
         \li On Linux, the default path is <tt>\%HOME\%/.local/share/\%ORG\%/\%AppName\%</tt>,
@@ -418,6 +514,56 @@ namespace Core {
 
         \li On Mac/Linux, the default path is <tt>\%TMPDIR\%</tt>
         \li On Windows, the default path is <tt>\%TEMP\%</tt>
+    */
+
+    /*!
+        Returns the application configuration directory.
+
+        \li On Windows, the default path is <tt>\%LOCALAPPDATA\%/\%ORG\%/\%AppName\%/config</tt>
+        \li On Mac, the default path is
+       <tt>\%HOME\%/Library/Application Support/\%ORG\%/\%AppName\%/config</tt>
+        \li On Linux, the default path is
+       <tt>\%XDG_CONFIG_HOME\%/\%ORG\%/\%AppName\%/config</tt>
+    */
+
+    /*!
+        Returns the application data directory.
+
+        \li On Windows, the default path is <tt>\%LOCALAPPDATA\%/\%ORG\%/\%AppName\%/data</tt>
+        \li On Mac, the default path is
+       <tt>\%HOME\%/Library/Application Support/\%ORG\%/\%AppName\%/data</tt>
+        \li On Linux, the default path is
+       <tt>\%XDG_DATA_HOME\%/\%ORG\%/\%AppName\%/data</tt>
+    */
+
+    /*!
+        Returns the application state directory.
+
+        \li On Windows, the default path is <tt>\%LOCALAPPDATA\%/\%ORG\%/\%AppName\%/state</tt>
+        \li On Mac, the default path is
+       <tt>\%HOME\%/Library/Application Support/\%ORG\%/\%AppName\%/state</tt>
+        \li On Linux, the default path is
+       <tt>\%XDG_STATE_HOME\%/\%ORG\%/\%AppName\%/state</tt>
+    */
+
+    /*!
+        Returns the application cache directory.
+
+        \li On Windows, the default path is <tt>\%LOCALAPPDATA\%/\%ORG\%/\%AppName\%/cache</tt>
+        \li On Mac, the default path is
+       <tt>\%HOME\%/Library/Caches/\%ORG\%/\%AppName\%/cache</tt>
+        \li On Linux, the default path is
+       <tt>\%XDG_CACHE_HOME\%/\%ORG\%/\%AppName\%/cache</tt>
+    */
+
+    /*!
+        Returns the application log directory.
+
+        \li On Windows, the default path is <tt>\%LOCALAPPDATA\%/\%ORG\%/\%AppName\%/logs</tt>
+        \li On Mac, the default path is
+       <tt>\%HOME\%/Library/Logs/\%ORG\%/\%AppName\%/logs</tt>
+        \li On Linux, the default path is
+       <tt>\%XDG_STATE_HOME\%/\%ORG\%/\%AppName\%/logs</tt>
     */
 
     /*!

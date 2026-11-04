@@ -18,8 +18,8 @@ namespace Core {
 
     void RecentFileCollectionPrivate::init() {
         // Initialize thumbnail directory
-        QString dataDir = ApplicationInfo::applicationLocation(ApplicationInfo::RuntimeData);
-        thumbnailDir = QDir(dataDir).absoluteFilePath("thumbnails");
+        QString cacheDir = ApplicationInfo::applicationLocation(ApplicationInfo::Cache);
+        thumbnailDir = QDir(cacheDir).absoluteFilePath("thumbnails");
         ensureThumbnailDir();
     }
 
@@ -244,16 +244,20 @@ namespace Core {
         qCDebug(lcRecentFileCollection) << "Loading settings";
         
         auto settings = RuntimeInterface::settings();
-        if (!settings) {
-            qCWarning(lcRecentFileCollection) << "No settings instance available";
+        auto state = RuntimeInterface::state();
+        if (!settings || !state) {
+            qCWarning(lcRecentFileCollection) << "No settings or state instance available";
             return;
         }
-        
-        settings->beginGroup(staticMetaObject.className());
-        d->recentFiles = settings->value("recentFiles").toStringList();
-        d->count = settings->value("count", 32).toInt();
+
+        settings->beginGroup(QStringLiteral("choruskit.recentfiles"));
+        d->count = settings->value(QStringLiteral("count"), 32).toInt();
         settings->endGroup();
-        
+
+        state->beginGroup(QStringLiteral("choruskit.recentfiles"));
+        d->recentFiles = state->value(QStringLiteral("recentFiles")).toStringList();
+        state->endGroup();
+
         qCDebug(lcRecentFileCollection) << "Loaded" << d->recentFiles.size() << "recent files, count limit:" << d->count;
     }
 
@@ -263,16 +267,20 @@ namespace Core {
         qCDebug(lcRecentFileCollection) << "Saving settings";
         
         auto settings = RuntimeInterface::settings();
-        if (!settings) {
-            qCWarning(lcRecentFileCollection) << "No settings instance available";
+        auto state = RuntimeInterface::state();
+        if (!settings || !state) {
+            qCWarning(lcRecentFileCollection) << "No settings or state instance available";
             return;
         }
-        
-        settings->beginGroup(staticMetaObject.className());
-        settings->setValue("recentFiles", d->recentFiles);
-        settings->setValue("count", d->count);
+
+        settings->beginGroup(QStringLiteral("choruskit.recentfiles"));
+        settings->setValue(QStringLiteral("count"), d->count);
         settings->endGroup();
-        
+
+        state->beginGroup(QStringLiteral("choruskit.recentfiles"));
+        state->setValue(QStringLiteral("recentFiles"), d->recentFiles);
+        state->endGroup();
+
         qCDebug(lcRecentFileCollection) << "Saved" << d->recentFiles.size() << "recent files, count limit:" << d->count;
     }
 

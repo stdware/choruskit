@@ -1,6 +1,7 @@
 #include "loaderspec.h"
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/QDir>
 
 #include <CoreApi/applicationinfo.h>
 
@@ -14,7 +15,7 @@ namespace Loader {
 
     QSettings *LoaderSpec::createExtensionSystemSettings(QSettings::Scope scope) {
         QString dir = ApplicationInfo::applicationLocation(scope == QSettings::UserScope
-                                                               ? ApplicationInfo::RuntimeData
+                                                               ? ApplicationInfo::Config
                                                                : ApplicationInfo::BuiltinResources);
         return new QSettings(QStringLiteral("%1/%2.extensionsystem.ini")
                                  .arg(dir, QCoreApplication::applicationName()),
@@ -24,7 +25,18 @@ namespace Loader {
     /// Create a new settings for ChorusKit
     QSettings *LoaderSpec::createChorusKitSettings(QSettings::Scope scope) {
         QString dir = ApplicationInfo::applicationLocation(scope == QSettings::UserScope
-                                                               ? ApplicationInfo::RuntimeData
+                                                               ? ApplicationInfo::Config
+                                                               : ApplicationInfo::BuiltinResources);
+        return new QSettings(
+            QStringLiteral("%1/%2.plugins.ini").arg(dir, QCoreApplication::applicationName()),
+            QSettings::IniFormat);
+    }
+
+
+    /// Create a new state store for ChorusKit
+    QSettings *LoaderSpec::createChorusKitState(QSettings::Scope scope) {
+        QString dir = ApplicationInfo::applicationLocation(scope == QSettings::UserScope
+                                                               ? ApplicationInfo::State
                                                                : ApplicationInfo::BuiltinResources);
         return new QSettings(
             QStringLiteral("%1/%2.plugins.ini").arg(dir, QCoreApplication::applicationName()),

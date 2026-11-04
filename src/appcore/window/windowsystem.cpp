@@ -160,27 +160,28 @@ namespace Core {
         readSettings();
     }
 
-    static const char settingCatalogC[] = "WindowSystem";
+    static const char settingCatalogC[] = "choruskit.window";
 
-    static const char winGeometryGroupC[] = "WindowGeometry";
+    static const char winGeometryKeyC[] = "windowGeometry";
 
     void WindowSystemPrivate::readSettings() {
         winGeometries.clear();
 
         auto settings = RuntimeInterface::settings();
         settings->beginGroup(QLatin1String(settingCatalogC));
+        shouldStoreGeometry = settings->value(QStringLiteral("shouldStoreGeometry"), true).toBool();
+        settings->endGroup();
 
-        auto winPropsObj = settings->value(winGeometryGroupC).toJsonObject();
+        auto state = RuntimeInterface::state();
+        state->beginGroup(QLatin1String(settingCatalogC));
+        auto winPropsObj = state->value(QLatin1String(winGeometryKeyC)).toJsonObject();
+        state->endGroup();
         for (auto it = winPropsObj.begin(); it != winPropsObj.end(); ++it) {
             if (!it->isObject()) {
                 continue;
             }
             winGeometries.insert(it.key(), WindowGeometry::fromObject(it->toObject()));
         }
-
-        shouldStoreGeometry = settings->value("shouldStoreGeometry", true).toBool();
-
-        settings->endGroup();
     }
 
     void WindowSystemPrivate::saveSettings() const {
@@ -191,11 +192,13 @@ namespace Core {
 
         auto settings = RuntimeInterface::settings();
         settings->beginGroup(QLatin1String(settingCatalogC));
-
-        settings->setValue(QLatin1String(winGeometryGroupC), winPropsObj);
-        settings->setValue("shouldStoreGeometry", shouldStoreGeometry);
-        
+        settings->setValue(QStringLiteral("shouldStoreGeometry"), shouldStoreGeometry);
         settings->endGroup();
+
+        auto state = RuntimeInterface::state();
+        state->beginGroup(QLatin1String(settingCatalogC));
+        state->setValue(QLatin1String(winGeometryKeyC), winPropsObj);
+        state->endGroup();
     }
 
     void WindowSystemPrivate::windowCreated(WindowInterface *windowInterface) {

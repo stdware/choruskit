@@ -107,6 +107,19 @@ namespace Core {
         settings->setParent(m_instance);
     }
 
+    QSettings *RuntimeInterface::state() {
+        return RuntimeInterfacePrivate::instance()->state;
+    }
+
+    void RuntimeInterface::setState(QSettings *state) {
+        auto *d = RuntimeInterfacePrivate::instance();
+        auto &stateRef = d->state;
+        delete stateRef;
+
+        stateRef = state;
+        state->setParent(m_instance);
+    }
+
     QSettings *RuntimeInterface::globalSettings() {
         return RuntimeInterfacePrivate::instance()->globalSettings;
     }
