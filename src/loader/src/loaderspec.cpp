@@ -34,10 +34,8 @@ namespace Loader {
 
 
     /// Create a new state store for ChorusKit
-    QSettings *LoaderSpec::createChorusKitState(QSettings::Scope scope) {
-        QString dir = ApplicationInfo::applicationLocation(scope == QSettings::UserScope
-                                                               ? ApplicationInfo::State
-                                                               : ApplicationInfo::BuiltinResources);
+    QSettings *LoaderSpec::createChorusKitState() {
+        QString dir = ApplicationInfo::applicationLocation(ApplicationInfo::State);
         return new QSettings(
             QStringLiteral("%1/%2.plugins.ini").arg(dir, QCoreApplication::applicationName()),
             QSettings::IniFormat);

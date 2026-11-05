@@ -3,6 +3,7 @@
 #ifdef Q_OS_WINDOWS
 #  include <ShlObj.h>
 #  include <Windows.h>
+#  include <KnownFolders.h>
 #elif defined(Q_OS_MACOS)
 #  include <CoreFoundation/CoreFoundation.h>
 #endif
@@ -152,6 +153,19 @@ namespace Core {
         static QString dir = QDir::cleanPath(QCoreApplication::applicationDirPath() + "/..");
         return dir;
     }
+
+#ifdef Q_OS_WINDOWS
+    static QString commonProgramFilesDir() {
+        PWSTR path = nullptr;
+        if (FAILED(::SHGetKnownFolderPath(FOLDERID_ProgramFilesCommon, KF_FLAG_DEFAULT, nullptr,
+                                          &path))) {
+            return {};
+        }
+        QString result = QString::fromWCharArray(path);
+        ::CoTaskMemFree(path);
+        return result;
+    }
+#endif
 
     struct ApplicationInfoData {
         QString appDataDir;
@@ -396,19 +410,14 @@ namespace Core {
                 break;
             case SystemPlugins:
 #ifdef Q_OS_WINDOWS
-                {
-                    auto commonProgramFiles = qEnvironmentVariable("CommonProgramFiles");
-                    if (commonProgramFiles.isEmpty())
-                        commonProgramFiles = QDir(qEnvironmentVariable("ProgramFiles")).filePath(QStringLiteral("Common Files"));
-                    res = QDir(QDir::fromNativeSeparators(commonProgramFiles))
-                              .filePath(QCoreApplication::organizationName() + "/" + QCoreApplication::applicationName() + QStringLiteral("/Plugins"));
-                }
+                res = QDir(QDir::fromNativeSeparators(commonProgramFilesDir()))
+                          .filePath(QCoreApplication::organizationName() + "/" + QCoreApplication::applicationName() + QStringLiteral("/plugins"));
 #elif defined(Q_OS_MACOS)
                 res = QDir(QStringLiteral("/Library/Application Support"))
                           .filePath(QCoreApplication::organizationName() + "/" + QCoreApplication::applicationName() + QStringLiteral("/plugins"));
 #elif defined(Q_OS_LINUX)
                 res = QDir(QStringLiteral("/usr/local")).filePath(
-                    QStringLiteral(OS_LIBRARY_DIR) + u'/' + QCoreApplication::applicationName() + QStringLiteral("/plugins"));
+                    QStringLiteral(OS_LIBRARY_DIR) + u'/' + QCoreApplication::organizationName() + "/" + QCoreApplication::applicationName() + QStringLiteral("/plugins"));
 #else
                 res = {};
 #endif

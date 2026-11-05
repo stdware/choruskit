@@ -44,7 +44,7 @@ namespace Loader {
         virtual QSettings *createChorusKitSettings(QSettings::Scope scope);
 
         /// Create a new state store for ChorusKit
-        virtual QSettings *createChorusKitState(QSettings::Scope scope);
+        virtual QSettings *createChorusKitState();
  
         /// Parse extra options and do some initializations
         virtual bool preprocessArguments(QStringList &arguments, int *code = nullptr);
