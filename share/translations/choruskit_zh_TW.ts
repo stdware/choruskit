@@ -9,39 +9,39 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="235"/>
+        <location filename="../../src/loader/src/main.cpp" line="236"/>
         <source>You are trying to start %1 as the %2, which is extremely dangerous and therefore strongly not recommended.
 
 You can supress this warning by starting the application with &quot;--allow-root&quot; option.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="241"/>
+        <location filename="../../src/loader/src/main.cpp" line="242"/>
         <source>Administrator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="243"/>
+        <location filename="../../src/loader/src/main.cpp" line="244"/>
         <source>Root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="283"/>
+        <location filename="../../src/loader/src/main.cpp" line="284"/>
         <source>Searching plugins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="317"/>
+        <location filename="../../src/loader/src/main.cpp" line="318"/>
         <source>Could not find Core plugin!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="322"/>
+        <location filename="../../src/loader/src/main.cpp" line="323"/>
         <source>Core plugin is disabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="394"/>
+        <location filename="../../src/loader/src/main.cpp" line="395"/>
         <source>Loading plugins...</source>
         <translation type="unfinished"></translation>
     </message>

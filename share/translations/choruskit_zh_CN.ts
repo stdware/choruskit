@@ -13,7 +13,7 @@
         <translation type="vanished">你正在尝试以%2身份运行 %1，该操作具有较高危险性，不推荐使用。</translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="235"/>
+        <location filename="../../src/loader/src/main.cpp" line="236"/>
         <source>You are trying to start %1 as the %2, which is extremely dangerous and therefore strongly not recommended.
 
 You can supress this warning by starting the application with &quot;--allow-root&quot; option.</source>
@@ -22,32 +22,32 @@ You can supress this warning by starting the application with &quot;--allow-root
 使用“--allow-root”选项启动应用程序可禁用此警告。</translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="241"/>
+        <location filename="../../src/loader/src/main.cpp" line="242"/>
         <source>Administrator</source>
         <translation>管理员</translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="243"/>
+        <location filename="../../src/loader/src/main.cpp" line="244"/>
         <source>Root</source>
         <translation>超级用户</translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="283"/>
+        <location filename="../../src/loader/src/main.cpp" line="284"/>
         <source>Searching plugins...</source>
         <translation>搜索插件中...</translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="317"/>
+        <location filename="../../src/loader/src/main.cpp" line="318"/>
         <source>Could not find Core plugin!</source>
         <translation>无法找到核心插件！</translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="322"/>
+        <location filename="../../src/loader/src/main.cpp" line="323"/>
         <source>Core plugin is disabled.</source>
         <translation>核心插件已被禁用。</translation>
     </message>
     <message>
-        <location filename="../../src/loader/src/main.cpp" line="394"/>
+        <location filename="../../src/loader/src/main.cpp" line="395"/>
         <source>Loading plugins...</source>
         <translation>加载插件中...</translation>
     </message>
