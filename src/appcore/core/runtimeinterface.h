@@ -15,6 +15,7 @@ class QSplashScreen;
 
 namespace Core {
 
+    class FileOpenEventSource;
     class Logger;
     class TranslationManager;
 
@@ -38,6 +39,8 @@ namespace Core {
         static RuntimeInterface *instance();
 
     public:
+        static FileOpenEventSource *fileOpenEventSource();
+
         static QSettings *settings();
         static void setSettings(QSettings *settings);
 

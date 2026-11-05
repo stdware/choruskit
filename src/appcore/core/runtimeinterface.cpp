@@ -1,6 +1,5 @@
 #include "runtimeinterface.h"
-
-#include <CoreApi/private/runtimeinterface_p.h>
+#include "runtimeinterface_p.h"
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -11,6 +10,8 @@
 #include <QTimer>
 #include <QtCore/QLoggingCategory>
 #include <QtQml/QQmlEngine>
+
+#include <CoreApi/FileOpenEventSource.h>
 
 namespace Core {
 
@@ -84,6 +85,8 @@ namespace Core {
         : ObjectPool(parent), d_ptr(new RuntimeInterfacePrivate(this)) {
         Q_ASSERT(!m_instance);
         m_instance = this;
+        Q_D(RuntimeInterface);
+        d->fileOpenEventSource = new FileOpenEventSource(this);
     }
 
     RuntimeInterface::~RuntimeInterface() {
@@ -92,6 +95,10 @@ namespace Core {
 
     QDateTime RuntimeInterface::startTime() {
         return RuntimeInterfacePrivate::instance()->startTime;
+    }
+
+    FileOpenEventSource *RuntimeInterface::fileOpenEventSource() {
+        return RuntimeInterfacePrivate::instance()->fileOpenEventSource;
     }
 
     QSettings *RuntimeInterface::settings() {

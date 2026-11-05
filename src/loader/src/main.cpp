@@ -220,6 +220,7 @@ int __main__(LoaderSpec *loadSpec) {
 
     // Global instances must be created
     QApplication &a = *qApp;
+    RuntimeInterface runtimeInterface;
 
     QStringList arguments = a.arguments();
     ArgumentParser argsParser;
@@ -262,7 +263,6 @@ int __main__(LoaderSpec *loadSpec) {
         loadSpec->createExtensionSystemSettings(QSettings::SystemScope));
 
     // ChorusKit plugin database
-    RuntimeInterface runtimeInterface;
     runtimeInterface.setSettings(loadSpec->createChorusKitSettings(QSettings::UserScope));
     runtimeInterface.setState(loadSpec->createChorusKitState());
     runtimeInterface.setGlobalSettings(loadSpec->createChorusKitSettings(QSettings::SystemScope));

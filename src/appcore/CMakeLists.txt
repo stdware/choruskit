@@ -5,7 +5,7 @@ project(CkAppCore
 
 qm_import(QtQml)
 
-file(GLOB_RECURSE _src *.h *.cpp *.qrc)
+file(GLOB_RECURSE _src CONFIGURE_DEPENDS *.h *.cpp *.qrc)
 
 find_package(stdcorelib CONFIG REQUIRED)
 

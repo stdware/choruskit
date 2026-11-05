@@ -1,13 +1,13 @@
 #ifndef CHORUSKIT_RUNTIMEINTERFACE_P_H
 #define CHORUSKIT_RUNTIMEINTERFACE_P_H
 
+#include <CoreApi/runtimeinterface.h>
+
 #include <functional>
 #include <vector>
 
 #include <QDateTime>
 #include <QtQmlIntegration/qqmlintegration.h>
-
-#include <CoreApi/runtimeinterface.h>
 
 class QQmlEngine;
 class QJSEngine;
@@ -32,6 +32,8 @@ namespace Core {
         QDateTime startTime;
 
         RuntimeInterface *q_ptr;
+
+        FileOpenEventSource *fileOpenEventSource = nullptr;
 
         QSettings *settings = nullptr;
         QSettings *state = nullptr;
