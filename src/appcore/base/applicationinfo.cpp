@@ -131,7 +131,7 @@ namespace Core {
                 return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
 #endif
             case ApplicationInfo::Cache:
-#if defined(Q_OS_MACOS)
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
                 return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
 #else
                 return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
