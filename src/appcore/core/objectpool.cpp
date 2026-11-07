@@ -138,7 +138,7 @@ namespace Core {
             objs = it->keys_qlist();
         }
 
-        for (const auto &obj : qAsConst(objs)) {
+        for (const auto &obj : std::as_const(objs)) {
             d->aboutToRemoveObject(id, obj);
         }
 

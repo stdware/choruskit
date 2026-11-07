@@ -1,6 +1,8 @@
 #include "executiveinterface.h"
 #include "executiveinterface_p.h"
 
+#include <utility>
+
 namespace Core {
 
     static const int DELAYED_INITIALIZE_INTERVAL = 5; // ms
@@ -53,7 +55,7 @@ namespace Core {
         changeLoadState(ExecutiveInterface::Starting);
 
         // Initialize
-        for (auto &addOn : qAsConst(addOns)) {
+        for (auto &addOn : std::as_const(addOns)) {
             // Call 1
             addOn->initialize();
         }
@@ -166,7 +168,7 @@ namespace Core {
         if (d->state >= Starting)
             return;
 
-        for (auto &addOn : qAsConst(d->addOns)) {
+        for (auto &addOn : std::as_const(d->addOns)) {
             auto d1 = addOn->d_func();
             addOn->d_func()->host = this;
         }

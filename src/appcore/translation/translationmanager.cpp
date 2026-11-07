@@ -1,6 +1,8 @@
 #include "translationmanager.h"
 #include "translationmanager_p.h"
 
+#include <utility>
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
@@ -43,7 +45,7 @@ namespace Core {
         }
 
         QRegularExpression reg(R"((\w+?)_(\w{2})(_\w+|))");
-        for (const auto &file : qAsConst(searchFiles)) {
+        for (const auto &file : std::as_const(searchFiles)) {
             auto match = reg.match(file.fileName());
             if (!match.hasMatch()) {
                 continue;
@@ -60,7 +62,7 @@ namespace Core {
 
     static QList<QTranslator *> installTranslation_helper(const QStringList &paths) {
         QList<QTranslator *> res;
-        for (const auto &file : qAsConst(paths)) {
+        for (const auto &file : std::as_const(paths)) {
             qCDebug(lcTranslationManager) << "Installing translation" << file;
             auto t = new QTranslator(qApp);
             if (!t->load(file)) {
@@ -77,7 +79,7 @@ namespace Core {
     void TranslationManagerPrivate::scanTranslations() const {
         qmFiles.clear();
 
-        for (const auto &path : qAsConst(translationPaths)) {
+        for (const auto &path : std::as_const(translationPaths)) {
             insertTranslationFiles_helper(scanTranslation_helper(path));
         }
 

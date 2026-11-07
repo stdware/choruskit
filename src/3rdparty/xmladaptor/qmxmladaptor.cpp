@@ -1,5 +1,7 @@
 #include "qmxmladaptor.h"
 
+#include <utility>
+
 #include <QDebug>
 #include <QFile>
 #include <QJsonArray>
@@ -12,7 +14,7 @@ QJsonObject QMXmlAdaptorElement::toObject() const {
         obj.insert("value", value);
     } else {
         QJsonArray arr;
-        for (const auto &child : qAsConst(children)) {
+        for (const auto &child : std::as_const(children)) {
             arr.append(child->toObject());
         }
         obj.insert("children", arr);
