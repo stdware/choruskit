@@ -65,12 +65,16 @@ namespace Core {
         Q_INVOKABLE static void exitApplicationGracefully(int exitCode = 0);
         Q_INVOKABLE static void restartApplication(int exitCode = 0);
 
+        static bool exitInProgress();
         static bool restartPlanned();
 
         static void addExitCallback(const std::function<void(int)> &callback);
 
     Q_SIGNALS:
         void restartPlannedChanged();
+
+    protected:
+        bool eventFilter(QObject *watched, QEvent *event) override;
 
     private:
         QScopedPointer<RuntimeInterfacePrivate> d_ptr;

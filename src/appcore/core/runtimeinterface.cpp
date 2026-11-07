@@ -1,13 +1,20 @@
 #include "runtimeinterface.h"
 #include "runtimeinterface_p.h"
 
+#include <utility>
+
 #include <QApplication>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
+#include <QEvent>
+#include <QList>
+#include <QPointer>
 #include <QProcess>
+#include <QScopeGuard>
 #include <QSettings>
 #include <QTimer>
+#include <QWindow>
 #include <QtCore/QLoggingCategory>
 #include <QtQml/QQmlEngine>
 
@@ -54,6 +61,50 @@ namespace Core {
         return exitCode;
     }
 
+    void RuntimeInterfacePrivate::requestExit(int exitCode, bool restart) {
+        Q_Q(RuntimeInterface);
+        if (exitInProgress) {
+            return;
+        }
+        exitInProgress = true;
+        QTimer::singleShot(0, q, [this, exitCode, restart] {
+            const bool quitOnLastWindowClosed = QApplication::quitOnLastWindowClosed();
+            QApplication::setQuitOnLastWindowClosed(false);
+            const auto restoreQuitOnLastWindowClosed = qScopeGuard([quitOnLastWindowClosed] {
+                QApplication::setQuitOnLastWindowClosed(quitOnLastWindowClosed);
+            });
+
+            QList<QPointer<QWindow>> windows;
+            for (auto *window : QApplication::topLevelWindows()) {
+                windows.append(window);
+            }
+            for (const auto &window : std::as_const(windows)) {
+                if (window && !window->close()) {
+                    exitInProgress = false;
+                    qCInfo(lcRuntimeInterface) << "Exit canceled because a window refused closure.";
+                    return;
+                }
+            }
+
+            QTimer::singleShot(0, q_ptr, [this, exitCode, restart] {
+                for (auto *window : QApplication::topLevelWindows()) {
+                    if (window->isVisible()) {
+                        exitInProgress = false;
+                        qCInfo(lcRuntimeInterface) << "Exit canceled because a window remains visible.";
+                        return;
+                    }
+                }
+                setRestartPlanned(restart);
+                qCDebug(lcRuntimeInterface) << "Calling QCoreApplication::exit" << exitCode;
+                QCoreApplication::exit(exitCode);
+            });
+        });
+    }
+
+    bool RuntimeInterfacePrivate::isExitInProgress() const {
+        return exitInProgress;
+    }
+
     void RuntimeInterfacePrivate::setRestartPlanned(bool planned) {
         if (restartPlanned == planned) {
             return;
@@ -87,6 +138,7 @@ namespace Core {
         m_instance = this;
         Q_D(RuntimeInterface);
         d->fileOpenEventSource = new FileOpenEventSource(this);
+        qApp->installEventFilter(this);
     }
 
     RuntimeInterface::~RuntimeInterface() {
@@ -178,17 +230,17 @@ namespace Core {
     void RuntimeInterface::exitApplicationGracefully(int exitCode) {
         Q_ASSERT(m_instance);
         qCInfo(lcRuntimeInterface) << "Manually exit" << exitCode;
-        QTimer::singleShot(0, [exitCode] {
-            qCDebug(lcRuntimeInterface) << "Calling QCoreApplication::exit" << exitCode;
-            QCoreApplication::exit(exitCode);
-        });
+        RuntimeInterfacePrivate::instance()->requestExit(exitCode, false);
     }
 
     void RuntimeInterface::restartApplication(int exitCode) {
         Q_ASSERT(m_instance);
         qCInfo(lcRuntimeInterface) << "Scheduling restart" << exitCode;
-        RuntimeInterfacePrivate::instance()->setRestartPlanned(true);
-        exitApplicationGracefully(exitCode);
+        RuntimeInterfacePrivate::instance()->requestExit(exitCode, true);
+    }
+
+    bool RuntimeInterface::exitInProgress() {
+        return RuntimeInterfacePrivate::instance()->isExitInProgress();
     }
 
     bool RuntimeInterface::restartPlanned() {
@@ -201,6 +253,15 @@ namespace Core {
 
     RuntimeInterface *RuntimeInterface::instance() {
         return m_instance;
+    }
+
+    bool RuntimeInterface::eventFilter(QObject *watched, QEvent *event) {
+        if (watched == qApp && event->type() == QEvent::Quit) {
+            event->ignore();
+            exitApplicationGracefully();
+            return true;
+        }
+        return ObjectPool::eventFilter(watched, event);
     }
 
 }

@@ -24,6 +24,9 @@ namespace Core {
 
         int restartOrExitInternal(int exitCode);
 
+        void requestExit(int exitCode, bool restart);
+        bool isExitInProgress() const;
+
         void setRestartPlanned(bool planned);
         bool isRestartPlanned() const;
 
@@ -49,6 +52,7 @@ namespace Core {
     private:
         void runExitCallbacks(int exitCode) const;
 
+        bool exitInProgress = false;
         bool restartPlanned = false;
         std::vector<std::function<void(int)>> exitCallbacks;
     };

@@ -1,15 +1,14 @@
 #include "windowinterface.h"
 #include "windowinterface_p.h"
 
-#include "coreinterfacebase.h"
-#include "windowsystem_p.h"
-
+#include <QActionEvent>
 #include <QDebug>
 #include <QFileInfo>
 #include <QMimeData>
-#include <QActionEvent>
 #include <QWindow>
-#include <QApplication>
+
+#include <CoreApi/coreinterfacebase.h>
+#include <CoreApi/private/windowsystem_p.h>
 
 static const int DELAYED_INITIALIZE_INTERVAL = 5; // ms
 
@@ -100,9 +99,6 @@ namespace Core {
 
         // Create window
         auto win = q->createWindow(nullptr);
-
-        // Ensure closing window when quit
-        connect(qApp, &QApplication::aboutToQuit, win, &QWindow::close);
 
         q->setWindow(win);
         winFilter = new WindowEventFilter(this, win);
