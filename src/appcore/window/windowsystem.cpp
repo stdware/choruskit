@@ -351,7 +351,13 @@ namespace Core {
                 centralizeWindow(w);
             }
             if (isMax) {
-                w->showMaximized();
+                if (w->isVisible()) {
+                    w->setWindowState(Qt::WindowMaximized);
+                } else {
+                    connect(w, &QWindow::visibleChanged, w, [w] {
+                        w->setWindowState(Qt::WindowMaximized);
+                    }, Qt::SingleShotConnection);
+                }
             }
         } else {
             qCDebug(lcWindowSystem) << "Saved window geometry is valid:" << winRect;
@@ -389,7 +395,7 @@ namespace Core {
         if (!d->shouldStoreGeometry)
             return;
         qCInfo(lcWindowSystem) << "Saving window geometry for" << id << w << w->geometry() << w->visibility();
-        d->winGeometries.insert(id, {w->geometry(), w->visibility() == QWindow::Maximized});
+        d->winGeometries.insert(id, {w->geometry(), w->visibility() == QWindow::Maximized || w->visibility() == QWindow::FullScreen});
     }
 
     bool WindowSystem::shouldStoreGeometry() const {
